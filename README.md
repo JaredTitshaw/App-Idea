@@ -36,7 +36,11 @@ A revamp of the original app concept: a single app for discovering events, watch
 
 ## Design concept
 
-A visual concept for the revamped app is published as three interactive design canvases (split up so each loads reliably on mobile browsers):
+Start here — one overview page with the pitch and links to every screen:
+
+**https://claude.ai/code/artifact/7eca8791-048b-41b4-9bea-5709c8eb571b**
+
+The screens themselves are published as three interactive design canvases (split up so each loads reliably on mobile browsers):
 
 - [Onboarding & Home](https://claude.ai/code/artifact/69e1f789-b606-4e0e-9e76-f25f2eb88b46) — Welcome, Discover, Search, Notifications
 - [Explore & Events](https://claude.ai/code/artifact/327dd4c8-80bb-43f1-a08f-653dfdb53dc2) — Explore Map, Live, Create Event, Event Detail sheet, Invite & Share sheet
