@@ -36,6 +36,8 @@ A revamp of the original app concept: a single app for discovering events, watch
 
 ## Design concept
 
-A visual concept for the revamped app — Welcome, Discover, Explore Map, Live, Create Event, and Companion screens — is published as an interactive design canvas:
+A visual concept for the revamped app is published as three interactive design canvases (split up so each loads reliably on mobile browsers):
 
-https://claude.ai/code/artifact/69e1f789-b606-4e0e-9e76-f25f2eb88b46
+- [Onboarding & Home](https://claude.ai/code/artifact/69e1f789-b606-4e0e-9e76-f25f2eb88b46) — Welcome, Discover, Search, Notifications
+- [Explore & Events](https://claude.ai/code/artifact/327dd4c8-80bb-43f1-a08f-653dfdb53dc2) — Explore Map, Live, Create Event, Event Detail sheet, Invite & Share sheet
+- [Account & Branding](https://claude.ai/code/artifact/f5249ed6-5a31-42d4-af36-6c7ea8671ed4) — Companion (AI), Profile, Settings, Launch Splash, App Icon
