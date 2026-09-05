@@ -34,9 +34,17 @@ A revamp of the original app concept: a single app for discovering events, watch
 - **Business/venue partnerships** — paid placement and analytics tools for venues, brands, and professional event organizers.
 - **Convene+ subscription** — priority live-stream quality, unlimited real-time translation, and advanced Companion features for frequent travelers and organizers.
 
+## Try it
+
+A working, tap-through prototype — one phone screen with real navigation, not just static pictures:
+
+**https://claude.ai/code/artifact/4ee53592-ca5e-407d-b02b-feba421d78d0**
+
+Browse Discover, search events, drop a pin on the map, watch Live, create your own event (it shows up on Discover), RSVP to an event (it shows up on your Profile), chat with the Companion, and toggle settings.
+
 ## Design concept
 
-Start here — one overview page with the pitch and links to every screen:
+A static overview page with the pitch and links to every screen as individual mockups:
 
 **https://claude.ai/code/artifact/7eca8791-048b-41b4-9bea-5709c8eb571b**
 
