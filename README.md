@@ -34,6 +34,12 @@ A revamp of the original app concept: a single app for discovering events, watch
 - **Business/venue partnerships** — paid placement and analytics tools for venues, brands, and professional event organizers.
 - **Convene+ subscription** — priority live-stream quality, unlimited real-time translation, and advanced Companion features for frequent travelers and organizers.
 
+## Case study
+
+The full portfolio write-up — problem, naming and direction exploration, screen gallery, the ticketing/group-buying flow, and business model:
+
+**https://claude.ai/code/artifact/f3518657-0651-4594-9b60-93d4cc77e12f**
+
 ## Try it
 
 A working, tap-through prototype — one phone screen with real navigation, not just static pictures:
