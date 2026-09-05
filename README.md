@@ -48,7 +48,9 @@ A working, tap-through prototype — one phone screen with real navigation, not 
 
 Browse Discover, search events, drop a pin on the map, watch Live, create your own event (it shows up on Discover), RSVP to an event (it shows up on your Profile), chat with the Companion, and toggle settings.
 
-## Design concept
+## Early design exploration
+
+Before the working prototype existed, the direction was mocked up as static screens — this is where the naming, palette, and layout decisions got made. The prototype above has since grown well past what's pictured here (dark mode, ratings & reviews, Connections, a real Convene+ upgrade flow, more sample events), so treat these as the starting point, not the current state.
 
 A static overview page with the pitch and links to every screen as individual mockups:
 
