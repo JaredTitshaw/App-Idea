@@ -29,20 +29,21 @@ A revamp of the original app concept: a single app for discovering events, watch
 
 ## Business model
 
-- **Freemium core app** — free to discover, join, and attend events.
-- **Ticketing & booking fees** — a small percentage on paid events created through the platform.
-- **Business/venue partnerships** — paid placement and analytics tools for venues, brands, and professional event organizers.
-- **Convene+ subscription** — priority live-stream quality, unlimited real-time translation, and advanced Companion features for frequent travelers and organizers.
+Convene is deliberately payment-less and login-less — no accounts, no ticketing, no subscription tier anywhere in the app. That's a product decision as much as a business one: a monetization model built on personal data or transaction fees would work against the whole guest-first premise.
+
+- **Free, full stop** — discovering, saving, RSVPing, and hosting all work with zero payment and zero account.
+- **No user monetization** — no ads, no data resale, no paywall. Nothing about a person's activity here is for sale.
+- **Business/venue partnerships** — the one plausible revenue path: paid placement and analytics tools sold directly to venues, brands, and organizers, never funded by user data.
 
 ## Case study
 
-The full portfolio write-up — problem, naming and direction exploration, screen gallery, the ticketing/group-buying flow, and business model:
+The full portfolio write-up — problem, naming and direction exploration, screen gallery, the guest-first/no-account redesign, and business model:
 
 **https://claude.ai/code/artifact/f3518657-0651-4594-9b60-93d4cc77e12f**
 
 ## Try it
 
-A working, tap-through prototype — one phone screen with real navigation, not just static pictures:
+A working, tap-through prototype — one phone screen with real navigation, not just static pictures. No login, no signup, no payment info — it opens straight into the app as a guest.
 
 **https://claude.ai/code/artifact/4ee53592-ca5e-407d-b02b-feba421d78d0**
 
@@ -50,7 +51,7 @@ Browse Discover, search events, drop a pin on the map, watch Live, create your o
 
 ## Early design exploration
 
-Before the working prototype existed, the direction was mocked up as static screens — this is where the naming, palette, and layout decisions got made. The prototype above has since grown well past what's pictured here (dark mode, ratings & reviews, Connections, a real Convene+ upgrade flow, more sample events), so treat these as the starting point, not the current state.
+Before the working prototype existed, the direction was mocked up as static screens — this is where the naming, palette, and layout decisions got made. The prototype above has since grown well past what's pictured here (dark mode, ratings & reviews, Connections, a guest-first no-account redesign, more sample events), so treat these as the starting point, not the current state.
 
 A static overview page with the pitch and links to every screen as individual mockups:
 
