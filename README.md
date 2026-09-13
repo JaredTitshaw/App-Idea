@@ -18,13 +18,13 @@ A revamp of the original app concept: a single app for discovering events, watch
 | "Pulse360" | "Convene" | Signals gathering and coming together — confident enough for a business mixer, plain enough for a family picnic |
 | Generic AI chat icon | "Companion" — a named, branded assistant | Frames the AI feature as a helpful guide, not a gimmick, which reads better to a broad audience |
 | Feature labels ("Connect", "Explore") | Same functions, reframed as a coherent product vocabulary (Discover, Live, The Planet, Companion, Create) | Consistent naming across the app instead of a loose feature list |
-| A flat 2D city map with pins | **The Planet** — a photoreal, draggable Earth with clouds, a scrubbable timeline, a real day/night terminator, and scroll-driven pages | A pin map says "find something near you." A globe says "people are gathering everywhere, right now" — which is what the product is actually about |
+| A flat 2D city map with pins | **The Planet** — a photoreal, draggable Earth with verified coastlines, clouds, a scrubbable timeline, a real day/night terminator, and scroll-driven pages | A pin map says "find something near you." A globe says "people are gathering everywhere, right now" — which is what the product is actually about |
 
 ## Core features
 
 1. **Discover** — A personalized home feed of nearby and global events, curated by interest, language, and community.
 2. **Live** — Real-time streaming of events and moments, with live chat and translation so a global audience can follow along.
-3. **The Planet** — The centrepiece. A photoreal Earth you drag to orbit: real coastlines, continental shelves, climate-banded terrain, polar ice, and a drifting cloud layer, all shaded per pixel. Every point on it is a free gathering. Drag the time scrubber (*Right now → Saturday → Sunday → Next week → This month*) and the planet repopulates as you travel forward; "Play the tour" flies you point to point. Tap any point to open the event.
+3. **The Planet** — The centrepiece. A photoreal Earth you drag to orbit: coastlines verified against 183 known coordinates, continental shelves, climate regions (Sahara, Amazon, Gobi, Andes), sea ice, sun glint and a drifting cloud layer, all shaded per pixel. Every point on it is a free gathering. Drag the time scrubber (*Right now → Saturday → Sunday → Next week → This month*) and the planet repopulates as you travel forward; "Play the tour" flies you point to point. Tap any point to open the event.
 4. **Day & night** — The terminator is real, not decorative: it is computed from the sun's actual position, so the lit half of the planet matches the clock. It tracks live by default, city lights come up on the night side, sun glints off the sea, and dragging the sun slider walks the daylight round the world hour by hour.
 5. **Companion** — An AI assistant that recommends events, answers questions, translates in real time, and helps hosts set up an event.
 6. **Create** — Simple tools for anyone — an individual, a community group, or a business — to host and promote an event.
@@ -60,6 +60,8 @@ The same idea as a responsive website, with the globe promoted all the way to th
 Drag the globe, drag the *Convene through time* scrubber, walk the sun round the planet with the day/night slider, play the tour, or search a city. Gatherings outside the current time window stay on the planet as faint marks, so scrubbing forward visibly fills it in.
 
 Scrolling is also a control: the globe stays pinned while five pages move past it, and each one re-poses the planet — into night, forward to the weekend, east into tomorrow morning. Both prototypes do this.
+
+Keyboard: `/` or `Cmd/Ctrl-K` jumps to search, `Escape` backs out of anything open, and the timeline takes arrow keys as well as a drag.
 
 ## Early design exploration
 
