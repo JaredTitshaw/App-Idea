@@ -17,13 +17,14 @@ A revamp of the original app concept: a single app for discovering events, watch
 | Neon purple/magenta gradients, nightlife concert imagery | Warm cream, terracotta, and forest green | Reads as approachable and daylight-friendly at a glance, works for a family/community audience, not just nightlife |
 | "Pulse360" | "Convene" | Signals gathering and coming together — confident enough for a business mixer, plain enough for a family picnic |
 | Generic AI chat icon | "Companion" — a named, branded assistant | Frames the AI feature as a helpful guide, not a gimmick, which reads better to a broad audience |
-| Feature labels ("Connect", "Explore") | Same functions, reframed as a coherent product vocabulary (Discover, Live, Map, Companion, Create) | Consistent naming across the app instead of a loose feature list |
+| Feature labels ("Connect", "Explore") | Same functions, reframed as a coherent product vocabulary (Discover, Live, The Planet, Companion, Create) | Consistent naming across the app instead of a loose feature list |
+| A flat 2D city map with pins | **The Planet** — a draggable globe you orbit, with a time scrubber | A pin map says "find something near you." A globe says "people are gathering everywhere, right now" — which is what the product is actually about |
 
 ## Core features
 
 1. **Discover** — A personalized home feed of nearby and global events, curated by interest, language, and community.
 2. **Live** — Real-time streaming of events and moments, with live chat and translation so a global audience can follow along.
-3. **Explore Map** — An interactive map of what's happening around you or anywhere in the world, filterable by category.
+3. **The Planet** — The centrepiece. A real, hand-drawn globe you drag to orbit; every point on it is a free gathering. A time scrubber (*Right now → Saturday → Sunday → Next week → This month*) fills the planet in as you travel forward, a Daylight/After-dark toggle changes how it's lit, and "Play the tour" flies you point to point. Tap any point to open the event.
 4. **Companion** — An AI assistant that recommends events, answers questions, translates in real time, and helps hosts set up an event.
 5. **Create** — Simple tools for anyone — an individual, a community group, or a business — to host and promote an event.
 
@@ -47,11 +48,19 @@ A working, tap-through prototype — one phone screen with real navigation, not 
 
 **https://claude.ai/code/artifact/4ee53592-ca5e-407d-b02b-feba421d78d0**
 
-Browse Discover, search events, drop a pin on the map, watch Live, create your own event (it shows up on Discover), RSVP to an event (it shows up on your Profile), chat with the Companion, and toggle settings.
+Browse Discover, search events, orbit **The Planet** and scrub through time, watch Live, create your own event (it shows up on Discover), RSVP to an event (it shows up on your Profile), chat with the Companion, and toggle settings.
+
+## The web app
+
+The same idea as a responsive website, with the globe promoted all the way to the hero — the planet *is* the landing page. Live streaming is replaced here by **Moments**, an after-the-fact recap feed, which suits a browser better than a live video wall.
+
+**https://claude.ai/code/artifact/8004ec78-296c-47fa-bc32-7219aaa738c8**
+
+Drag the globe, scroll or click the *Convene through time* scrubber, switch between Daylight and After dark, play the tour, or search a city. Gatherings outside the current time window stay on the planet as faint marks, so scrubbing forward visibly fills it in.
 
 ## Early design exploration
 
-Before the working prototype existed, the direction was mocked up as static screens — this is where the naming, palette, and layout decisions got made. The prototype above has since grown well past what's pictured here (dark mode, ratings & reviews, Connections, a guest-first no-account redesign, more sample events), so treat these as the starting point, not the current state.
+Before the working prototype existed, the direction was mocked up as static screens — this is where the naming, palette, and layout decisions got made. The prototype above has since grown well past what's pictured here (dark mode, ratings & reviews, Connections, a guest-first no-account redesign, The Planet replacing the flat map, more sample events), so treat these as the starting point, not the current state.
 
 A static overview page with the pitch and links to every screen as individual mockups:
 
@@ -60,5 +69,5 @@ A static overview page with the pitch and links to every screen as individual mo
 The screens themselves are published as three interactive design canvases (split up so each loads reliably on mobile browsers):
 
 - [Onboarding & Home](https://claude.ai/code/artifact/69e1f789-b606-4e0e-9e76-f25f2eb88b46) — Welcome, Discover, Search, Notifications
-- [Explore & Events](https://claude.ai/code/artifact/327dd4c8-80bb-43f1-a08f-653dfdb53dc2) — Explore Map, Live, Create Event, Event Detail sheet, Invite & Share sheet
+- [Explore & Events](https://claude.ai/code/artifact/327dd4c8-80bb-43f1-a08f-653dfdb53dc2) — Explore Map (since replaced by The Planet), Live, Create Event, Event Detail sheet, Invite & Share sheet
 - [Account & Branding](https://claude.ai/code/artifact/f5249ed6-5a31-42d4-af36-6c7ea8671ed4) — Companion (AI), Profile, Settings, Launch Splash, App Icon
