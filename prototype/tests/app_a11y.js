@@ -6,7 +6,7 @@ const ok=(c,m)=>c?pass++:(fail++,console.log('  FAIL: '+m));
  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
  const pg=await b.newPage({viewport:{width:1280,height:900},colorScheme:'light'});
  const errs=[]; pg.on('pageerror',e=>errs.push(e.message));
- await pg.goto('file://'+path.resolve('convene-app.html'));
+ await pg.goto('file://'+path.resolve('wrapped-app.html'));
  await pg.waitForTimeout(1500);
  await pg.evaluate(()=>go('discover')); await pg.waitForTimeout(1200);
 

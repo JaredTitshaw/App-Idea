@@ -1786,8 +1786,10 @@
       '    vec3 nv = vec3(p / rr, 0.0);',
       '    float e = dot(nv, uSunV);',
       '    float d = mix(1.0, smoothstep(-0.30, 0.30, e), uLit);',
-      '    float a = exp(-(rr - 1.0) * 24.0) * 0.55 * d;',
-      '    gl_FragColor = vec4(vec3(0.40, 0.60, 1.00), a);',
+      '    float f = rr - 1.0;',
+      '    float a = (exp(-f * 26.0) * 0.50 + exp(-f * 7.0) * 0.16) * d;',
+      '    vec3 halo = mix(vec3(0.30, 0.52, 1.00), vec3(0.55, 0.72, 1.00), exp(-f * 20.0));',
+      '    gl_FragColor = vec4(halo, a);',
       '    return;',
       '  }',
 
@@ -1813,13 +1815,14 @@
       '  float diff = max(ill, 0.0);',
 
       '  vec3 litc = surf * (0.34 + 0.98 * diff);',
-      '  vec3 night = surf * 0.055 + vec3(0.012, 0.022, 0.045);',
-      '  night += vec3(1.0, 0.72, 0.38) * lights * 1.45;',
+      '  vec3 night = surf * 0.115 + vec3(0.015, 0.027, 0.055);',
+      '  night += vec3(0.10, 0.14, 0.26) * (0.25 + 0.75 * max(-ill, 0.0)) * 0.22;',
+      '  night += vec3(1.0, 0.74, 0.40) * lights * 1.62;',
       '  vec3 col = mix(night, litc, day);',
 
       /* the warm line of dawn and dusk */
-      '  float dawn = exp(-pow(ill / 0.055, 2.0)) * uLit;',
-      '  col += vec3(0.62, 0.30, 0.10) * dawn * 0.22;',
+      '  float dawn = exp(-pow(ill / 0.070, 2.0)) * uLit;',
+      '  col += vec3(0.70, 0.34, 0.11) * dawn * 0.28;',
 
       /* sun glint off open water */
       '  vec3 hv = normalize(uSunV + vec3(0.0, 0.0, 1.0));',
@@ -1835,7 +1838,8 @@
       /* limb darkening, and air thickening toward the edge */
       '  col *= (0.88 + 0.12 * nz);',
       '  float rim = pow(1.0 - nz, 3.0);',
-      '  col += vec3(0.26, 0.46, 0.88) * rim * day * 0.30;',
+      '  col += vec3(0.26, 0.46, 0.88) * rim * day * 0.38;',
+      '  col += vec3(0.05, 0.09, 0.20) * rim * (1.0 - day) * 0.55;',
 
       '  col = mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, 1.16);',
       '  float alpha = 1.0 - smoothstep(1.0 - 1.6/uRadius, 1.0, rr);',

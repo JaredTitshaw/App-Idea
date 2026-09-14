@@ -212,6 +212,13 @@
   }
   body.planet-mode .guest-avatar{ background:var(--accent); color:var(--accent-ink); }
   body.planet-mode .topbar{ background:transparent; border-bottom-color:transparent; }
+  @media (max-width:900px){
+    body.planet-mode .topbar{
+      background:rgba(8,9,11,.88);
+      -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+      border-bottom-color:rgba(255,255,255,.06);
+    }
+  }
   body.planet-mode .rail{ border-right-color:#16181C; }
   body.planet-mode .view-planet{ padding:0; }
 
@@ -222,12 +229,35 @@
   }
   .stage.grabbing{ cursor:grabbing; }
   .stage canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #star-canvas{ pointer-events:none; z-index:0; }
   #globe-overlay{ pointer-events:none; }
   .stage-scrim{
-    position:absolute; left:0; right:0; bottom:0; height:230px; pointer-events:none;
-    background:linear-gradient(to top, #08090B 12%, rgba(8,9,11,.82) 46%, rgba(8,9,11,0));
+    position:absolute; inset:0; pointer-events:none; z-index:1;
+    background:
+      linear-gradient(to top, #08090B 6%, rgba(8,9,11,.82) 22%, rgba(8,9,11,0) 40%),
+      linear-gradient(to right, #08090B 8%, rgba(8,9,11,.86) 30%, rgba(8,9,11,.38) 48%, rgba(8,9,11,0) 62%);
   }
 
+  .stage-gap{ display:none; }
+
+  /* A short opening. It plays on load rather than on scroll, and every element's
+     resting state is the default, so the page is never parked invisible. */
+  @media (prefers-reduced-motion: no-preference){
+    .stage-copy > *{ animation:riseIn .5s cubic-bezier(.2,.7,.3,1) backwards; }
+    .stage-copy > *:nth-child(1){ animation-delay:.04s; }
+    .stage-copy > *:nth-child(2){ animation-delay:.10s; }
+    .stage-copy > *:nth-child(3){ animation-delay:.16s; }
+    .stage-copy > *:nth-child(4){ animation-delay:.22s; }
+    .stage-copy > *:nth-child(5){ animation-delay:.28s; }
+    .stage-now{ animation:riseIn .5s cubic-bezier(.2,.7,.3,1) .20s backwards; }
+    .stage-controls{ animation:riseIn .5s cubic-bezier(.2,.7,.3,1) .34s backwards; }
+    .timeline{ animation:riseIn .5s cubic-bezier(.2,.7,.3,1) .40s backwards; }
+    #globe-canvas, #globe-overlay{ animation:planetIn .8s cubic-bezier(.2,.7,.3,1) backwards; }
+    #star-canvas{ animation:fadeIn 1.1s ease .1s backwards; }
+  }
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(9px); } }
+  @keyframes fadeIn{ from{ opacity:0; } }
+  @keyframes planetIn{ from{ opacity:0; transform:scale(.965); } }
   .stage-copy{ z-index:2; position:absolute; left:clamp(20px,4vw,64px); top:50%; transform:translateY(-54%); max-width:min(38vw,430px); }
   .stage-eyebrow{
     font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
@@ -287,8 +317,21 @@
   }
 
   @media (max-width:900px){
-    .stage{ min-height:calc(100vh - 61px); }
-    .stage-scrim{ height:180px; }
+    /* The stage stops being a viewport-height box. Its children flow, the page
+       scrolls normally, and the planet gets a reserved block of its own — so the
+       timeline can never end up underneath the bottom nav. */
+    .stage{
+      min-height:0; height:auto; overflow:visible; display:block;
+      touch-action:pan-y;            /* vertical scrolling wins over tilting */
+      padding-bottom:8px;
+    }
+    .stage-gap{
+      display:block; height:clamp(230px, 42vh, 360px);
+      order:0; pointer-events:none;
+    }
+    .stage-controls{ position:static; margin-top:18px; }
+    .timeline{ position:static; margin-top:14px; }
+    .stage-scrim{ display:none; }
     .stage-copy{
       position:static; transform:none; max-width:none; padding:22px clamp(16px,5vw,28px) 0;
     }
@@ -306,8 +349,8 @@
     .stage-now-name{ font-size:19px; margin:0; }
     .stage-now-count{ margin:0; font-size:11.5px; }
     .stage-now-link{ margin:0 0 0 auto; }
-    .stage-controls{ bottom:112px; gap:6px; justify-content:center; }
-    .timeline{ padding-bottom:18px; }
+    .stage-controls{ gap:6px; justify-content:center; }
+    .timeline{ padding-bottom:10px; }
     .timeline-hint{ display:none; }
     .timeline-head{ margin-bottom:12px; }
     .mode-btn{ padding:8px 12px; font-size:10.5px; }
@@ -578,7 +621,7 @@
     .view{ padding:18px 16px; }
     .view h1{ font-size:22px; }
     .view-planet{ padding:0; }
-    .stage{ min-height:calc(100vh - 53px - 64px); }
+    .stage{ min-height:0; }
     .hero{ padding-top:18px; gap:22px; }
     .hero-title{ font-size:30px; }
     .hero-globe{ height:300px; }
@@ -681,6 +724,7 @@
     <!-- THE PLANET — a full-bleed stage, nothing below the globe but the timeline -->
     <section class="view view-planet" id="view-discover">
       <div class="stage" id="map-canvas">
+        <canvas id="star-canvas" aria-hidden="true"></canvas>
         <canvas id="globe-canvas" tabindex="0" aria-describedby="globe-help" role="img" aria-label="A photoreal globe showing the Earth with the real day and night line. Points of light mark gatherings happening in the selected time window."></canvas>
         <canvas id="globe-overlay" aria-hidden="true"></canvas>
         <p class="vh" id="globe-help">Drag the planet to orbit it, or focus it and use the arrow keys. Page Up and Page Down travel through time.</p>
@@ -698,6 +742,8 @@
           </div>
           <div class="chip-row stage-chips" id="interest-chips"></div>
         </div>
+
+        <div class="stage-gap" aria-hidden="true"></div>
 
         <div class="stage-now">
           <div class="stage-now-label">Showing</div>
@@ -721,6 +767,7 @@
             <span class="sun-time" id="sun-time">12:00 UTC</span>
             <button class="sun-now on" id="sun-now" onclick="setSunLive()">Now</button>
           </div>
+          <button class="mode-btn" id="region-btn" onclick="goToMyRegion()" title="Spin the planet to your part of the world">My region</button>
           <button class="tour-btn" id="tour-btn" onclick="toggleTour()">
             <svg aria-hidden="true" focusable="false" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>
             <span id="tour-btn-label">Play the tour</span>
@@ -1162,6 +1209,50 @@
 
   /* ---------- the tour ---------- */
   var tour = { on:false, i:0, timer:null, currentId:null };
+  /* Where the viewer is, roughly, without asking for anything. The browser's UTC
+     offset gives a longitude directly (15 degrees per hour); the IANA zone name gives
+     a usable latitude. No permission prompt, no location access, no account — which is
+     the whole premise of the product. */
+  var REGION_LAT = {
+    Europe:50, Africa:4, Asia:30, Australia:-28, Pacific:-18,
+    Atlantic:35, Indian:-10, America:39, Antarctica:-70
+  };
+  var SOUTH_AMERICA = /Argentina|Sao_Paulo|Santiago|Lima|Bogota|Caracas|La_Paz|Montevideo|Asuncion|Guayaquil|Recife|Fortaleza|Cuiaba|Manaus|Belem|Punta_Arenas/;
+
+  function myRegion(){
+    /* Use the zone's standard offset, not today's. Daylight saving shifts the clock
+       an hour without moving anyone, which would drop New York 15 degrees east. DST
+       only ever reduces the offset, so the larger of January and July is standard. */
+    var y = new Date().getFullYear();
+    var jan = new Date(y, 0, 1).getTimezoneOffset();
+    var jul = new Date(y, 6, 1).getTimezoneOffset();
+    var lon = -Math.max(jan, jul) / 4;                 // minutes -> degrees
+    lon = Math.max(-180, Math.min(180, lon));
+    var zone = '';
+    try{ zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){}
+    var area = zone.split('/')[0];
+    var lat = REGION_LAT[area];
+    if(lat === undefined) lat = 30;
+    if(area === 'America' && SOUTH_AMERICA.test(zone)) lat = -15;
+    var place = zone ? zone.split('/').pop().replace(/_/g, ' ') : 'your region';
+    return { lat:lat, lon:lon, place:place };
+  }
+
+  function goToMyRegion(){
+    var r = myRegion();
+    stopTour(true);
+    globe.autoRotate = false;
+    // Bring that longitude to the centre of the disc and tilt to its latitude.
+    globe.targetRotY = -r.lon * Math.PI / 180;
+    globe.targetRotX = Math.max(-0.9, Math.min(0.9, r.lat * Math.PI / 180 * 0.8));
+    clearTimeout(globe.keyIdle);
+    globe.keyIdle = setTimeout(function(){ globe.autoRotate = true; }, 6000);
+    startGlobeLoop();
+    showToast('Looking at ' + r.place);
+    var live = document.getElementById('view-live');
+    if(live) live.textContent = 'The planet turned to ' + r.place;
+  }
+
   function toggleTour(){ tour.on ? stopTour() : startTour(); }
   function startTour(){
     var list = visibleEvents();
@@ -1790,8 +1881,10 @@
       '    vec3 nv = vec3(p / rr, 0.0);',
       '    float e = dot(nv, uSunV);',
       '    float d = mix(1.0, smoothstep(-0.30, 0.30, e), uLit);',
-      '    float a = exp(-(rr - 1.0) * 24.0) * 0.55 * d;',
-      '    gl_FragColor = vec4(vec3(0.40, 0.60, 1.00), a);',
+      '    float f = rr - 1.0;',
+      '    float a = (exp(-f * 26.0) * 0.50 + exp(-f * 7.0) * 0.16) * d;',
+      '    vec3 halo = mix(vec3(0.30, 0.52, 1.00), vec3(0.55, 0.72, 1.00), exp(-f * 20.0));',
+      '    gl_FragColor = vec4(halo, a);',
       '    return;',
       '  }',
 
@@ -1817,13 +1910,15 @@
       '  float diff = max(ill, 0.0);',
 
       '  vec3 litc = surf * (0.34 + 0.98 * diff);',
-      '  vec3 night = surf * 0.055 + vec3(0.012, 0.022, 0.045);',
-      '  night += vec3(1.0, 0.72, 0.38) * lights * 1.45;',
+      '  vec3 night = surf * 0.115 + vec3(0.015, 0.027, 0.055);',
+      /* a little moonlight, so coastlines still read on the dark side */
+      '  night += vec3(0.10, 0.14, 0.26) * (0.25 + 0.75 * max(-ill, 0.0)) * 0.22;',
+      '  night += vec3(1.0, 0.74, 0.40) * lights * 1.62;',
       '  vec3 col = mix(night, litc, day);',
 
       /* the warm line of dawn and dusk */
-      '  float dawn = exp(-pow(ill / 0.055, 2.0)) * uLit;',
-      '  col += vec3(0.62, 0.30, 0.10) * dawn * 0.22;',
+      '  float dawn = exp(-pow(ill / 0.070, 2.0)) * uLit;',
+      '  col += vec3(0.70, 0.34, 0.11) * dawn * 0.28;',
 
       /* sun glint off open water */
       '  vec3 hv = normalize(uSunV + vec3(0.0, 0.0, 1.0));',
@@ -1839,7 +1934,8 @@
       /* limb darkening, and air thickening toward the edge */
       '  col *= (0.88 + 0.12 * nz);',
       '  float rim = pow(1.0 - nz, 3.0);',
-      '  col += vec3(0.26, 0.46, 0.88) * rim * day * 0.30;',
+      '  col += vec3(0.26, 0.46, 0.88) * rim * day * 0.38;',
+      '  col += vec3(0.05, 0.09, 0.20) * rim * (1.0 - day) * 0.55;',
 
       '  col = mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, 1.16);',
       '  float alpha = 1.0 - smoothstep(1.0 - 1.6/uRadius, 1.0, rr);',
@@ -2130,6 +2226,40 @@
     perf.last = t;
   }
 
+  /* The sky. Painted once per resize rather than per frame — it never moves, and a
+     planet floating on flat black reads as a sprite instead of a place. */
+  function paintSky(w, h, dpr){
+    var cv = document.getElementById('star-canvas');
+    if(!cv) return;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    var c = cv.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, w, h);
+    var seed = 20260914;
+    function rnd(){ seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; }
+    var n = Math.round(w * h / 5200);
+    for(var i = 0; i < n; i++){
+      var x = rnd() * w, y = rnd() * h, m = rnd();
+      var r = m > 0.985 ? 1.5 : (m > 0.88 ? 1.0 : 0.65);
+      var a = 0.14 + rnd() * 0.5;
+      // A few carry a faint colour cast, the way real fields do.
+      var tint = rnd();
+      c.fillStyle = tint > 0.93 ? 'rgba(190,210,255,' + a.toFixed(3) + ')'
+                  : tint < 0.06 ? 'rgba(255,222,190,' + a.toFixed(3) + ')'
+                                : 'rgba(255,255,255,' + a.toFixed(3) + ')';
+      c.beginPath(); c.arc(x, y, r, 0, 6.2832); c.fill();
+    }
+    // A handful of brighter ones with a soft bloom, for depth.
+    for(var j = 0; j < Math.max(3, Math.round(n / 90)); j++){
+      var bx = rnd() * w, by = rnd() * h;
+      var g = c.createRadialGradient(bx, by, 0, bx, by, 7);
+      g.addColorStop(0, 'rgba(255,255,255,.55)');
+      g.addColorStop(0.35, 'rgba(200,220,255,.16)');
+      g.addColorStop(1, 'rgba(200,220,255,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(bx, by, 7, 0, 6.2832); c.fill();
+    }
+  }
+
   function resizeGlobe(){
     var wrap = document.getElementById('map-canvas');
     var rect = wrap.getBoundingClientRect();
@@ -2141,6 +2271,7 @@
     globe.overlay.width = globe.canvas.width;
     globe.overlay.height = globe.canvas.height;
     globe.ctx.setTransform(globe.dpr, 0, 0, globe.dpr, 0, 0);
+    paintSky(rect.width, rect.height, globe.dpr);
   }
   function projectPoint(lat, lon){
     var phi = lat * Math.PI / 180;
@@ -2155,27 +2286,38 @@
   }
   function globeLayout(){
     var w = globe.w, h = globe.h;
-    if(w >= 900){
+    /* Which layout we are in is decided by the stylesheet, not by a second threshold
+       here: the stage is narrower than the window, so a width test in JS disagreed
+       with the media query between about 960 and 1060px and dropped the planet into
+       a fallback size. The reserved block is visible in exactly one of the two. */
+    var gapEl = document.querySelector('.stage-gap');
+    var stacked = !!(gapEl && gapEl.offsetParent !== null);
+    if(!stacked){
       return { cx:w*0.66, cy:h*0.44, R:Math.max(90, Math.min(w*0.33, h*0.385)) };
     }
-    /* Stacked: the copy and the controls are laid out in flow, so measure what
-       they actually occupy and drop the planet into the gap between them. */
+    /* Stacked: the planet has its own reserved block in the flow, so read that
+       rather than inferring a gap from whatever happens to be around it. */
     var stage = wrapEl().getBoundingClientRect();
-    var copy = document.querySelector('.stage-copy');
-    var now = document.querySelector('.stage-now');
-    var ctrl = document.querySelector('.stage-controls');
-    var top = 0, bot = h;
-    if(copy) top = Math.max(top, copy.getBoundingClientRect().bottom - stage.top);
-    if(now) top = Math.max(top, now.getBoundingClientRect().bottom - stage.top);
-    if(ctrl) bot = ctrl.getBoundingClientRect().top - stage.top;
-    var avail = bot - top;
-    if(avail < 140){ top = h*0.30; avail = Math.max(140, h*0.42); }
+    var g = gapEl.getBoundingClientRect();
+    var top = g.top - stage.top, avail = g.height;
     return {
       cx: w*0.5,
       cy: top + avail/2,
       R: Math.max(80, Math.min(w*0.44, avail*0.47))
     };
   }
+  var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var motionOK = !motionQuery.matches;
+  if(motionQuery.addEventListener) motionQuery.addEventListener('change', function(e){ motionOK = !e.matches; });
+
+  /* Markers ease in and out as the time window changes rather than popping, and each
+     carries its own phase so the planet breathes instead of blinking in unison. */
+  var markerVis = {};
+  function markerPhase(id){
+    var h = 0; for(var i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) % 1000;
+    return h / 1000 * Math.PI * 2;
+  }
+
   function drawGlobe(){
     var ctx = globe.ctx;
     if(!ctx || globe.w < 4) return;
@@ -2201,6 +2343,7 @@
       ctx.beginPath(); ctx.arc(cx+q.x*R, cy-q.y*R, Math.max(1.6, R*0.007), 0, Math.PI*2); ctx.fill();
     });
 
+    var now = performance.now() / 1000;
     shown.forEach(function(ev){
       var p = projectPoint(ev.lat, ev.lon);
       var sx = cx+p.x*R, sy = cy-p.y*R;
@@ -2209,8 +2352,24 @@
       var alpha = front ? Math.min(1, 0.5 + (p.z+0.12)*1.4) : 0.16;
       var isTourPoint = tour.on && tour.currentId === ev.id;
       var base = Math.max(4.5, R*0.021);
-      var r = (isTourPoint ? base*1.45 : base) * scale;
-      ctx.globalAlpha = alpha;
+
+      // ease in when this event enters the window
+      var v = markerVis[ev.id];
+      if(v === undefined) v = markerVis[ev.id] = motionOK ? 0 : 1;
+      v = markerVis[ev.id] = motionOK ? v + (1 - v) * 0.10 : 1;
+
+      var pulse = motionOK ? 1 + 0.07 * Math.sin(now * 1.5 + markerPhase(ev.id)) : 1;
+      var r = (isTourPoint ? base*1.45 : base) * scale * pulse * (0.4 + 0.6*v);
+
+      if(front && motionOK){
+        // a slow ring breathing outward, so a point reads as something happening
+        var t = ((now * 0.5 + markerPhase(ev.id) / 6.2832) % 1);
+        ctx.globalAlpha = alpha * (1 - t) * 0.34 * v;
+        ctx.beginPath(); ctx.arc(sx, sy, r + t * base * 2.6, 0, Math.PI*2);
+        ctx.strokeStyle = pointColor; ctx.lineWidth = 1.2; ctx.stroke();
+      }
+
+      ctx.globalAlpha = alpha * v;
       ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2); ctx.fillStyle = pointColor; ctx.fill();
       ctx.globalAlpha = 1;
       if(front){
@@ -2236,7 +2395,7 @@
       while(diff < -Math.PI) diff += Math.PI*2;
       globe.rotY += diff * 0.08;
       if(Math.abs(diff) < 0.003) globe.targetRotY = null;
-    } else if(globe.autoRotate && !globe.dragging && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    } else if(globe.autoRotate && !globe.dragging && motionOK){
       globe.rotY += 0.0016;
     }
     if(sun.on && sun.live){

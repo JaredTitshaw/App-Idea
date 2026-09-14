@@ -46,7 +46,7 @@ const AUDIT = () => {
   let bad=0;
   for(const theme of ['light','dark']){
     const pg=await b.newPage({viewport:{width:1280,height:900}, colorScheme:theme});
-    await pg.goto('file://'+path.resolve('convene-web.html'));
+    await pg.goto('file://'+path.resolve('wrapped-web.html'));
     await pg.waitForTimeout(1600);
     for(const view of ['discover','gatherings','moments','companion','profile']){
       await pg.evaluate(v=>go(v), view); await pg.waitForTimeout(350);

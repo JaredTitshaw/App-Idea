@@ -6,7 +6,7 @@ const ok = (n,c)=>console.log((c?'PASS':'FAIL')+' — '+n);
   const p = await b.newPage({ viewport:{width:1440,height:860} });
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   p.on('console',m=>{ if(m.type()==='error' && !/ERR_TUNNEL/.test(m.text())) errs.push(m.text()); });
-  await p.goto('file://'+path.resolve(__dirname,'convene-web.html'));
+  await p.goto('file://'+path.resolve(__dirname,'wrapped-web.html'));
   await p.evaluate(()=>{ try{localStorage.clear();}catch(e){} });
   await p.reload(); await p.waitForTimeout(2600);
 

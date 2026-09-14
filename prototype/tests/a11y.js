@@ -1,6 +1,6 @@
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
 const path = require('path');
-const FILE = 'file://' + path.resolve('convene-web.html');
+const FILE = 'file://' + path.resolve('wrapped-web.html');
 let pass=0, fail=0;
 function ok(c,m){ c?(pass++):(fail++, console.log('  FAIL: '+m)); }
 

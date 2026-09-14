@@ -18,12 +18,24 @@ a Chromium binary; the paths at the top of each file point at this container's c
 and are the only thing to adjust elsewhere. Run them from the directory holding the
 HTML files:
 
+Tests run against a *wrapped* copy, built by `tests/wrap.py`, which reproduces the
+head the artifact publisher injects — including the viewport meta. Without it, mobile
+emulation lays out at 980px and every phone-width result is fiction:
+
+```sh
+python3 tests/wrap.py convene-web.html wrapped-web.html
+python3 tests/wrap.py convene-app.html wrapped-app.html
+```
+
 ```sh
 node tests/fulltest.js       # 15 interaction checks on the web app
 node tests/a11y.js           # 35 accessibility + layout assertions (web)
 node tests/app_a11y.js       #  9 accessibility assertions (phone)
 node tests/contrast.js       # every visible string measured against WCAG AA (web)
 node tests/contrast_app.js   # the same for the phone prototype
+node tests/feattest.js       # time-zone region feature + reduced-motion handling
+node tests/mobrepro.js       # phone layout: scrollable, timeline clear of the nav
+node tests/bandtest.js       # globe sizing across the width range
 ```
 
 The contrast checks walk every rendered text node, resolve the effective background
