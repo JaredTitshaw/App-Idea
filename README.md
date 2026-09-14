@@ -76,3 +76,27 @@ The screens themselves are published as three interactive design canvases (split
 - [Onboarding & Home](https://claude.ai/code/artifact/69e1f789-b606-4e0e-9e76-f25f2eb88b46) — Welcome, Discover, Search, Notifications
 - [Explore & Events](https://claude.ai/code/artifact/327dd4c8-80bb-43f1-a08f-653dfdb53dc2) — Explore Map (since replaced by The Planet), Live, Create Event, Event Detail sheet, Invite & Share sheet
 - [Account & Branding](https://claude.ai/code/artifact/f5249ed6-5a31-42d4-af36-6c7ea8671ed4) — Companion (AI), Profile, Settings, Launch Splash, App Icon
+
+## Working on this repo
+
+Two pieces of tooling are checked in so a fresh clone is set up the same way.
+
+**Design skills.** `.claude/skills/` vendors the seven skills from the
+[ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+plugin (MIT). They load automatically as project skills — nothing to install.
+Provenance and the one local modification are recorded in
+`.claude/skills/VENDOR.md`.
+
+**The 21st MCP server.** `.mcp.json` configures it, but reads the API key from
+the environment rather than storing it — no secret is in this repo. To use it:
+
+```sh
+cp .env.example .env        # git-ignored
+# then put your key from https://21st.dev in TWENTYFIRST_API_KEY
+export TWENTYFIRST_API_KEY=...
+```
+
+Set the variable before starting Claude Code, which will ask you to approve the
+server on first use. Without the key set you'll see
+`Missing environment variables: TWENTYFIRST_API_KEY` and the server stays off —
+everything else in the repo works regardless.

@@ -1,0 +1,4 @@
+# Local secrets — never commit. .mcp.json reads the key from the environment.
+.env
+.env.*
+!.env.example
