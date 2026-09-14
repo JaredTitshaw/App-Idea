@@ -1,0 +1,2832 @@
+<title>Convene</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital@0;1&family=Work+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{
+    --bg:#FAF6EE; --surface:#FFFFFF; --surface-2:#F1E9D8;
+    --ink:#2B2420; --ink-dim:#6B5F52; --ink-faint:#706555;
+    --accent:#A14E2D; --accent-ink:#FFF7EF;
+    --green:#4A7043; --green-soft:#E7EFE0;
+    --line:#E7DCC8;
+    --page-bg:#EDE7DA; --page-ink:#2B2420;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; }
+  body{
+    background:var(--page-bg); color:var(--page-ink);
+    font-family:"Work Sans", system-ui, sans-serif; -webkit-font-smoothing:antialiased;
+    min-height:100%;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:32px 16px 56px;
+  }
+  .serif{ font-family:"Newsreader", Georgia, serif; font-style:italic; }
+  button{ font-family:inherit; cursor:pointer; }
+  input{ font-family:inherit; }
+
+  .stage{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .stage h1{
+    font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-faint); margin:0;
+  }
+
+  .phone{
+    width:390px; height:844px; max-width:calc(100vw - 24px);
+    background:var(--bg); border-radius:34px; overflow:hidden; position:relative;
+    box-shadow:0 30px 70px rgba(43,36,32,.28), 0 2px 0 rgba(255,255,255,.4) inset;
+    border:1px solid rgba(43,36,32,.08);
+  }
+
+  .screen{ position:absolute; inset:0; display:none; flex-direction:column; background:var(--bg); color:var(--ink); }
+  .screen.active{ display:flex; }
+  .scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; overscroll-behavior-y:contain; }
+  .scroll::-webkit-scrollbar{ display:none; }
+
+  /* ---------- PULL TO REFRESH ---------- */
+  .pull-refresh{ display:flex; align-items:center; justify-content:center; gap:7px; height:0; overflow:hidden; opacity:0; transition:height .28s cubic-bezier(.4,0,.2,1), opacity .28s ease; }
+  .pull-refresh.dragging{ transition:none; }
+  .pull-refresh-mark{ width:20px; height:20px; flex-shrink:0; }
+  .pull-refresh-mark svg{ display:block; }
+  .pull-refresh-word{ font-size:14px; font-style:italic; color:var(--ink-dim); white-space:nowrap; }
+  .pull-refresh.spinning .pr-group{ animation:prSpin .9s linear infinite; transform-origin:50px 50px; }
+  .pull-refresh.spinning .pull-refresh-word{ animation:prPulse 1.1s ease-in-out infinite; }
+  @keyframes prSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+  @keyframes prPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){
+    .pull-refresh.spinning .pr-group, .pull-refresh.spinning .pull-refresh-word{ animation:none !important; }
+  }
+
+  /* shared header */
+  .hd{ display:flex; align-items:center; gap:14px; padding:18px 20px 14px; border-bottom:1px solid var(--line); background:var(--surface); flex-shrink:0; }
+  .hd h2{ font-size:16px; font-weight:800; margin:0; flex:1; }
+  .iconbtn{ background:none; border:none; padding:4px; display:flex; color:var(--ink); }
+  .iconbtn svg{ display:block; }
+
+  /* bottom nav */
+  .navbar{ display:none; align-items:center; justify-content:space-around; padding:12px 12px 20px; background:var(--surface); border-top:1px solid var(--line); flex-shrink:0; }
+  .phone.has-nav .navbar{ display:flex; }
+  .navicon{ background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--ink-faint); font-size:10px; font-weight:600; }
+  .navicon svg{ width:22px; height:22px; }
+  .navicon.active{ color:var(--accent); }
+  .navicon.fab{ width:44px; height:44px; border-radius:50%; background:var(--accent); align-items:center; justify-content:center; margin-top:-16px; box-shadow:0 6px 16px rgba(43,36,32,.22); }
+
+  .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+  .btn-primary{ background:var(--accent); color:var(--accent-ink); border:none; border-radius:12px; font-weight:700; font-size:15px; padding:15px; }
+  .btn-secondary{ background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:12px; font-weight:700; font-size:14px; padding:14px; }
+
+  /* ---------- SPLASH ---------- */
+  #screen-splash{ align-items:center; justify-content:center; background:linear-gradient(160deg,var(--accent),var(--green)); cursor:pointer; }
+  #screen-splash .mark{ width:104px; height:104px; border-radius:26px; background:#FAF6EE; display:flex; align-items:center; justify-content:center; animation:markSeq 2s cubic-bezier(.4,0,.2,1) both; box-shadow:0 10px 28px rgba(43,36,32,.18); }
+  #screen-splash .mark svg{ overflow:visible; }
+  #screen-splash .mark svg circle:nth-of-type(1){ transform-origin:38px 38px; animation:circleInA 2s cubic-bezier(.4,0,.2,1) both; }
+  #screen-splash .mark svg circle:nth-of-type(2){ transform-origin:62px 62px; animation:circleInB 2s cubic-bezier(.4,0,.2,1) both; }
+  @keyframes markSeq{
+    0%{ transform:scale(.9); opacity:0; }
+    10%{ transform:scale(1); opacity:1; }
+    38%{ transform:scale(1.02); opacity:1; }
+    55%{ transform:scale(1); opacity:1; }
+    75%{ transform:scale(1.03); opacity:1; }
+    90%{ transform:scale(1); opacity:1; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+  @keyframes circleInA{
+    0%{ transform:translate(12px,12px) scale(1); fill:#6F4E37; opacity:0; }
+    10%{ transform:translate(12px,12px) scale(1); fill:#6F4E37; opacity:1; }
+    38%{ transform:translate(-16px,-14px) scale(.92); fill:#6F4E37; opacity:1; }
+    55%{ transform:translate(-16px,-14px) scale(1); fill:#6F4E37; opacity:1; }
+    75%{ transform:translate(0,0) scale(1); fill:#6F4E37; opacity:1; }
+    90%{ transform:translate(0,0) scale(1); fill:var(--accent); opacity:.92; }
+    100%{ transform:translate(0,0) scale(1); fill:var(--accent); opacity:.92; }
+  }
+  @keyframes circleInB{
+    0%{ transform:translate(-12px,-12px) scale(1); fill:#6F4E37; opacity:0; }
+    10%{ transform:translate(-12px,-12px) scale(1); fill:#6F4E37; opacity:1; }
+    38%{ transform:translate(16px,14px) scale(1.08); fill:#6F4E37; opacity:1; }
+    55%{ transform:translate(16px,14px) scale(1); fill:#6F4E37; opacity:1; }
+    75%{ transform:translate(0,0) scale(1); fill:#6F4E37; opacity:1; }
+    90%{ transform:translate(0,0) scale(1); fill:var(--green); opacity:.8; }
+    100%{ transform:translate(0,0) scale(1); fill:var(--green); opacity:.8; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #screen-splash .mark{ animation:none !important; opacity:1; }
+    #screen-splash .mark svg circle:nth-of-type(1){ animation:none !important; transform:translate(0,0); fill:var(--accent); opacity:.92; }
+    #screen-splash .mark svg circle:nth-of-type(2){ animation:none !important; transform:translate(0,0); fill:var(--green); opacity:.8; }
+  }
+  #screen-splash .word{ font-size:38px; color:var(--accent-ink); margin-top:22px; }
+  #screen-splash .tag{ font-size:12px; color:var(--accent-ink); opacity:.85; font-weight:600; letter-spacing:.16em; text-transform:uppercase; margin-top:8px; }
+
+  /* ---------- SPLASH -> ONBOARDING TRANSITION (shared-element + circular reveal) ---------- */
+  #screen-splash.leaving{ pointer-events:none; }
+  .screen.measuring{ visibility:hidden; }
+  .transition-ghost{ position:absolute; margin:0; pointer-events:none; overflow:visible; }
+
+  /* ---------- ONBOARDING ---------- */
+  #screen-onboarding .hero{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 36px 0; text-align:center; }
+  #screen-onboarding .glyph{ width:76px; height:76px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; margin-bottom:26px; }
+  #screen-onboarding h2{ font-size:40px; margin:0; line-height:1.05; }
+  #screen-onboarding .sub{ font-size:13px; color:var(--ink-dim); font-weight:600; letter-spacing:.14em; text-transform:uppercase; margin-top:10px; }
+  #screen-onboarding p{ font-size:15px; line-height:1.55; color:var(--ink-dim); max-width:290px; margin:22px 0 0; }
+  #screen-onboarding .langs{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:22px; }
+  #screen-onboarding .langs span{ background:var(--surface-2); color:var(--ink-dim); font-size:12px; font-weight:700; padding:6px 12px; border-radius:20px; }
+  #screen-onboarding .actions{ padding:26px 28px 40px; display:flex; flex-direction:column; gap:12px; flex-shrink:0; }
+
+  /* ---------- PERSONALIZE (interests only, no account) ---------- */
+  #screen-signup{ background:var(--bg); }
+  .su-top{ display:flex; align-items:center; gap:14px; padding:18px 20px 0; flex-shrink:0; }
+
+  /* ---------- DISCOVER ---------- */
+  .discover-hd{ display:flex; align-items:center; gap:12px; padding:18px 20px 14px; border-bottom:1px solid var(--line); background:var(--surface); flex-shrink:0; }
+  .avatar-sm{ width:34px; height:34px; border-radius:50%; background:var(--surface-2); flex-shrink:0; }
+  .search-trigger{ display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:14px 20px 0; color:var(--ink-faint); font-size:13px; }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; padding:0 20px; margin:24px 0 12px; }
+  .section-title{ font-size:16px; font-weight:800; }
+  .see-all{ font-size:12px; font-weight:700; color:var(--ink-faint); }
+  .live-card{ margin:0 20px; height:150px; border-radius:14px; background:linear-gradient(160deg,#F3E4D6,#EFE7D3); position:relative; overflow:hidden; border:1px solid var(--line); }
+  .event-row{ display:flex; align-items:center; gap:12px; margin:0 20px 10px; padding:10px; }
+  .event-row .thumb{ width:48px; height:48px; border-radius:10px; background:var(--surface-2); flex-shrink:0; }
+  .event-row .meta b{ display:block; font-size:14px; font-weight:700; }
+  .event-row .meta span{ font-size:11.5px; color:var(--ink-dim); }
+  .event-row .going{ font-size:10px; font-weight:700; color:var(--ink-faint); white-space:nowrap; }
+
+  /* ---------- SEARCH ---------- */
+  .search-field{ display:flex; align-items:center; gap:10px; background:var(--surface-2); border-radius:12px; padding:11px 14px; margin:0; flex:1; border:1.5px solid var(--accent); }
+  .search-field input{ border:none; background:none; outline:none; font-size:13.5px; font-weight:600; color:var(--ink); flex:1; }
+  .chip-row{ display:flex; gap:8px; padding:16px 20px 4px; overflow-x:auto; }
+  .chip{ padding:9px 15px; border-radius:20px; font-size:12.5px; font-weight:700; white-space:nowrap; background:var(--surface); border:1px solid var(--line); color:var(--ink-dim); }
+  .chip.on{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+
+  /* ---------- THE PLANET ---------- */
+  /* The planet screen goes dark on its own: a photoreal globe on cream reads as a
+     sticker. Tokens and an explicit colour, since descendants inherit the computed
+     colour rather than the variable. */
+  #screen-map{
+    --bg:#08090B; --surface:#131519; --surface-2:#1A1D22;
+    --ink:#F4F0E6; --ink-dim:#A6A29A; --ink-faint:#89857E;
+    --accent:#E9B44C; --accent-ink:#17120A;
+    --line:#212429;
+    background:#08090B; color:#F4F0E6;
+  }
+  #screen-map .hd{ background:transparent; border-bottom-color:#181B20; }
+  #screen-map .sunrow, #screen-map .timeline{ background:transparent; border-top-color:#181B20; }
+  #screen-map .navbar{ background:#0B0D10; border-top-color:#181B20; }
+  /* The globe pins to the top of the screen while its pages scroll underneath. */
+  #planet-scroll{ overscroll-behavior-y:contain; }
+  .planet-sticky{ position:sticky; top:0; z-index:3; background:var(--bg); }
+  #screen-map .maparea{ height:38vh; min-height:250px; max-height:310px; position:relative; background:var(--bg); overflow:hidden; touch-action:none; }
+  .planet-pages{ padding:0 20px 26px; }
+  .ppage{ padding:30px 0; border-bottom:1px solid var(--line); }
+  .ppage:last-child{ border-bottom:none; }
+  .ppage-label{ font-size:10px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+  .ppage h3{ font-size:24px; line-height:1.12; letter-spacing:-.01em; font-weight:700; color:var(--ink); }
+  .ppage p{ font-size:13.5px; line-height:1.6; color:var(--ink-dim); margin:11px 0 0; }
+  .ppage-stat{ display:flex; align-items:baseline; gap:10px; margin-top:18px; }
+  .ppage-stat b{ font-size:30px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .ppage-stat span{ font-size:11.5px; color:var(--ink-faint); max-width:16ch; line-height:1.35; }
+  .ppage-cue{ display:inline-flex; align-items:center; gap:7px; margin-top:20px; font-size:11px; font-weight:600; color:var(--ink-faint); }
+  .ppage-cue svg{ animation:cueNudge 2.4s ease-in-out infinite; }
+  @keyframes cueNudge{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(3px); } }
+  @media (prefers-reduced-motion: reduce){ .ppage-cue svg{ animation:none; } }
+  .ppage-btn{
+    margin-top:20px; background:var(--accent); color:var(--accent-ink); border:none;
+    border-radius:22px; padding:12px 20px; font-size:13px; font-weight:700; min-height:44px;
+  }
+  #globe-canvas, #globe-overlay{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; }
+  #globe-overlay{ pointer-events:none; }
+  #screen-map .maparea.grabbing #globe-canvas{ cursor:grabbing; }
+  .mode-toggle{
+    background:var(--surface); border:1px solid var(--line); color:var(--ink-dim);
+    font-size:11.5px; font-weight:700; padding:8px 14px; border-radius:20px; min-height:36px;
+  }
+  .mode-toggle.on{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .globe-readout{ position:absolute; top:16px; left:16px; pointer-events:none; }
+  .globe-window{ font-size:19px; font-weight:800; letter-spacing:-.01em; color:var(--ink); }
+  .globe-count{ font-size:11.5px; color:var(--ink-dim); margin-top:2px; font-variant-numeric:tabular-nums; }
+  .globe-hint{
+    position:absolute; top:16px; right:16px; max-width:118px; text-align:right;
+    font-size:10px; line-height:1.45; color:var(--ink-faint); pointer-events:none;
+  }
+  .globe-card{
+    position:absolute; left:14px; right:14px; bottom:58px; background:var(--surface);
+    border:1px solid var(--line); border-radius:14px; padding:12px 14px;
+    display:flex; gap:11px; align-items:center; cursor:pointer; text-align:left;
+    box-shadow:0 10px 24px rgba(43,36,32,.14);
+  }
+  .globe-card[hidden]{ display:none; }
+  .globe-card-dot{ width:9px; height:9px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  .globe-card b{ display:block; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .globe-card span{ display:block; font-size:11px; color:var(--ink-dim); margin-top:2px; }
+  .globe-tour{
+    position:absolute; left:14px; bottom:14px; display:inline-flex; align-items:center; gap:7px;
+    background:var(--accent); color:var(--accent-ink); border:none; border-radius:20px;
+    font-size:11.5px; font-weight:700; padding:9px 15px; min-height:36px;
+  }
+  .sunrow{
+    flex-shrink:0; display:flex; align-items:center; gap:10px; padding:9px 20px;
+    border-top:1px solid var(--line); background:var(--surface); color:var(--ink-faint);
+  }
+  .sunrow[hidden]{ display:none; }
+  .sunrow svg{ flex-shrink:0; }
+  #sun-range{ flex:1; min-width:0; accent-color:var(--accent); height:18px; }
+  .sun-time{ font-size:11.5px; font-weight:700; color:var(--ink-dim); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .sun-now{ background:none; border:none; color:var(--ink-faint); font-size:11.5px; font-weight:700; padding:4px 2px; min-height:32px; }
+  .sun-now.on{ color:var(--accent); }
+  .timeline{ flex-shrink:0; border-top:1px solid var(--line); background:var(--surface); padding:12px 0 10px; }
+  .timeline-head{
+    display:flex; justify-content:space-between; align-items:baseline; padding:0 20px 9px;
+    font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);
+  }
+  .timeline-head span:last-child{ letter-spacing:.02em; text-transform:none; font-weight:600; font-size:11px; }
+  .timeline-track{ position:relative; height:42px; margin:0 20px; cursor:grab; touch-action:pan-y; }
+  .timeline-track.scrubbing{ cursor:grabbing; }
+  .timeline-track:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:4px; }
+  .tl-line{ position:absolute; left:0; right:0; top:5px; height:1px; background:var(--line); }
+  .tl-fill{ position:absolute; left:0; top:5px; height:1px; background:var(--accent); transition:width .26s ease; }
+  .tl-dot{
+    position:absolute; top:0; width:11px; height:11px; border-radius:50%; background:var(--accent);
+    transform:translateX(-50%); transition:left .26s ease;
+  }
+  .timeline-track.scrubbing .tl-dot, .timeline-track.scrubbing .tl-fill{ transition:none; }
+  .timeline-track.scrubbing .tl-dot{ transform:translateX(-50%) scale(1.35); }
+  .tl-stops{ position:absolute; inset:0; display:flex; justify-content:space-between; }
+  .timeline-stop{
+    background:none; border:none; padding:16px 0 0; flex:1; text-align:left; position:relative;
+    font-size:11px; font-weight:700; color:var(--ink-faint); white-space:nowrap;
+  }
+  .timeline-stop:last-child{ flex:0 0 auto; text-align:right; }
+  .timeline-stop::before{ content:""; position:absolute; top:-9px; left:0; width:1px; height:9px; background:var(--line); }
+  .timeline-stop:last-child::before{ left:auto; right:0; }
+  .timeline-stop.on{ color:var(--accent); }
+
+  /* ---------- LIVE ---------- */
+  #screen-live{ background:#20180F; color:#FAF6EE; }
+  #screen-live .topbar{ display:flex; align-items:center; gap:10px; padding:18px 16px 0; }
+  #screen-live .bottom{ padding:0 20px 26px; }
+  #screen-live .comments{ padding:0 20px; display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+  #screen-live .composer{ display:flex; align-items:center; gap:10px; padding:14px 16px 26px; }
+
+  /* ---------- CREATE ---------- */
+  .field{ padding:14px 20px; border-bottom:1px solid var(--line); }
+  .field-label{ font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+  .field input, .field select{ width:100%; border:none; background:none; font-size:15px; font-weight:600; color:var(--ink); outline:none; font-family:inherit; padding:0; }
+  .type-tag{ padding:6px 14px; border-radius:20px; font-size:12.5px; font-weight:700; border:none; background:var(--surface-2); color:var(--ink-dim); }
+  .type-tag.on{ background:var(--green); color:#FAF6EE; }
+
+  /* ---------- COMPANION ---------- */
+  .chat{ flex:1; overflow-y:auto; padding:18px 20px; display:flex; flex-direction:column; gap:14px; }
+  .bubble-ai{ background:var(--surface); border:1px solid var(--line); border-radius:14px 14px 14px 4px; padding:12px 14px; font-size:13.5px; line-height:1.5; max-width:78%; }
+  .bubble-me{ background:var(--accent); color:var(--accent-ink); border-radius:14px 14px 4px 14px; padding:12px 14px; font-size:13.5px; line-height:1.5; max-width:78%; align-self:flex-end; font-weight:600; }
+  .chatrow{ display:flex; gap:10px; align-items:flex-end; }
+  .composer2{ padding:12px 16px 22px; border-top:1px solid var(--line); display:flex; align-items:center; gap:10px; background:var(--surface); flex-shrink:0; }
+  .composer2 input{ flex:1; border:1px solid var(--line); background:var(--bg); border-radius:22px; padding:11px 16px; font-size:13px; outline:none; color:var(--ink); }
+
+  /* ---------- PROFILE ---------- */
+  .stat{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .stat b{ font-size:17px; font-weight:800; } .stat span{ font-size:11px; color:var(--ink-faint); font-weight:600; }
+  .tab{ font-size:13px; font-weight:700; padding:12px 0; flex:1; text-align:center; color:var(--ink-faint); border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; }
+  .tab.on{ color:var(--ink); border-color:var(--accent); }
+
+  /* ---------- CHECKOUT ---------- */
+  .row-between{ display:flex; justify-content:space-between; align-items:center; }
+
+  /* ---------- SETTINGS ---------- */
+  .srow{ display:flex; align-items:center; gap:14px; padding:13px 20px; border-bottom:1px solid var(--line); }
+  .srow .txt{ flex:1; font-size:14.5px; font-weight:600; }
+  .switch{ width:40px; height:24px; border-radius:12px; position:relative; flex-shrink:0; border:none; background:var(--line); transition:background .15s; }
+  .switch::after{ content:""; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .15s; }
+  .switch.on{ background:var(--accent); }
+  .switch.on::after{ transform:translateX(16px); }
+
+  /* ---------- OVERLAY SHEETS ---------- */
+  .sheet-overlay{ position:absolute; inset:0; z-index:50; pointer-events:none; opacity:0; transition:opacity .18s; }
+  .sheet-overlay.open{ pointer-events:auto; opacity:1; }
+  .sheet-scrim{ position:absolute; inset:0; background:rgba(43,36,32,.4); }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--bg); color:var(--ink); border-radius:24px 24px 0 0; box-shadow:0 -12px 32px rgba(43,36,32,.25); display:flex; flex-direction:column; overflow:hidden; transform:translateY(100%); transition:transform .22s ease; }
+  .sheet-overlay.open .sheet{ transform:translateY(0); }
+  .sheet .grabber{ display:flex; justify-content:center; padding:10px 0 6px; flex-shrink:0; }
+  .sheet .grabber span{ width:38px; height:4.5px; border-radius:3px; background:var(--line); display:block; }
+  #sheet-invite, #sheet-analytics, #sheet-connections{ z-index:60; }
+
+  .toast{ position:absolute; left:20px; right:20px; bottom:100px; background:var(--ink); color:var(--bg); font-size:13px; font-weight:600; text-align:center; padding:12px 16px; border-radius:12px; z-index:80; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; transform:translateY(8px); }
+  .toast.show{ opacity:1; transform:translateY(0); }
+
+  .contact{ display:flex; align-items:center; gap:12px; padding:11px 20px; }
+  .checkbox{ width:22px; height:22px; border-radius:50%; border:1.5px solid var(--line); flex-shrink:0; background:none; display:flex; align-items:center; justify-content:center; }
+  .checkbox.on{ background:var(--accent); border-color:var(--accent); }
+
+  @media (max-width:460px){
+    body{ padding:0; }
+    .phone{ width:100vw; height:100vh; max-width:none; border-radius:0; }
+    .stage h1{ display:none; }
+  }
+
+  /* ---------- accessibility ---------- */
+  button:focus-visible, input:focus-visible, .checkbox:focus-visible, .chip:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  .iconbtn{ min-width:44px; min-height:44px; align-items:center; justify-content:center; }
+  .navicon{ min-height:44px; justify-content:center; }
+  .chip{ min-height:36px; display:inline-flex; align-items:center; }
+
+  /* ---------- notification badge ---------- */
+  .bell-wrap{ position:relative; }
+  .badge-dot{ position:absolute; top:6px; right:6px; width:9px; height:9px; border-radius:50%; background:#C23B3B; border:2px solid var(--surface); }
+  .badge-dot.hidden{ display:none; }
+
+  /* ---------- date/time row (Create Event) ---------- */
+  .field .dt-row{ display:flex; gap:12px; }
+  .field .dt-row input{ flex:1; }
+  .field input[type="date"], .field input[type="time"]{ color:var(--ink); }
+
+  /* ---------- typing indicator ---------- */
+  .typing-dots{ display:inline-flex; gap:4px; padding:3px 2px; }
+  .typing-dots span{ width:6px; height:6px; border-radius:50%; background:var(--ink-faint); animation:typingBounce 1.2s infinite ease-in-out; }
+  .typing-dots span:nth-child(2){ animation-delay:.15s; }
+  .typing-dots span:nth-child(3){ animation-delay:.3s; }
+  @keyframes typingBounce{ 0%,60%,100%{ transform:translateY(0); opacity:.5; } 30%{ transform:translateY(-4px); opacity:1; } }
+  @media (prefers-reduced-motion: reduce){ .typing-dots span{ animation:none; opacity:.75; } }
+
+  /* ---------- dark mode ---------- */
+  .phone.dark{
+    --bg:#1C1712; --surface:#241D17; --surface-2:#2E251C;
+    --ink:#F4EFE6; --ink-dim:#C9BBA8; --ink-faint:#8C7C68;
+    --line:#3A2F24;
+  }
+  .phone.dark .search-trigger, .phone.dark .search-field{ color:var(--ink-dim); }
+
+  /* ---------- interests (sign-up) ---------- */
+  .su-interests{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px; }
+  .su-interests .type-tag{ padding:11px 18px; font-size:13.5px; }
+
+  /* ---------- ratings ---------- */
+  .star-btn{ background:none; border:none; padding:0; cursor:pointer; }
+  /* ---------- accessibility foundations (last, so they win) ---------- */
+  :root{ --focus:#1F6FEB; --focus-on-dark:#8FC2FF; }
+  :where(a,button,input,select,textarea,[tabindex]):focus-visible{
+    outline:3px solid var(--focus); outline-offset:2px; border-radius:6px;
+  }
+  #screen-map :where(button,input,[tabindex]):focus-visible,
+  #screen-live :where(button,input,[tabindex]):focus-visible{ outline-color:var(--focus-on-dark); }
+  .vh{
+    position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+    overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0;
+  }
+  .card-open{
+    background:none; border:none; padding:0; margin:0; font:inherit; color:inherit;
+    text-align:left; cursor:pointer; width:100%;
+  }
+  .card-open:focus-visible{ outline:3px solid var(--focus); outline-offset:3px; border-radius:4px; }
+
+</style>
+
+<div class="stage">
+  <h1>Convene — tap through the app</h1>
+  <div class="phone has-nav" id="phone">
+
+    <!-- SPLASH -->
+    <section class="screen active" id="screen-splash" onclick="goToOnboarding()">
+      <div class="mark">
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 100 100" width="60" height="60">
+          <circle cx="38" cy="38" r="24" fill="#6F4E37"/><circle cx="62" cy="62" r="24" fill="#6F4E37"/>
+        </svg>
+      </div>
+      <div class="serif word">Convene</div>
+      <div class="tag">Where everyone gathers</div>
+    </section>
+
+    <!-- ONBOARDING -->
+    <section class="screen" id="screen-onboarding">
+      <div class="scroll" style="display:flex;flex-direction:column;">
+        <div class="hero">
+          <div class="glyph"><svg aria-hidden="true" focusable="false" viewBox="0 0 100 100" width="34" height="34"><circle cx="38" cy="38" r="24" fill="var(--accent)" opacity=".92"/><circle cx="62" cy="62" r="24" fill="var(--green)" opacity=".8"/></svg></div>
+          <h2 class="serif">Convene</h2>
+          <div class="sub">Where everyone gathers</div>
+          <p>Discover real events, watch moments live, and build genuine connections with people across every city and culture.</p>
+          <div class="langs"><span>Hello</span><span>Hola</span><span>你好</span><span>Karibu</span></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" onclick="go('signup')">Get Started</button>
+      </div>
+    </section>
+
+    <!-- PERSONALIZE (no account, no login — just a local, on-device preference) -->
+    <section class="screen" id="screen-signup">
+      <div class="su-top" id="su-top">
+        <button class="iconbtn" onclick="go('onboarding')" aria-label="Back"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg></button>
+      </div>
+      <div class="scroll" style="display:flex;flex-direction:column;">
+        <div class="hero" style="padding-top:10px;">
+          <h2 class="serif">What are<br>you into?</h2>
+          <p>Pick a few — we'll use them to sort what you see first. This stays on your device; nothing is sent anywhere, and there's no account to create.</p>
+          <div class="su-interests" id="su-interests" style="margin-top:24px;">
+            <button type="button" class="type-tag" data-val="Family" onclick="toggleInterest(this)">Family</button>
+            <button type="button" class="type-tag" data-val="Business" onclick="toggleInterest(this)">Business</button>
+            <button type="button" class="type-tag" data-val="Community" onclick="toggleInterest(this)">Community</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" onclick="finishSignupToApp()">Continue</button>
+        <button class="btn-secondary" onclick="finishSignupToApp()">Skip for now</button>
+      </div>
+    </section>
+
+    <!-- DISCOVER -->
+    <section class="screen" id="screen-discover">
+      <div class="discover-hd">
+        <div class="avatar-sm"></div>
+        <div style="flex:1;">
+          <div style="font-size:10px;color:var(--ink-faint);font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Good evening</div>
+          <div class="serif" style="font-size:19px;">Convene</div>
+        </div>
+        <button class="iconbtn bell-wrap" onclick="go('notifications')" aria-label="Notifications">
+          <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <span class="badge-dot" id="bell-badge"></span>
+        </button>
+      </div>
+      <div class="scroll" id="discover-scroll">
+        <div class="pull-refresh" id="pull-refresh">
+          <div class="pull-refresh-mark">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 100 100" width="20" height="20"><g class="pr-group"><circle cx="38" cy="38" r="24" fill="var(--accent)" opacity=".92"/><circle cx="62" cy="62" r="24" fill="var(--green)" opacity=".8"/></g></svg>
+          </div>
+          <div class="pull-refresh-word serif">Convene</div>
+        </div>
+        <div class="search-trigger" onclick="go('search')">
+          <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          What's happening near you?
+        </div>
+
+        <div class="section-head" style="margin-top:22px;"><div class="section-title">Live Now</div></div>
+        <div class="live-card" onclick="openEvent('live1')">
+          <div style="position:absolute;top:12px;left:12px;display:flex;gap:6px;align-items:center;">
+            <span class="pill" style="background:#C23B3B;color:#fff;">● LIVE</span>
+            <span style="font-size:11px;color:#6B5F52;font-weight:600;">850 watching</span>
+          </div>
+          <div style="position:absolute;bottom:12px;left:14px;right:14px;">
+            <div style="font-weight:700;font-size:15px;color:#2B2420;">Rooftop Founders Night</div>
+            <div style="font-size:11px;color:#6B5F52;margin-top:2px;">Downtown</div>
+          </div>
+        </div>
+
+        <div class="section-head"><div class="section-title">Upcoming Near You</div></div>
+        <div id="upcoming-list"></div>
+
+        <div class="section-head"><div class="section-title">Trending This Week</div></div>
+        <div style="display:flex;gap:12px;padding:0 20px 24px;overflow-x:auto;">
+          <div class="card" style="min-width:150px;height:110px;background:linear-gradient(160deg,#F1E6D2,#EFE7D3);flex-shrink:0;"></div>
+          <div class="card" style="min-width:150px;height:110px;background:linear-gradient(160deg,#E7EFE0,#EFE7D3);flex-shrink:0;"></div>
+          <div class="card" style="min-width:150px;height:110px;background:linear-gradient(160deg,#F3E0D6,#EFE7D3);flex-shrink:0;"></div>
+        </div>
+      </div>
+      <div class="navbar" data-nav></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section class="screen" id="screen-search">
+      <div class="hd">
+        <button class="iconbtn" onclick="back()" aria-label="Back"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg></button>
+        <div class="search-field"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <label class="vh" for="search-input">Search events, people and cities</label><input id="search-input" placeholder="Search events, people, cities" oninput="renderSearch()" onkeydown="if(event.key==='Enter'){logSearch(this.value);renderSearch();}">
+        </div>
+      </div>
+      <div class="chip-row">
+        <button class="chip on" data-filter="all" onclick="setSearchFilter(this)">All</button><button class="chip" data-filter="events" onclick="setSearchFilter(this)">Events</button><button class="chip" data-filter="people" onclick="setSearchFilter(this)">People</button><button class="chip" data-filter="live" onclick="setSearchFilter(this)">Live</button>
+      </div>
+      <div class="scroll" id="search-results"></div>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="screen" id="screen-notifications">
+      <div class="hd"><button class="iconbtn" onclick="back()" aria-label="Back"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg></button><h2>Notifications</h2><span onclick="markAllNotifRead()" style="font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;">Mark all read</span></div>
+      <div class="scroll" id="notif-list"></div>
+    </section>
+
+    <!-- MAP -->
+    <section class="screen" id="screen-map">
+      <div class="hd" style="justify-content:space-between;">
+        <h2>The Planet</h2>
+        <button class="mode-toggle on" id="globe-mode-btn" aria-pressed="true" onclick="toggleDayNight()">
+          <span id="globe-mode-label">Day &amp; night</span>
+        </button>
+      </div>
+      <div class="scroll" id="planet-scroll">
+        <div class="planet-sticky">
+        <div class="maparea" id="globe-area">
+          <canvas id="globe-canvas" tabindex="0" role="img" aria-label="A photoreal globe showing Earth with the real day and night line. Points of light mark gatherings in the selected time window. Use the arrow keys to orbit it."></canvas>
+        <canvas id="globe-overlay"></canvas>
+          <div class="globe-readout">
+            <div class="globe-window" id="globe-window">Right now</div>
+            <div class="globe-count" id="globe-count"></div>
+          </div>
+          <div class="globe-hint" id="globe-hint">Drag to orbit · tap a point to open it</div>
+          <div class="globe-card" id="globe-card" hidden onclick="openEvent(globeTour.currentId)">
+            <div class="globe-card-dot"></div>
+            <div style="flex:1;min-width:0;">
+              <b id="globe-card-title"></b>
+              <span id="globe-card-meta"></span>
+            </div>
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+          <button class="globe-tour" id="globe-tour-btn" onclick="toggleGlobeTour()">
+            <svg aria-hidden="true" focusable="false" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>
+            <span id="globe-tour-label">Play the tour</span>
+          </button>
+        </div>
+        <div class="sunrow" id="sunrow">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg>
+          <input type="range" id="sun-range" min="0" max="1435" step="5" value="720" aria-label="Time of day, UTC" oninput="setSunMinutes(this.value)">
+          <span class="sun-time" id="sun-time">12:00 UTC</span>
+          <button class="sun-now on" id="sun-now" onclick="setSunLive()">Now</button>
+        </div>
+        <div class="timeline">
+          <div class="timeline-head">
+            <span>Convene through time</span>
+            <span id="timeline-sub">next few hours</span>
+          </div>
+          <div class="timeline-track" id="timeline-track" role="slider" tabindex="0"
+               aria-label="Travel through time" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+            <div class="tl-line"></div>
+            <div class="tl-fill" id="timeline-fill"></div>
+            <div class="tl-dot" id="timeline-dot"></div>
+            <div class="tl-stops" id="timeline-stops"></div>
+          </div>
+        </div>
+        </div>
+        <div class="planet-pages">
+          <section class="ppage" data-scene="0">
+            <div class="ppage-label">Right now</div>
+            <h3>See where everyone&#39;s gathering.</h3>
+            <p>Every point is a real, free gathering — no account, no ticket. Spin the planet, drag the timeline, drop in.</p>
+            <div class="ppage-cue">
+              <svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+              Keep scrolling — the planet follows
+            </div>
+          </section>
+          <section class="ppage" data-scene="1">
+            <div class="ppage-label">After dark</div>
+            <h3>Half of it is always night.</h3>
+            <p>The terminator is the real one, drawn from where the sun actually is. The lights coming up across a continent are coming up right now.</p>
+            <div class="ppage-stat"><b id="pstat-night">—</b><span>gatherings on the dark side</span></div>
+          </section>
+          <section class="ppage" data-scene="2">
+            <div class="ppage-label">This weekend</div>
+            <h3>Then the weekend fills it in.</h3>
+            <p>Drag the timeline and the planet repopulates. Anything past your window stays on as a faint mark, so you can see what is out there.</p>
+            <div class="ppage-stat"><b id="pstat-weekend">—</b><span>gatherings by Sunday night</span></div>
+          </section>
+          <section class="ppage" data-scene="3">
+            <div class="ppage-label">Somewhere it&#39;s morning</div>
+            <h3>Seven in the evening, everywhere at once.</h3>
+            <p>7pm local is a different proposition in Tokyo than in Tampa. Spin east and the planet is already into tomorrow.</p>
+            <div class="ppage-stat"><b id="pstat-cities">—</b><span>cities with something on</span></div>
+          </section>
+          <section class="ppage" data-scene="4">
+            <div class="ppage-label">Everything ahead</div>
+            <h3>And all of it, free to walk into.</h3>
+            <p>No account, no ticket, no card. Tap any point on the globe to open it, or browse the feed on Home.</p>
+            <div class="ppage-stat"><b id="pstat-all">—</b><span>gatherings on the planet</span></div>
+            <button class="ppage-btn" onclick="go('discover')">Browse everything &rarr;</button>
+          </section>
+        </div>
+      </div>
+      <div class="navbar" data-nav></div>
+    </section>
+
+    <!-- LIVE -->
+    <section class="screen" id="screen-live">
+      <div class="topbar">
+        <button class="iconbtn" style="color:#FAF6EE;" onclick="go('discover')" aria-label="Back"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg></button>
+        <span class="pill" style="background:var(--accent);color:var(--accent-ink);">● LIVE</span>
+        <span style="font-size:12px;font-weight:600;color:#F1E9D8;">1.2K watching</span>
+        <div style="flex:1;"></div>
+        <button class="chip" id="translate-toggle" style="background:rgba(250,246,238,.14);border-color:rgba(250,246,238,.32);color:#F1E9D8;" onclick="toggleTranslate()">🌐 Translate</button>
+      </div>
+      <div style="flex:1;position:relative;">
+        <svg aria-hidden="true" focusable="false" width="100%" height="100%" viewBox="0 0 390 500" style="position:absolute;inset:0;">
+          <rect width="390" height="500" fill="#20180F"/><ellipse cx="195" cy="260" rx="260" ry="220" fill="#3A2A18"/>
+        </svg>
+      </div>
+      <div class="comments" id="live-comments"></div>
+      <div class="composer">
+        <label class="vh" for="live-input">Write a message to the live chat</label><input id="live-input" placeholder="Say something…" style="flex:1;background:rgba(250,246,238,.14);border:1px solid rgba(250,246,238,.3);border-radius:22px;padding:11px 16px;font-size:13px;color:#F1E9D8;outline:none;" onkeydown="if(event.key==='Enter')postLiveComment()">
+        <button class="iconbtn" style="background:var(--accent);color:var(--accent-ink);width:36px;height:36px;border-radius:50%;justify-content:center;flex-shrink:0;min-width:36px;min-height:36px;" onclick="postLiveComment()" aria-label="Send">
+          <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- CREATE -->
+    <section class="screen" id="screen-create">
+      <div class="hd"><h2>Create Event</h2><button class="iconbtn" onclick="back()" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="scroll">
+        <div style="margin:18px 20px 0;height:130px;border-radius:16px;background:linear-gradient(160deg,#F1E3D4,#E9DDC4);"></div>
+        <div class="field"><div class="field-label">Event Name</div><label class="vh" for="ev-name">Event name</label><input id="ev-name" placeholder="Give your event a name"></div>
+        <div class="field"><div class="field-label">Date &amp; Time</div>
+          <div class="dt-row">
+            <label class="vh" for="ev-date-input">Event date</label>
+            <input id="ev-date-input" type="date">
+            <label class="vh" for="ev-time-input">Event start time</label>
+            <input id="ev-time-input" type="time">
+          </div>
+        </div>
+        <div class="field"><div class="field-label">Location</div><label class="vh" for="ev-loc">Location</label><input id="ev-loc" placeholder="Where's it happening?"></div>
+        <div class="field">
+          <div class="field-label">Event Type</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="ev-type-row">
+            <button class="type-tag on" onclick="pickType(this,'Family')">Family</button>
+            <button class="type-tag" onclick="pickType(this,'Community')">Community</button>
+            <button class="type-tag" onclick="pickType(this,'Business')">Business</button>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 26px;border-top:1px solid var(--line);"><button class="btn-primary" style="width:100%;" onclick="createEvent()">Create Event</button></div>
+    </section>
+
+    <!-- COMPANION -->
+    <section class="screen" id="screen-companion">
+      <div class="hd">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));"></div>
+        <div style="flex:1;"><div style="font-weight:800;font-size:14.5px;">Companion</div><div style="font-size:11px;color:var(--ink-dim);">Your Convene guide</div></div>
+      </div>
+      <div class="chat" id="chat-log"></div>
+      <div class="composer2">
+        <label class="vh" for="chat-input">Ask your Companion a question</label><input id="chat-input" placeholder="Ask your Companion anything…" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="iconbtn" style="background:var(--accent);color:var(--accent-ink);width:32px;height:32px;border-radius:50%;justify-content:center;flex-shrink:0;" onclick="sendChat()" aria-label="Send">
+          <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="navbar" data-nav></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="screen" id="screen-profile">
+      <div class="hd" style="border-bottom:none;"><h2>Profile</h2><button class="iconbtn" onclick="go('settings')" aria-label="Settings"><svg aria-hidden="true" focusable="false" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.33 1.87M4.6 9a1.7 1.7 0 00-.33-1.87M12 3v2M12 19v2M3 12h2M19 12h2"/></svg></button></div>
+      <div class="scroll">
+        <div style="display:flex;flex-direction:column;align-items:center;padding:6px 20px 18px;text-align:center;">
+          <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));display:flex;align-items:center;justify-content:center;">
+            <span class="serif" id="profile-avatar-letter" style="font-size:34px;color:#FFF7EF;">G</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:14px;">
+            <div id="profile-name" style="font-weight:800;font-size:19px;">Guest</div>
+          </div>
+          <div id="profile-location" style="font-size:12.5px;color:var(--ink-dim);margin-top:3px;">Somewhere out there · Joined 2026</div>
+          <div style="display:flex;gap:34px;margin-top:18px;">
+            <div class="stat" id="stat-hosted"><b>0</b><span>Hosted</span></div>
+            <div class="stat" id="stat-going"><b>0</b><span>Going</span></div>
+            <div class="stat" id="stat-connections" style="cursor:pointer;" onclick="openConnections()"><b>0</b><span>Connections</span></div>
+          </div>
+          <button class="btn-secondary" style="margin-top:16px;padding:9px 22px;font-size:12.5px;" onclick="openEditProfile()">Edit Profile</button>
+        </div>
+        <div style="display:flex;border-bottom:1px solid var(--line);padding:0 4px;">
+          <button class="tab on" data-tab="upcoming" onclick="setProfileTab('upcoming')">Upcoming</button>
+          <button class="tab" data-tab="hosted" onclick="setProfileTab('hosted')">Hosted</button>
+          <button class="tab" data-tab="saved" onclick="setProfileTab('saved')">Saved</button>
+        </div>
+        <div id="profile-list" style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+      <div class="navbar" data-nav></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="screen-settings">
+      <div class="hd"><button class="iconbtn" onclick="back()" aria-label="Back"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg></button><h2>Settings</h2></div>
+      <div class="scroll">
+        <div class="srow"><span class="txt">Notifications</span><button class="switch on" id="sw-notif" role="switch" aria-checked="true" aria-label="Notifications" onclick="toggleSwitch(this)"></button></div>
+        <div class="srow"><span class="txt">Location Services</span><button class="switch on" id="sw-loc" role="switch" aria-checked="true" aria-label="Location Services" onclick="toggleSwitch(this)"></button></div>
+        <div class="srow"><span class="txt">Dark Mode</span><button class="switch" id="sw-dark" role="switch" aria-checked="false" aria-label="Dark Mode" onclick="toggleDarkMode()"></button></div>
+        <div class="srow" style="border-bottom:none;"><span class="txt">Language &amp; Translation</span><span style="font-size:12px;color:var(--ink-faint);">English</span></div>
+        <div style="padding:24px 20px 0;"><button class="btn-secondary" style="width:100%;color:#A63244;" onclick="resetLocalData()">Reset Local Data</button></div>
+        <div style="padding:10px 20px 0;text-align:center;font-size:11px;color:var(--ink-faint);">No account, no server — this just clears what's saved on this device.</div>
+      </div>
+    </section>
+
+    <!-- EDIT PROFILE -->
+    <section class="screen" id="screen-edit-profile">
+      <div class="top-nav">
+        <button class="iconbtn" onclick="go('profile')" aria-label="Back"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg></button>
+      </div>
+      <div class="scroll">
+        <div class="form-wrap">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px;">
+            <div id="edit-avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span class="serif" id="edit-avatar-letter" style="font-size:22px;color:#FFF7EF;"></span>
+            </div>
+            <h2 class="serif" style="margin:0;font-size:24px;">Edit Profile</h2>
+          </div>
+          <div class="sub">Update how you show up on Convene.</div>
+
+          <div class="input-group">
+            <label for="edit-name">Full Name</label>
+            <div class="box">
+              <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.6-3.6 4.6-5.4 7-5.4S18.4 16.4 20 20"/></svg>
+              <label class="vh" for="edit-name">Your name</label><input id="edit-name" type="text" placeholder="Your name" oninput="onEditProfileInput()">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="edit-location">Location</label>
+            <div class="box">
+              <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M12 21s7-6.1 7-11.5A7 7 0 105 9.5C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+              <label class="vh" for="edit-location">Your city</label><input id="edit-location" type="text" placeholder="City, State">
+            </div>
+          </div>
+
+          <button class="btn-primary" style="width:100%;" id="edit-save-btn" onclick="saveProfileEdit()">Save Changes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVENT DETAIL SHEET -->
+    <div class="sheet-overlay" id="sheet-event">
+      <div class="sheet-scrim" onclick="closeEvent()"></div>
+      <div class="sheet" style="height:78%;">
+        <div class="grabber"><span></span></div>
+        <div class="scroll" style="padding:0 20px;">
+          <div id="ev-cover" style="height:150px;border-radius:16px;background:linear-gradient(160deg,#F1E3D4,#E9DDC4);margin-top:4px;position:relative;">
+            <span class="pill" id="ev-tag" style="position:absolute;top:12px;left:12px;background:var(--green);color:#FAF6EE;"></span>
+          </div>
+          <div id="ev-title" style="padding:16px 0 2px;font-weight:800;font-size:19px;"></div>
+          <div id="ev-rating" style="font-size:12px;color:var(--ink-dim);margin-bottom:12px;"></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);">
+            <svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+            <div id="ev-date2" style="font-size:13.5px;font-weight:700;"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);">
+            <svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 21s7-6.1 7-11.5A7 7 0 105 9.5C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+            <div id="ev-loc2" style="font-size:13.5px;font-weight:700;"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);">
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));flex-shrink:0;"></div>
+            <div style="flex:1;"><div id="ev-host" style="font-size:13.5px;font-weight:700;"></div><div style="font-size:11.5px;color:var(--ink-dim);">Organizer</div></div>
+            <button class="iconbtn" onclick="go('invite')" title="Invite & Share" aria-label="Invite and share"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg></button>
+          </div>
+          <div style="padding:16px 0 24px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px;">About this event</div>
+            <div id="ev-desc" style="font-size:13px;line-height:1.6;color:var(--ink-dim);"></div>
+          </div>
+          <div style="padding:0 0 24px;border-top:1px solid var(--line);padding-top:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Rate this event</div>
+            <div id="rate-stars" style="display:flex;gap:6px;margin-bottom:12px;"></div>
+            <label class="vh" for="rate-comment">Add a short review</label><textarea id="rate-comment" placeholder="Add a short review (optional)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13px;color:var(--ink);resize:none;min-height:60px;outline:none;background:var(--surface);"></textarea>
+            <button class="btn-secondary" style="width:100%;margin-top:10px;padding:11px;font-size:13px;" onclick="submitRating()">Submit Review</button>
+          </div>
+        </div>
+        <div style="padding:14px 20px 24px;border-top:1px solid var(--line);display:flex;gap:10px;background:var(--bg);">
+          <button class="iconbtn" style="width:52px;height:52px;border-radius:12px;border:1.5px solid var(--line);justify-content:center;" onclick="closeEvent()" aria-label="Close"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          <button class="iconbtn" id="save-btn" style="width:52px;height:52px;border-radius:12px;border:1.5px solid var(--line);justify-content:center;" onclick="toggleSave()" aria-label="Save event">
+            <svg aria-hidden="true" focusable="false" id="save-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
+          </button>
+          <button class="btn-primary" style="flex:1;" id="rsvp-btn">I'm Going</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOST ANALYTICS SHEET -->
+    <div class="sheet-overlay" id="sheet-analytics">
+      <div class="sheet-scrim" onclick="closeAnalytics()"></div>
+      <div class="sheet" style="height:64%;">
+        <div class="grabber"><span></span></div>
+        <div class="hd" style="border-bottom:1px solid var(--line);"><h2>Event Analytics</h2><button class="iconbtn" onclick="closeAnalytics()" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="scroll" style="padding:0 20px;">
+          <div id="an-title" style="font-weight:800;font-size:15px;padding:16px 0 2px;"></div>
+          <div id="an-sub" style="font-size:11.5px;color:var(--ink-dim);padding-bottom:16px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div class="card" style="padding:16px;">
+              <div style="font-size:10.5px;color:var(--ink-faint);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Views</div>
+              <div id="an-views" style="font-size:22px;font-weight:800;margin-top:4px;"></div>
+            </div>
+            <div class="card" style="padding:16px;">
+              <div style="font-size:10.5px;color:var(--ink-faint);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">RSVPs</div>
+              <div id="an-rsvps" style="font-size:22px;font-weight:800;margin-top:4px;"></div>
+            </div>
+            <div class="card" style="padding:16px;">
+              <div style="font-size:10.5px;color:var(--ink-faint);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Conversion</div>
+              <div id="an-conv" style="font-size:22px;font-weight:800;margin-top:4px;"></div>
+            </div>
+          </div>
+          <div class="card" style="padding:16px;margin-top:12px;">
+            <div style="font-size:10.5px;color:var(--ink-faint);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Rating</div>
+            <div id="an-rating" style="font-size:15px;font-weight:700;margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVITE & SHARE SHEET -->
+    <div class="sheet-overlay" id="sheet-invite">
+      <div class="sheet-scrim" onclick="go('event')"></div>
+      <div class="sheet" style="height:60%;">
+        <div class="grabber"><span></span></div>
+        <div class="hd" style="border-bottom:1px solid var(--line);"><h2>Invite &amp; Share</h2><button class="iconbtn" onclick="go('event')" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="scroll">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 6px;">Invite from Convene</div>
+          <div class="contact"><div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));flex-shrink:0;"></div><div style="flex:1;"><div style="font-weight:700;font-size:13.5px;">Sofia Marín</div><div style="font-size:11px;color:var(--ink-dim);">Tampa, FL</div></div><button class="checkbox on" onclick="toggleCheck(this)"><svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFF7EF" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></button></div>
+          <div class="contact"><div style="width:38px;height:38px;border-radius:50%;background:var(--surface-2);flex-shrink:0;"></div><div style="flex:1;"><div style="font-weight:700;font-size:13.5px;">Carlos Reyes</div><div style="font-size:11px;color:var(--ink-dim);">Austin, TX</div></div><button class="checkbox" onclick="toggleCheck(this)"></button></div>
+          <div class="contact"><div style="width:38px;height:38px;border-radius:50%;background:var(--surface-2);flex-shrink:0;"></div><div style="flex:1;"><div style="font-weight:700;font-size:13.5px;">Giulia Conti</div><div style="font-size:11px;color:var(--ink-dim);">Milan, Italy</div></div><button class="checkbox" onclick="toggleCheck(this)"></button></div>
+        </div>
+        <div style="padding:14px 20px 24px;border-top:1px solid var(--line);"><button class="btn-primary" style="width:100%;" onclick="sendInvites()">Send Invites</button></div>
+      </div>
+    </div>
+
+    <!-- CONNECTIONS SHEET -->
+    <div class="sheet-overlay" id="sheet-connections">
+      <div class="sheet-scrim" onclick="closeConnections()"></div>
+      <div class="sheet" style="height:64%;">
+        <div class="grabber"><span></span></div>
+        <div class="hd" style="border-bottom:1px solid var(--line);"><h2>Connections</h2><button class="iconbtn" onclick="closeConnections()" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="scroll">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 6px;">Recently Active</div>
+          <div id="connections-list"></div>
+        </div>
+        <div style="padding:14px 20px 24px;border-top:1px solid var(--line);"><button class="btn-secondary" style="width:100%;" onclick="closeConnections();go('search');document.querySelector('#screen-search .chip[data-filter=\'people\']').click();">Find More People</button></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+  var events = [
+    {id:'live1', title:'Rooftop Founders Night', tag:'Business', date:'Live now', location:'Downtown, 2.1 mi away', host:'Convene Community', going:850, live:true, desc:'Join founders and builders for an evening on the rooftop — good conversation, better views.'},
+    {id:'e1', title:'Riverside Founders Mixer', tag:'Business', date:'Sat, May 18 · 6:00 PM', location:'Austin, TX', host:'Austin Founders Collective', going:142, rating:4.6, desc:'A relaxed evening mixer for founders, operators, and anyone building something new along the river.'},
+    {id:'e2', title:'Community Culture Fair', tag:'Family', date:'Sun, May 19 · 11:00 AM', location:'Portland, OR', host:'Culture Fair Collective', going:86, rating:4.9, desc:'A free, family-friendly celebration of the neighborhood\'s cultures — live music, food trucks, craft stalls, and bilingual storytelling for kids.'},
+    {id:'e3', title:'Zoo Adventure Day', tag:'Family', date:'Sat, May 18 · 10:00 AM', location:'Tampa, FL', host:'Tampa Family Network', going:63, rating:4.7, desc:'A guided morning at the zoo for families, with a scavenger hunt for the kids.'},
+    {id:'e4', title:'Outdoor Movie Night', tag:'Family', date:'Sat, May 18 · 7:30 PM', location:'Brandon, FL', host:'Brandon Parks & Rec', going:112, rating:4.4, desc:'Bring a blanket for a free outdoor screening under the stars.'},
+    {id:'e5', title:'Feria Cultural Bilingüe', tag:'Family', date:'Sun, May 19 · 11:00 AM', location:'Riverview, FL', host:'Comunidad Riverview', going:24, rating:4.8, desc:'Celebración cultural bilingüe con música en vivo y actividades para toda la familia.'},
+    {id:'e6', title:'Sunset Yoga in the Park', tag:'Community', date:'Sun, May 19 · 7:00 PM', location:'Miami, FL', host:'Miami Wellness Collective', going:38, rating:4.9, desc:'A free, all-levels yoga session as the sun goes down — mats provided, just bring water.'},
+    {id:'e7', title:'Startup Demo Night', tag:'Business', date:'Live now', location:'Seattle, WA', host:'Seattle Founders Guild', going:410, live:true, desc:'Ten early-stage startups pitch live, streamed straight from the demo floor — jump in and cheer them on.'},
+    {id:'e8', title:'Neighborhood Potluck', tag:'Community', date:'Sat, May 25 · 5:00 PM', location:'Denver, CO', host:'Five Points Neighbors', going:57, rating:4.8, desc:'Bring a dish, meet your neighbors — a low-key evening of food and conversation on the block.'},
+    {id:'e9', title:'Tokyo Night Market', tag:'Community', date:'Sat, May 18 · 7:00 PM JST', location:'Shimokitazawa, Tokyo', host:'Shimokita Neighbours', going:230, rating:4.8, desc:'Street food stalls, record crates, and a whole block that stays open late. Free to wander.'},
+    {id:'e10', title:'Alfama Sunset Fado', tag:'Community', date:'Sun, May 19 · 8:30 PM WEST', location:'Alfama, Lisbon', host:'Casa do Fado', going:74, rating:4.9, desc:'An open-door fado evening in the old quarter — no ticket, no reservation, just turn up.'},
+    {id:'e11', title:'Mercado de Domingo', tag:'Family', date:'Sun, May 26 · 10:00 AM CST', location:'Coyoacán, Mexico City', host:'Vecinos de Coyoacán', going:310, rating:4.7, desc:'Un mercado familiar de domingo con música, artesanía y comida — entrada libre.'},
+    {id:'e12', title:'Karura Forest Morning Walk', tag:'Family', date:'Sat, Jun 1 · 7:00 AM EAT', location:'Karura Forest, Nairobi', host:'Nairobi Walkers', going:48, rating:4.9, desc:'A guided early walk through the forest trails, easy pace, families welcome.'}
+  ];
+
+  /* Where each gathering sits on the planet, and how far out it is.
+     win: 0 right now · 1 Saturday · 2 Sunday · 3 next week · 4 this month */
+  var GEO = {
+    live1:{lat:30.27, lon:-97.74, win:0},
+    e7:{lat:47.61, lon:-122.33, win:0},
+    e1:{lat:30.27, lon:-97.74, win:1},
+    e3:{lat:27.95, lon:-82.46, win:1},
+    e4:{lat:27.94, lon:-82.29, win:1},
+    e9:{lat:35.66, lon:139.67, win:1},
+    e2:{lat:45.52, lon:-122.68, win:2},
+    e5:{lat:27.86, lon:-82.33, win:2},
+    e6:{lat:25.76, lon:-80.19, win:2},
+    e10:{lat:38.71, lon:-9.13, win:2},
+    e8:{lat:39.74, lon:-104.99, win:3},
+    e11:{lat:19.35, lon:-99.16, win:3},
+    e12:{lat:-1.24, lon:36.83, win:4}
+  };
+  events.forEach(function(e){ if(GEO[e.id]){ e.lat = GEO[e.id].lat; e.lon = GEO[e.id].lon; e.win = GEO[e.id].win; } });
+
+  var GLOBE_WINDOWS = [
+    {label:'Right now',  short:'Now',   sub:'next few hours'},
+    {label:'Saturday',   short:'Sat',   sub:'through the day'},
+    {label:'Sunday',     short:'Sun',   sub:'the weekend in full'},
+    {label:'Next week',  short:'Week',  sub:'seven days out'},
+    {label:'This month', short:'Month', sub:'everything ahead'}
+  ];
+  var rsvps = new Set();
+  var saved = new Set();
+  var hostedBase = 0;
+  var mainView = 'discover';
+  var activeEventId = null;
+  var contacts = [
+    {name:'Sofia Marín', loc:'Tampa, FL'},
+    {name:'Carlos Reyes', loc:'Austin, TX'},
+    {name:'Giulia Conti', loc:'Milan, Italy'}
+  ];
+  var userInterests = [];
+  var recentSearches = [];
+  var myRatings = {};
+  var pendingStars = 0;
+  var notifications = [
+    {id:'n1', kind:'live', title:'Rooftop Founders Night is live now', time:'6 min ago', read:false, eventId:'live1'},
+    {id:'n2', kind:'social', title:'Sofia Marín wants to connect', time:'42 min ago', read:false},
+    {id:'n3', kind:'reminder', title:'Reminder: Community Culture Fair starts in 3 hours', time:'2 hr ago', read:true, eventId:'e2'}
+  ];
+  var translateOn = false;
+  var liveComments = [
+    {name:'Sofia', text:'This is amazing! 🔥'},
+    {name:'Carlos', text:'Saludos desde México 🇲🇽', lang:'Spanish', translated:'Greetings from Mexico 🇲🇽'},
+    {name:'Giulia', text:'Che bella serata!', lang:'Italian', translated:'What a beautiful evening!'},
+    {name:'Ahmed', text:'مرحبا من دبي 👋', lang:'Arabic', translated:'Hello from Dubai 👋'}
+  ];
+  var chatLog = [
+    {who:'ai', text:"Welcome back. Tell me what kind of experience you're looking for this weekend, and I'll line it up — in any language."}
+  ];
+  var navIcons = [
+    {view:'discover', label:'Home', svg:'<path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9h12v-9"/>'},
+    {view:'map', label:'Planet', svg:'<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M4.5 7.5h15M4.5 16.5h15"/>'},
+    {view:'create', label:'', fab:true, svg:'<path d="M12 5v14M5 12h14"/>'},
+    {view:'live', label:'Live', svg:'<rect x="3" y="7" width="13" height="10" rx="2"/><path d="M21 9l-5 3 5 3z"/>'},
+    {view:'profile', label:'Profile', svg:'<circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.6-3.6 4.6-5.4 7-5.4S18.4 16.4 20 20"/>'}
+  ];
+  var navHostViews = ['discover','map','companion','profile'];
+
+  function buildNav(activeView){
+    var html = navIcons.map(function(n){
+      if(n.fab){ return '<button class="navicon fab" onclick="go(\''+n.view+'\')" aria-label="Create event"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="#FFF7EF" stroke-width="2.4">'+n.svg+'</svg></button>'; }
+      var cls = 'navicon' + (n.view===activeView ? ' active' : '');
+      return '<button class="'+cls+'" onclick="go(\''+n.view+'\')"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">'+n.svg+'</svg>'+n.label+'</button>';
+    }).join('');
+    document.querySelectorAll('[data-nav]').forEach(function(el){ el.innerHTML = html; });
+  }
+
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+
+  /* A sheet at opacity:0 is still in the tab order and the a11y tree. `inert` is what
+     actually takes it out of both, so every open and close goes through here. */
+  function setSheet(id, open){
+    var el = document.getElementById(id);
+    if(!el) return;
+    if(open){
+      el.classList.add('open');
+      el.removeAttribute('inert'); el.removeAttribute('aria-hidden');
+      var focusable = el.querySelector('button, input, textarea, select, [tabindex]');
+      if(focusable) focusable.focus({preventScroll:true});
+    } else {
+      if(el.contains(document.activeElement)) document.activeElement.blur();
+      el.classList.remove('open');
+      el.setAttribute('inert',''); el.setAttribute('aria-hidden','true');
+    }
+  }
+  function initSheets(){
+    document.querySelectorAll('.sheet-overlay').forEach(function(el){
+      if(!el.classList.contains('open')){ el.setAttribute('inert',''); el.setAttribute('aria-hidden','true'); }
+    });
+  }
+  function go(view){
+    var phone = document.getElementById('phone');
+    var subViews = ['search','notifications','create','settings'];
+    if(navHostViews.indexOf(view) !== -1){ mainView = view; }
+
+    if(view === 'invite'){ setSheet('sheet-invite', true); return; }
+    if(view === 'event'){ setSheet('sheet-invite', false); return; }
+
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById('screen-'+view).classList.add('active');
+
+    phone.classList.toggle('has-nav', navHostViews.indexOf(view) !== -1);
+    buildNav(view);
+
+    if(view === 'notifications') renderNotifications();
+    if(view === 'discover') renderUpcoming();
+    if(view === 'search') renderSearch();
+    if(view === 'profile') renderProfile();
+    if(view === 'companion') renderChat();
+    if(view === 'live') renderLiveComments();
+    if(view === 'map') showGlobe(); else stopGlobeTour(true);
+  }
+  function back(){ go(mainView); }
+
+  var splashTransitioning = false;
+  function goToOnboarding(){
+    var splash = document.getElementById('screen-splash');
+    var onboarding = document.getElementById('screen-onboarding');
+    if(!splash.classList.contains('active') || splashTransitioning) return;
+    splashTransitioning = true;
+    splash.classList.add('leaving');
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduceMotion || !('animate' in splash)){
+      splash.classList.remove('active', 'leaving');
+      onboarding.classList.add('active');
+      splashTransitioning = false;
+      return;
+    }
+
+    var phone = document.getElementById('phone');
+    var phoneRect = phone.getBoundingClientRect();
+    var markIcon = splash.querySelector('.mark svg');
+    var r1 = markIcon.getBoundingClientRect();
+
+    onboarding.classList.add('active', 'measuring');
+    var glyphIcon = onboarding.querySelector('.glyph svg');
+    var r2 = glyphIcon.getBoundingClientRect();
+
+    var originX = (r1.left - phoneRect.left) + r1.width / 2;
+    var originY = (r1.top - phoneRect.top) + r1.height / 2;
+    var maxRadius = Math.hypot(
+      Math.max(originX, phoneRect.width - originX),
+      Math.max(originY, phoneRect.height - originY)
+    );
+
+    var dx = (r2.left - phoneRect.left) - (r1.left - phoneRect.left);
+    var dy = (r2.top - phoneRect.top) - (r1.top - phoneRect.top);
+    var scale = r2.width / r1.width;
+
+    glyphIcon.style.opacity = '0';
+
+    var ghost = markIcon.cloneNode(true);
+    ghost.setAttribute('class', 'transition-ghost');
+    ghost.style.left = (r1.left - phoneRect.left) + 'px';
+    ghost.style.top = (r1.top - phoneRect.top) + 'px';
+    ghost.style.width = r1.width + 'px';
+    ghost.style.height = r1.height + 'px';
+    ghost.style.zIndex = '60';
+    ghost.style.visibility = 'visible';
+
+    // freeze the ghost's circles at whatever the live entrance animation actually
+    // looked like at this instant (cloneNode only copies static markup, not the
+    // in-flight CSS-animated fill/transform), so an early tap still hands off cleanly
+    var origCircles = markIcon.querySelectorAll('circle');
+    var ghostCircles = ghost.querySelectorAll('circle');
+    origCircles.forEach(function(oc, i){
+      var cs = getComputedStyle(oc);
+      var gc = ghostCircles[i];
+      gc.style.animation = 'none';
+      gc.style.fill = cs.fill;
+      gc.style.opacity = cs.opacity;
+      gc.style.transform = cs.transform;
+    });
+
+    markIcon.style.visibility = 'hidden';
+    phone.appendChild(ghost);
+
+    onboarding.style.zIndex = '2';
+    splash.style.zIndex = '1';
+    onboarding.style.clipPath = 'circle(0px at ' + originX + 'px ' + originY + 'px)';
+    onboarding.classList.remove('measuring');
+
+    var DURATION = 640, EASING = 'cubic-bezier(.4,0,.2,1)';
+
+    onboarding.animate([
+      { clipPath: 'circle(0px at ' + originX + 'px ' + originY + 'px)' },
+      { clipPath: 'circle(' + maxRadius + 'px at ' + originX + 'px ' + originY + 'px)' }
+    ], { duration: DURATION, easing: EASING, fill: 'forwards' });
+
+    ghost.animate([
+      { transform: 'translate(0px,0px) scale(1)', offset: 0 },
+      { transform: 'translate(' + (dx * 1.04) + 'px,' + (dy * 1.04) + 'px) scale(' + (scale * 1.1) + ')', offset: 0.8 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + scale + ')', opacity: 1, offset: 0.94 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + scale + ')', opacity: 0, offset: 1 }
+    ], { duration: DURATION, easing: EASING, fill: 'forwards' });
+
+    setTimeout(function(){
+      splash.classList.remove('active', 'leaving');
+      splash.style.zIndex = '';
+      onboarding.style.zIndex = '';
+      onboarding.style.clipPath = '';
+      markIcon.style.visibility = '';
+      glyphIcon.style.opacity = '';
+      ghost.remove();
+      splashTransitioning = false;
+    }, DURATION + 60);
+  }
+
+  var COVER_GROUND = { Family:'#20303A', Business:'#2A2622', Community:'#1F2E24', Culture:'#2E2430', Outdoors:'#1E2E2A' };
+  function hashId(id){ var h=2166136261; for(var i=0;i<id.length;i++){ h^=id.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+  function thumbFor(id, tag){
+    var h = hashId(String(id)), ground = COVER_GROUND[tag] || '#262019', layers = [];
+    var n = 4 + (h % 3);
+    for(var i=0;i<n;i++){
+      h = (Math.imul(h, 1664525) + 1013904223) >>> 0;
+      var x = 10 + (h % 80), y = 12 + ((h >>> 8) % 76), r = 5 + ((h >>> 16) % 9);
+      var a = 0.32 + ((h >>> 20) % 50) / 100;
+      layers.push('radial-gradient(ellipse '+r+'% '+(r*1.7)+'% at '+x+'% '+y+'%, rgba(233,180,76,'+a.toFixed(2)+') 0%, rgba(233,180,76,0) 70%)');
+    }
+    layers.push('linear-gradient(175deg, rgba(255,255,255,.05) 0%, rgba(0,0,0,.18) 100%)');
+    layers.push(ground);
+    return layers.join(',');
+  }
+
+  function eventCardHtml(ev){
+    return '<div class="event-row card" style="cursor:pointer;" onclick="openEvent(\''+ev.id+'\')">'
+      + '<div class="thumb" style="background:'+thumbFor(ev.id, ev.tag)+';"></div>'
+      + '<div class="meta" style="flex:1;"><b><button class="card-open" onclick="event.stopPropagation();openEvent(\''+ev.id+'\')">'+ev.title+'</button></b><span>'+ev.date+' · '+ev.location+'</span></div>'
+      + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">'
+      + '<span style="font-size:10.5px;font-weight:800;color:var(--green);">'+ev.tag+'</span>'
+      + '<span class="going">'+ev.going+' going</span>'
+      + '</div>'
+      + '</div>';
+  }
+
+  function renderUpcoming(){
+    var list = events.filter(function(e){ return e.id !== 'live1'; });
+    if(userInterests.length){
+      list = list.slice().sort(function(a, b){
+        var aMatch = userInterests.indexOf(a.tag) !== -1 ? 0 : 1;
+        var bMatch = userInterests.indexOf(b.tag) !== -1 ? 0 : 1;
+        return aMatch - bMatch;
+      });
+    }
+    document.getElementById('upcoming-list').innerHTML = list.map(eventCardHtml).join('');
+  }
+
+  (function initPullToRefresh(){
+    var scroll = document.getElementById('discover-scroll');
+    var indicator = document.getElementById('pull-refresh');
+    if(!scroll || !indicator) return;
+    var THRESHOLD = 56, MAX_PULL = 76;
+    var startY = 0, pulling = false, dragging = false, refreshing = false;
+
+    function setPull(px){
+      indicator.style.height = px + 'px';
+      indicator.style.opacity = Math.min(1, px / THRESHOLD);
+    }
+
+    scroll.addEventListener('pointerdown', function(e){
+      if(refreshing || scroll.scrollTop > 0) return;
+      startY = e.clientY;
+      dragging = true; pulling = false;
+    });
+    scroll.addEventListener('pointermove', function(e){
+      if(!dragging || refreshing) return;
+      var dy = e.clientY - startY;
+      if(dy <= 0){ pulling = false; return; }
+      if(scroll.scrollTop > 0) return;
+      pulling = true;
+      indicator.classList.add('dragging');
+      e.preventDefault();
+      var pull = Math.min(MAX_PULL, dy * 0.45);
+      setPull(pull);
+    }, { passive:false });
+
+    function endPull(){
+      if(!dragging) return;
+      dragging = false;
+      indicator.classList.remove('dragging');
+      var height = parseFloat(indicator.style.height) || 0;
+      if(pulling && height >= THRESHOLD){
+        doRefresh();
+      } else {
+        setPull(0);
+      }
+      pulling = false;
+    }
+    scroll.addEventListener('pointerup', endPull);
+    scroll.addEventListener('pointercancel', endPull);
+    scroll.addEventListener('pointerleave', function(){ if(dragging) endPull(); });
+
+    function doRefresh(){
+      refreshing = true;
+      setPull(THRESHOLD);
+      indicator.classList.add('spinning');
+      setTimeout(function(){
+        renderUpcoming();
+        indicator.classList.remove('spinning');
+        setPull(0);
+        refreshing = false;
+      }, 900);
+    }
+  })();
+
+  var searchFilter = 'all';
+  function setSearchFilter(btn){
+    document.querySelectorAll('#screen-search .chip').forEach(function(c){ c.classList.remove('on'); });
+    btn.classList.add('on');
+    searchFilter = btn.dataset.filter;
+    renderSearch();
+  }
+  function logSearch(term){
+    term = (term || '').trim();
+    if(!term) return;
+    recentSearches = recentSearches.filter(function(t){ return t.toLowerCase() !== term.toLowerCase(); });
+    recentSearches.unshift(term);
+    recentSearches = recentSearches.slice(0, 5);
+    saveState();
+  }
+  function useRecentSearch(term){
+    document.getElementById('search-input').value = term;
+    renderSearch();
+  }
+  function renderSearch(){
+    var q = (document.getElementById('search-input').value || '').toLowerCase();
+    var box = document.getElementById('search-results');
+
+    if(!q && searchFilter === 'all' && recentSearches.length){
+      box.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 6px;">Recent</div>' + recentSearches.map(function(t){
+        var safe = t.replace(/'/g, "\\'");
+        return '<button type="button" class="event-row" style="width:calc(100% - 40px);text-align:left;background:none;border:none;cursor:pointer;" onclick="useRecentSearch(\''+safe+'\')">'
+          + '<div class="thumb" style="background:var(--surface-2);display:flex;align-items:center;justify-content:center;"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>'
+          + '<div class="meta" style="flex:1;"><b style="font-weight:600;">'+t+'</b></div>'
+          + '</button>';
+      }).join('');
+      return;
+    }
+
+    if(searchFilter === 'people'){
+      var people = q ? contacts.filter(function(c){ return c.name.toLowerCase().indexOf(q) !== -1; }) : contacts;
+      if(people.length === 0){ box.innerHTML = '<div style="padding:30px 20px;color:var(--ink-faint);font-size:13px;text-align:center;">No people found for "'+q+'"</div>'; return; }
+      box.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 6px;">People</div>' + people.map(function(c){
+        return '<div class="contact"><div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));flex-shrink:0;"></div><div style="flex:1;"><div style="font-weight:700;font-size:13.5px;">'+c.name+'</div><div style="font-size:11px;color:var(--ink-dim);">'+c.loc+'</div></div></div>';
+      }).join('');
+      return;
+    }
+
+    var list = events;
+    if(searchFilter === 'live') list = list.filter(function(e){ return e.live; });
+    if(q) list = list.filter(function(e){
+      return e.title.toLowerCase().indexOf(q) !== -1
+        || e.location.toLowerCase().indexOf(q) !== -1
+        || e.date.toLowerCase().indexOf(q) !== -1
+        || e.tag.toLowerCase().indexOf(q) !== -1;
+    });
+
+    if(list.length === 0){
+      box.innerHTML = '<div style="padding:30px 20px;color:var(--ink-faint);font-size:13px;text-align:center;">No results for "'+q+'"</div>';
+      return;
+    }
+    box.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 6px;">Events</div>' + list.map(eventCardHtml).join('');
+  }
+
+  /* ---------- PLANET ----------
+     The surface is baked once into an equirectangular texture (coastlines checked
+     against 183 known coordinates, see geo_source.py) and drawn by a WebGL shader:
+     hardware filtering is what keeps a globe this large smooth rather than grainy,
+     and it leaves room for a real terminator, sun glint and city lights. A 2D
+     canvas path is kept as a fallback for anything without WebGL. */
+  var PLANET = (function(){
+    var D2R = Math.PI/180;
+
+    /* Coastlines, then seas and lakes carved back out. Sculpting by subtraction
+       keeps every outline simple and non-self-intersecting; the shapes below are
+       checked against 116 known city and open-water coordinates. */
+    var LAND = [
+      [[-5.6,35.6],[0,36.6],[8,37.2],[11,34],[15,32],[20,31],[25,32],[30,31],[33,31],[34,28],[35,24],[37,21],[39,18],[41,15],[43,12],[45,11],[48,11],[51,12],[51,10],[48,6],[45,4],[42,1],[41,-2],[40,-6],[39,-8],[40,-11],[40,-15],[36,-18],[34,-22],[32,-26],[30,-31],[27,-33],[22,-34],[18,-34],[15,-27],[13,-23],[12,-18],[12,-13],[13,-8],[12,-6],[9,0],[9,4],[4,6],[0,5],[-4,5],[-8,4],[-13,9],[-16.2,12],[-17.8,14.8],[-17,21],[-14,25],[-10,29],[-8.5,33]], /* africa */
+      [[-9.5,37],[-9.5,43.8],[-8,43.8],[-4,43.5],[-1.8,43.4],[-1.2,46],[-2.2,47.3],[-4.8,48.5],[-1.6,49.4],[1.4,50.6],[1.8,51],[3.4,51.5],[4.8,53],[7,53.6],[8.2,55],[8.2,56.8],[10.6,57.7],[10.6,56],[9.9,54.8],[12.5,54.4],[14.5,54.1],[18.8,54.7],[21,55.3],[23,56.4],[24.5,57.7],[24.2,58.4],[24.5,59.5],[26,59.5],[28.5,59.5],[30.2,59.9],[27,60.2],[25,59.9],[22.5,60.4],[21.3,61.5],[21.5,63.2],[24.5,65.2],[25.2,65.8],[23,65.8],[21,63.6],[18.5,62.5],[17.4,60.9],[18.8,59.5],[16.8,58.6],[16.6,56.2],[14,55.4],[12.9,55.4],[12.5,56.3],[11.2,58.3],[10.6,59.4],[8.5,58],[5.5,58.6],[5,60.4],[7,62.5],[9.5,63.5],[12.5,65],[14.5,67],[16.5,68.5],[19,69.8],[23,70.5],[26,71],[29,71],[31,70.2],[33,69.3],[41,67],[44,68],[47,67.5],[53,68.5],[58,70],[65,71],[75,73],[85,75],[95,78],[105,77],[115,74],[125,73],[135,72],[145,71],[155,70],[165,69],[175,68],[180,66],[180,62],[172,61],[165,59],[160,56],[156,51],[158,55],[150,59],[142,54],[141,45],[135,43],[130,42.5],[127,42],[124,40.5],[122,40],[122.8,37.4],[119.2,34.5],[120.5,32.5],[121.9,31],[120.5,28],[119,25.5],[116,23],[113,22],[110,21.2],[108.5,18.5],[107,16],[105,10],[104,8.5],[103.6,5],[104.1,1.1],[103.3,1],[100.5,3],[100,6],[98.5,8],[97,10],[96,12],[92,20],[88,22],[84,17],[80.5,13.5],[79.9,10.3],[77.5,8.1],[72,18],[66,24],[60,25],[55,26],[50,29],[48,30],[50,28.5],[52,24.6],[54,24.4],[56,25.8],[56.8,26.3],[57.8,24],[59,22.4],[58,18],[55,17],[52,15],[48,13],[45,12.2],[43,12.6],[39,17],[36,23],[34,28],[34,31],[36,36],[30,37],[22,38],[14,40],[6,41],[-2,37]], /* eurasia */
+      [[7.6,43.9],[10,44],[12.4,44.3],[13.8,45.7],[12.4,45.5],[12.6,43.8],[14.2,42],[15.5,41.9],[16.3,41.4],[18.5,40.2],[17.2,39.9],[16.5,38.9],[15.6,38],[15,38.9],[15.3,40],[14,40.8],[12.9,41.3],[11,42.4],[10,43.4],[8.6,44.4]], /* italy */
+      [[12.4,38],[13.4,38.2],[15.1,38.2],[15.3,37.3],[14.5,36.7],[12.6,37.6]], /* sicily */
+      [[21,40],[25,41],[26,40],[24,38],[22,37],[20,38]], /* greece */
+      [[-168,66],[-160,70],[-150,70],[-140,70],[-130,70],[-120,69],[-110,69],[-100,69],[-95,69],[-90,70],[-85,73],[-80,73],[-75,70],[-68,64],[-62,58],[-56,52],[-60,47],[-64,46],[-67,45],[-70,42],[-74,39],[-76,35],[-79,33],[-81.4,30.7],[-80.9,28.5],[-80,26.9],[-80.1,25.3],[-81.1,25.2],[-82,26.8],[-82.7,27.9],[-82.6,28.9],[-83.7,29.9],[-84.3,30.1],[-85.4,29.7],[-88,30.3],[-90,29],[-95,29],[-97,26],[-95,19],[-90,19],[-87,21],[-88,16],[-84,10],[-79,9],[-83,8],[-87,13],[-92,16],[-97,16],[-105,20],[-110,23],[-114,28],[-117,32],[-121,35],[-124,40],[-124,48],[-128,52],[-133,55],[-140,60],[-150,59],[-155,57],[-162,55],[-165,60]], /* n_america */
+      [[-81,-4],[-79,0],[-77,4],[-75,9],[-71,12],[-66,11],[-62,9],[-60,6],[-52,5],[-50,1],[-44,-2],[-38,-5],[-35,-8],[-38,-13],[-39,-18],[-42,-23],[-48,-26],[-53,-33],[-55,-35],[-57,-36],[-60,-38.5],[-62,-39],[-63,-43],[-66,-46],[-69,-52],[-68,-55],[-74,-53],[-75,-47],[-74,-42],[-73,-37],[-71,-30],[-70,-23],[-71,-18],[-76,-14],[-79,-8]], /* s_america */
+      [[113,-22],[114,-26],[115,-31],[118,-35],[123,-34],[129,-32],[134,-33],[136,-35],[138,-35],[140,-38],[145,-39],[148,-38],[150,-37],[153.6,-32],[153.5,-28],[153,-25.5],[152.5,-24.5],[149,-21],[146,-19],[143,-14],[142,-11],[140,-17],[137,-12],[132,-11],[130,-12],[127,-14],[123,-17],[120,-20],[116,-21]], /* australia */
+      [[-43,60],[-52,64],[-53,68],[-56,72],[-60,76],[-64,78],[-58,81],[-45,83],[-32,83],[-22,80],[-20,75],[-24,71],[-30,68],[-38,65],[-43,61]], /* greenland */
+      [[11,55.3],[12.2,56.1],[12.75,55.9],[12.65,55],[11.4,54.8]], /* zealand */
+      [[-5.5,50],[-4,51],[-3,51.4],[-1,50.7],[1.4,51],[1.8,52.9],[0,53.6],[-1,54.6],[-3,54.8],[-3,55.9],[-2,56.5],[-2,57.7],[-3.5,58.6],[-5,58.5],[-5.8,57.4],[-5.4,56.4],[-4.8,55.4],[-5,54.4],[-4.5,53.4],[-4.8,52.8],[-5.2,51.7]], /* britain */
+      [[-10.4,51.6],[-9.8,53.2],[-10.2,54.2],[-8.2,55.2],[-6,55.2],[-6,53.4],[-6.2,52.2],[-8,51.5]], /* ireland */
+      [[-24,65],[-22,66],[-17,66],[-14,65],[-19,64],[-22,64]], /* iceland */
+      [[130.9,34.4],[132,34.8],[135,34.7],[136.8,34.5],[138,34.6],[139.8,34.9],[140.9,35.6],[141,36.5],[140.6,38.3],[141.5,39.5],[141.5,41.4],[140.3,41.5],[139.9,40],[139.8,38.5],[137,37.3],[135.5,35.6],[133,35.5],[131.5,35.2]], /* honshu */
+      [[140,42],[144,43],[145,44],[143,45],[141,45]], /* hokkaido */
+      [[130,31],[132,33],[131,34],[129,33]], /* kyushu */
+      [[142,46],[143,49],[143,54],[142,54],[141,50],[141,46]], /* sakhalin */
+      [[156,51],[159,52],[162,57],[163,60],[160,60],[157,57],[155,54]], /* kamchatka */
+      [[126.4,37.9],[127.5,38.3],[129.2,38.3],[129.5,35.6],[128.5,34.9],[126.5,34.4],[126.2,36.5]], /* korea */
+      [[120.1,22.6],[120.9,24.6],[121.8,25.3],[122,24.3],[121.2,22.9],[120.6,22.1]], /* taiwan */
+      [[95,6],[100,3],[104,-2],[106,-6],[103,-5],[99,0],[96,4]], /* sumatra */
+      [[105.2,-5.9],[107,-5.9],[110,-6.5],[112.6,-6.9],[114.5,-7.7],[114.4,-8.4],[111,-8.3],[108,-7.7],[105.5,-6.9]], /* java */
+      [[109,2],[113,4],[117,4],[119,-1],[116,-4],[111,-3],[109,0]], /* borneo */
+      [[119,-1],[121,1],[125,1],[124,-2],[121,-5],[119,-4]], /* sulawesi */
+      [[131,-1],[136,-2],[141,-3],[147,-6],[150.5,-10.7],[146.5,-9.9],[143,-9.2],[141,-9.3],[137.5,-8.4],[133,-4.5]], /* new_guinea */
+      [[120,18],[122,17],[124,12],[126,8],[126,6],[122,7],[121,11],[120,14]], /* philippines */
+      [[173,-35],[175,-37],[178,-38],[177,-40],[174,-41],[172,-39],[172,-37]], /* nz_north */
+      [[171,-41],[174,-42],[172,-45],[168,-47],[166,-45],[169,-42]], /* nz_south */
+      [[144.7,-40.7],[146.5,-41],[148.3,-40.9],[148.2,-42.3],[147.3,-43.5],[145.5,-43],[144.6,-41.9]], /* tasmania */
+      [[43,-12],[48,-13],[50,-16],[50,-21],[47,-25],[45,-23],[44,-17]], /* madagascar */
+      [[79.7,8.3],[80.5,9.6],[81.3,8.5],[81.9,7.2],[81.2,6.1],[79.85,6.2]], /* sri_lanka */
+      [[-84.9,21.9],[-82.5,23.2],[-80.3,23.1],[-77.5,21.6],[-74.9,20.2],[-77.2,20],[-79.8,20.7],[-82.8,21.4]], /* cuba */
+      [[-74.4,20],[-71.6,19.9],[-69.2,19.9],[-68.3,18.6],[-70,18.2],[-72.4,18.2],[-74.4,18.5]], /* hispaniola */
+      [[-66.3,45.3],[-64,45.8],[-61.5,45.6],[-60,45.9],[-61,44.6],[-63.6,44.2],[-65.8,43.6],[-66.5,44.6]], /* nova_scotia */
+      [[-59,48],[-56,50],[-53,50],[-53,47],[-56,47]], /* newfoundland */
+      [[-85,70],[-80,73],[-72,74],[-62,67],[-66,64],[-78,67]], /* baffin */
+      [[-118,72],[-110,73],[-102,70],[-110,68],[-117,69]], /* victoria_is */
+      [[-88,78],[-80,83],[-68,83],[-64,78],[-78,76]], /* ellesmere */
+      [[11,77],[20,79],[28,80],[20,80],[12,79]], /* svalbard */
+      [[52,71],[56,73],[68,77],[62,73],[55,70]], /* novaya_zemlya */
+      [[108.7,19.4],[109.6,20.1],[110.8,20],[111,19.2],[110,18.2],[109,18.6]], /* hainan */
+      [[-156,20],[-155,19],[-158,21],[-159,22]], /* hawaii */
+    ];
+
+    /* k:0 sea, k:6 inland water */
+    var WATER = [
+      { k:0, p:[[28.2,41.3],[31,41.6],[35,41.5],[38.5,41.4],[41.5,41.8],[41.8,43.4],[39.5,44.6],[37.5,45.3],[33.5,46.2],[31.2,46.6],[29.6,45.4],[28,43.4]] }, /* black_sea */
+      { k:6, p:[[48.8,37.4],[51.5,36.8],[53.5,37.8],[53.9,39.8],[52.6,41.5],[53.2,43.5],[51.6,45.6],[49.5,46.6],[47.6,45.2],[47.2,42.8],[48.4,40.2],[48.2,38.4]] }, /* caspian */
+      { k:6, p:[[58.2,44.5],[59.8,44.2],[61.2,45],[61,46.2],[59.4,46.6],[58.1,45.8]] }, /* aral */
+      { k:0, p:[[33,28],[35,28],[44,12],[42,12],[38,18],[35,22]] }, /* red_sea */
+      { k:0, p:[[48,30.4],[50.5,29],[53,27],[55.6,25.6],[56.6,26.6],[53,28.8],[50,30.6]] }, /* persian_gulf */
+      { k:0, p:[[-94.5,58.8],[-92,57.2],[-88,55.3],[-84.5,55],[-81,55.6],[-78.5,56.8],[-77.2,58.6],[-77.8,61],[-80,63.5],[-84,64.2],[-87.5,64],[-91,63],[-94,61.2],[-95.2,60]] }, /* hudson_bay */
+      { k:6, p:[[-92,46.7],[-88,48.3],[-84.5,46.5],[-82.6,45.2],[-79.6,43.5],[-76.6,43.85],[-76.8,43.2],[-79.9,43.4],[-82.9,41.4],[-86.5,41.6],[-87.6,43],[-88,44.6],[-90.6,46.4]] }, /* great_lakes */
+      { k:0, p:[[-114.6,31.5],[-112.6,28.8],[-110,24.6],[-108.6,23.2],[-108.2,25],[-110.8,27.5],[-113.3,31.8]] }, /* gulf_california */
+      { k:0, p:[[129,35],[135,35],[140,44],[142,46],[137,44],[130,42],[128,38]] }, /* sea_of_japan */
+      { k:0, p:[[143,46],[150,50],[156,52],[154,58],[148,58],[141,52]] }, /* okhotsk */
+      { k:6, p:[[31.8,-1],[33,-0.4],[34,-1.2],[34.2,-2.4],[33.2,-3],[32,-2.4]] }, /* lake_victoria */
+      { k:6, p:[[103.7,51.6],[105.5,52.6],[107.8,54.2],[109.9,55.8],[109.3,56.3],[107,54.6],[104.8,52.8],[103.4,52]] }, /* baikal */
+      { k:0, p:[[99.5,11],[104.5,12.5],[105,10],[104.2,8.5],[101,6.8],[99.3,8.5]] }, /* gulf_thailand */
+      { k:0, p:[[32.5,66.5],[36,65],[39.5,64.3],[41,65.5],[38.5,66.6],[34.5,67.2]] }, /* white_sea */
+      { k:0, p:[[-78,63.5],[-70,63],[-64,62],[-64,60.5],[-72,61],[-78,62]] }, /* hudson_strait */
+      { k:0, p:[[-66,50],[-61,50.8],[-58.5,50.5],[-58.8,48.2],[-60,46.6],[-64,47.5],[-66.5,49]] }, /* st_lawrence */
+      { k:0, p:[[24.2,36.2],[25.2,35.8],[26.5,36.8],[26.6,39.2],[25.4,40.3],[24.6,39.6],[23.95,37.8]] }, /* med_aegean */
+      { k:0, p:[[12.5,45.5],[16.5,42.5],[19.5,40],[18.5,39.8],[15.5,41.8],[12.3,44.8]] }, /* adriatic */
+    ];
+
+    var ARID = [
+      [[-13,26],[-5,30],[5,31],[16,30],[25,29],[32,27],[33,20],[28,16],[18,15],[6,14],[-4,15],[-11,18],[-15,21]], /* sahara */
+      [[36,29],[44,30],[50,26],[56,22],[52,16],[45,15],[40,20],[36,24]], /* arabian */
+      [[18,-20],[24,-19],[26,-23],[24,-28],[20,-29],[16,-26],[15,-22]], /* kalahari */
+      [[12,-17],[15,-19],[16,-26],[14,-28],[12,-24]], /* namib */
+      [[116,-22],[124,-26],[133,-27],[141,-26],[142,-21],[135,-19],[126,-19],[118,-20]], /* australia */
+      [[88,40],[98,43],[108,43],[116,42],[112,38],[102,37],[92,38]], /* gobi */
+      [[76,37],[84,40],[90,40],[88,36],[80,35]], /* taklamakan */
+      [[69,25],[74,28],[76,26],[73,23],[70,23]], /* thar */
+      [[55,38],[62,41],[66,42],[64,37],[58,36]], /* karakum */
+      [[-71,-19],[-68,-20],[-68,-26],[-70,-28],[-71,-24]], /* atacama */
+      [[-71,-40],[-66,-42],[-65,-48],[-70,-51],[-72,-46]], /* patagonia */
+      [[-117,32],[-114,29],[-110,25],[-107,28],[-104,31],[-104,36],[-108,40],[-113,42],[-118,40],[-119,36]], /* sonoran */
+      [[46,33],[54,34],[60,32],[58,28],[50,29]], /* iran */
+    ];
+
+    var FOREST = [
+      [[-74,-2],[-66,2],[-58,3],[-50,-1],[-46,-6],[-52,-11],[-62,-12],[-71,-9]], /* amazon */
+      [[9,2],[17,4],[26,3],[29,-3],[25,-8],[16,-7],[10,-3]], /* congo */
+      [[96,4],[104,2],[112,3],[119,1],[118,-4],[110,-6],[100,-2],[96,0]], /* indonesia */
+      [[131,-2],[140,-3],[148,-7],[144,-9],[136,-8],[132,-5]], /* new_guinea */
+      [[96,12],[102,16],[108,15],[108,10],[100,6],[96,8]], /* sea_asia */
+      [[-12,5],[-2,6],[8,6],[10,2],[0,3],[-10,3]], /* west_africa */
+    ];
+
+    var HIGHLAND = [
+      [[74,33],[84,36],[94,36],[102,33],[98,28],[88,28],[78,30]], /* tibet */
+      [[74,34],[80,31],[88,28],[95,28],[92,26],[84,28],[76,32]], /* himalaya */
+      [[-79,-2],[-75,-10],[-70,-18],[-69,-26],[-70,-36],[-72,-42],[-74,-38],[-72,-30],[-72,-20],[-76,-12],[-80,-4]], /* andes */
+      [[-127,61],[-122,54],[-117,48],[-112,42],[-107,36],[-104,32],[-108,32],[-110,38],[-114,45],[-120,52],[-128,59]], /* rockies */
+      [[6,45.8],[9,46.9],[12.5,47.2],[15,46.9],[14.2,45.4],[11,45.6],[7.5,44.9]], /* alps */
+      [[35,12],[40,13],[42,8],[38,6],[35,8]], /* ethiopia */
+      [[41.8,42.6],[44.5,43],[47.6,42],[47.4,40.6],[44,41],[41.6,41.4]], /* caucasus */
+    ];
+
+    /* Cities that light up on the night side. */
+    var CITIES = [
+      [-74,40.7,1],[-87.6,41.9,.8],[-118,34,.9],[-95.4,29.8,.7],[-80.2,25.8,.7],[-79.4,43.7,.7],
+      [-123.1,49.3,.6],[-122.3,47.6,.6],[-122.4,37.8,.7],[-104.99,39.7,.5],[-97.7,30.3,.5],
+      [-84.4,33.7,.6],[-75.2,40,.7],[-71.1,42.4,.6],[-90.2,38.6,.4],[-93.3,45,.5],
+      [-112.1,33.4,.5],[-115.1,36.2,.4],[-106.5,31.8,.4],[-99.1,19.4,.9],[-103.3,20.7,.5],
+      [-100.3,25.7,.5],[-89.6,20.97,.3],[-82.4,23.1,.4],[-66.1,18.5,.3],[-79.5,9,.4],
+      [-84.1,9.9,.3],[-74.1,4.7,.6],[-76.5,3.4,.4],[-78.5,-0.2,.4],[-77,-12,.6],
+      [-70.6,-33.4,.6],[-58.4,-34.6,.8],[-56.2,-34.9,.4],[-60.6,-32.9,.3],[-46.6,-23.5,.9],
+      [-43.2,-22.9,.7],[-47.9,-15.8,.4],[-38.5,-12.97,.4],[-34.9,-8.05,.4],[-51.2,-30,.4],
+      [-68.1,-16.5,.3],[-63.2,-17.8,.3],[-57.6,-25.3,.3],
+      [-0.1,51.5,1],[2.3,48.9,.9],[4.9,52.4,.6],[4.35,50.85,.5],[13.4,52.5,.7],[11.6,48.1,.5],
+      [8.7,50.1,.5],[6.96,50.94,.5],[12.5,41.9,.6],[9.2,45.5,.6],[-3.7,40.4,.6],[2.2,41.4,.5],
+      [-9.1,38.7,.4],[-6,37.4,.3],[16.4,48.2,.5],[14.4,50.1,.4],[19,47.5,.4],[21,52.2,.5],
+      [18.1,59.3,.4],[10.7,59.9,.4],[12.6,55.7,.4],[24.9,60.2,.3],[30.3,59.9,.5],[37.6,55.8,.8],
+      [30.5,50.5,.5],[27.6,53.9,.3],[28.98,41,.8],[32.9,39.9,.5],[35.2,31.8,.4],[34.8,32.1,.4],
+      [44.4,33.3,.5],[51.4,35.7,.6],[46.7,24.6,.5],[55.3,25.2,.6],[50.6,26.2,.3],
+      [31.2,30,.7],[3,36.7,.4],[-7.6,33.6,.4],[32.5,15.6,.3],[38.7,9,.3],[36.8,-1.3,.4],
+      [3.4,6.5,.6],[7.5,9.1,.3],[-17.4,14.7,.3],[13.2,-8.8,.3],[28,-26.2,.5],[18.4,-33.9,.4],
+      [31,-29.9,.3],[47.5,-18.9,.3],
+      [72.9,19.1,.9],[77.2,28.6,.9],[88.4,22.6,.8],[80.3,13.1,.6],[77.6,13,.6],[78.5,17.4,.5],
+      [73.9,18.5,.4],[67,24.9,.6],[74.3,31.6,.4],[90.4,23.8,.6],[79.9,6.9,.3],[85.3,27.7,.3],
+      [100.5,13.75,.6],[103.8,1.3,.6],[101.7,3.1,.5],[106.8,-6.2,.8],[112.7,-7.3,.4],
+      [105.8,21,.5],[106.7,10.8,.5],[121,14.6,.6],[96.2,16.8,.4],
+      [121.5,31.2,1],[116.4,39.9,1],[114.2,22.3,.8],[113.3,23.1,.8],[108.9,34.3,.5],
+      [104.1,30.7,.6],[106.5,29.6,.6],[114.3,30.6,.5],[126.98,37.57,.8],[129,35.2,.4],
+      [139.7,35.7,1],[135.5,34.7,.8],[136.9,35.2,.5],[130.4,33.6,.4],[141.3,43.1,.4],
+      [121.6,25,.5],[151.2,-33.9,.6],[144.96,-37.8,.5],[153,-27.5,.4],[115.9,-32,.3],
+      [138.6,-34.9,.3],[174.8,-36.85,.3],[172.6,-43.5,.2]
+    ];
+
+    /* ---------- baked surface ---------- */
+    /* Powers of two so the texture can wrap and mipmap on the GPU. */
+    var MW = 2048, MH = 1024;
+    var CW = 1024, CH = 512;
+    var MASK = null, TEX = null, AUX = null;
+    var baked = false, baking = false, bakeRow = 0, DIST = null, RD = null;
+
+    function hash2(x, y){
+      var n = Math.imul(x|0, 374761393) ^ Math.imul(y|0, 668265263);
+      n = Math.imul(n ^ (n >>> 13), 1274126177);
+      return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+    }
+    function vnoise(x, y, w){
+      var xi = Math.floor(x), yi = Math.floor(y);
+      var xf = x - xi, yf = y - yi;
+      var u = xf*xf*(3 - 2*xf), v = yf*yf*(3 - 2*yf);
+      var x0 = ((xi % w) + w) % w, x1 = (((xi + 1) % w) + w) % w;
+      var a = hash2(x0, yi), b = hash2(x1, yi), c = hash2(x0, yi+1), d = hash2(x1, yi+1);
+      var top = a + (b - a)*u, bot = c + (d - c)*u;
+      return top + (bot - top)*v;
+    }
+    function fbm(x, y, w, oct){
+      var sum = 0, amp = 0.5, f = 1, i;
+      for(i = 0; i < oct; i++){ sum += amp*vnoise(x*f, y*f, w*f); amp *= 0.5; f *= 2; }
+      return sum;
+    }
+
+    /* The outlines are authored coarsely. Subdivide each edge and relax only the
+       inserted points: the original vertices stay put, so the shapes stay the ones
+       that were verified, but the coast reads as a curve rather than a polygon. */
+    function smoothPoly(pts, seg, iters){
+      var n = pts.length, out = [], pin = [], i, j, t, a, b;
+      for(i = 0; i < n; i++){
+        a = pts[i]; b = pts[(i+1)%n];
+        out.push([a[0], a[1]]); pin.push(1);
+        for(j = 1; j < seg; j++){
+          t = j/seg;
+          out.push([a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t]); pin.push(0);
+        }
+      }
+      var m = out.length, k, next;
+      for(k = 0; k < iters; k++){
+        next = new Array(m);
+        for(i = 0; i < m; i++){
+          if(pin[i]){ next[i] = out[i]; continue; }
+          var p = out[(i-1+m)%m], q = out[(i+1)%m];
+          next[i] = [ out[i][0] + ((p[0]+q[0])/2 - out[i][0])*0.5,
+                      out[i][1] + ((p[1]+q[1])/2 - out[i][1])*0.5 ];
+        }
+        out = next;
+      }
+      return out;
+    }
+    var SMOOTHED = false;
+    function smoothAll(){
+      if(SMOOTHED) return;
+      SMOOTHED = true;
+      var i;
+      for(i = 0; i < LAND.length; i++) LAND[i] = smoothPoly(LAND[i], 4, 6);
+      for(i = 0; i < WATER.length; i++) WATER[i].p = smoothPoly(WATER[i].p, 4, 6);
+    }
+
+    function pointInPoly(lon, lat, poly){
+      var inside = false, n = poly.length, i, j, xi, yi, xj, yj;
+      for(i = 0, j = n-1; i < n; j = i++){
+        xi = poly[i][0]; yi = poly[i][1]; xj = poly[j][0]; yj = poly[j][1];
+        if(((yi > lat) !== (yj > lat)) && (lon < (xj-xi)*(lat-yi)/(yj-yi) + xi)) inside = !inside;
+      }
+      return inside;
+    }
+
+    /* Scanline fill: one pass per row rather than a point-in-polygon test per
+       texel, which is what makes a 2048-wide bake affordable at all. */
+    function stampScan(poly, value){
+      var n = poly.length, minLat = 90, maxLat = -90, i;
+      for(i = 0; i < n; i++){
+        if(poly[i][1] < minLat) minLat = poly[i][1];
+        if(poly[i][1] > maxLat) maxLat = poly[i][1];
+      }
+      var y0 = Math.max(0, Math.floor((90 - maxLat)/180*MH));
+      var y1 = Math.min(MH-1, Math.ceil((90 - minLat)/180*MH));
+      var xs = [];
+      for(var y = y0; y <= y1; y++){
+        var lat = 90 - (y + 0.5)/MH*180;
+        xs.length = 0;
+        for(i = 0; i < n; i++){
+          var a = poly[i], b = poly[(i+1)%n];
+          if((a[1] > lat) !== (b[1] > lat)) xs.push(a[0] + (b[0]-a[0])*(lat-a[1])/(b[1]-a[1]));
+        }
+        if(xs.length < 2) continue;
+        xs.sort(function(p,q){ return p-q; });
+        var row = y*MW;
+        for(i = 0; i + 1 < xs.length; i += 2){
+          var xa = Math.round((xs[i] + 180)/360*MW), xb = Math.round((xs[i+1] + 180)/360*MW);
+          if(xb < 0 || xa >= MW) continue;
+          if(xa < 0) xa = 0;
+          if(xb > MW) xb = MW;
+          for(var x = xa; x < xb; x++) MASK[row + x] = value;
+        }
+      }
+    }
+
+    /* Climate regions are small and need a noise-warped edge, so they stay
+       per-texel; their bounding boxes are tiny next to a continent's. */
+    function stampWarp(poly, value, warp){
+      var minLon = 180, maxLon = -180, minLat = 90, maxLat = -90, i;
+      for(i = 0; i < poly.length; i++){
+        if(poly[i][0] < minLon) minLon = poly[i][0];
+        if(poly[i][0] > maxLon) maxLon = poly[i][0];
+        if(poly[i][1] < minLat) minLat = poly[i][1];
+        if(poly[i][1] > maxLat) maxLat = poly[i][1];
+      }
+      var pad = warp;
+      var x0 = Math.max(0, Math.floor((minLon-pad+180)/360*MW)), x1 = Math.min(MW-1, Math.ceil((maxLon+pad+180)/360*MW));
+      var y0 = Math.max(0, Math.floor((90-maxLat-pad)/180*MH)), y1 = Math.min(MH-1, Math.ceil((90-minLat+pad)/180*MH));
+      for(var y = y0; y <= y1; y++){
+        var lat = 90 - (y + 0.5)/MH*180;
+        for(var x = x0; x <= x1; x++){
+          if(!MASK[y*MW + x]) continue;
+          var lon = (x + 0.5)/MW*360 - 180;
+          var tlon = lon + (vnoise(x/MW*9, y/MH*4.5, 9) - 0.5)*warp
+                         + (vnoise(x/MW*40, y/MH*20, 40) - 0.5)*warp*0.45;
+          var tlat = lat + (vnoise(x/MW*9 + 41, y/MH*4.5 + 23, 9) - 0.5)*warp
+                         + (vnoise(x/MW*40 + 91, y/MH*20 + 57, 40) - 0.5)*warp*0.45;
+          if(pointInPoly(tlon, tlat, poly)) MASK[y*MW + x] = value;
+        }
+      }
+    }
+
+    /* Chamfer distance on a half-resolution copy — distances are smooth, so the
+       extra resolution would buy nothing but time. */
+    var HW = MW >> 1, HH = MH >> 1;
+    function chamfer(seed){
+      var D = seed, x, y, i, best;
+      for(y = 0; y < HH; y++) for(x = 0; x < HW; x++){
+        i = y*HW + x; if(!D[i]) continue;
+        best = D[i];
+        if(x > 0 && D[i-1] + 1 < best) best = D[i-1] + 1;
+        if(y > 0 && D[i-HW] + 1 < best) best = D[i-HW] + 1;
+        if(y > 0 && x > 0 && D[i-HW-1] + 1 < best) best = D[i-HW-1] + 1;
+        if(y > 0 && x < HW-1 && D[i-HW+1] + 1 < best) best = D[i-HW+1] + 1;
+        D[i] = best;
+      }
+      for(y = HH-1; y >= 0; y--) for(x = HW-1; x >= 0; x--){
+        i = y*HW + x; if(!D[i]) continue;
+        best = D[i];
+        if(x < HW-1 && D[i+1] + 1 < best) best = D[i+1] + 1;
+        if(y < HH-1 && D[i+HW] + 1 < best) best = D[i+HW] + 1;
+        if(y < HH-1 && x < HW-1 && D[i+HW+1] + 1 < best) best = D[i+HW+1] + 1;
+        if(y < HH-1 && x > 0 && D[i+HW-1] + 1 < best) best = D[i+HW-1] + 1;
+        D[i] = best;
+      }
+      return D;
+    }
+
+    var BANDS = [
+      [0,  44, 90, 42],    /* equatorial forest */
+      [11,116,122, 66],    /* savanna           */
+      [23,158,144,100],    /* subtropical dry   */
+      [35, 92,114, 58],    /* temperate         */
+      [52, 66, 90, 58],    /* boreal            */
+      [64,120,124,104],    /* tundra            */
+      [73,226,231,236]     /* ice               */
+    ];
+    function band(alat, out){
+      var i = 0;
+      while(i < BANDS.length - 1 && alat >= BANDS[i+1][0]) i++;
+      if(i === BANDS.length - 1){ out[0] = BANDS[i][1]; out[1] = BANDS[i][2]; out[2] = BANDS[i][3]; return; }
+      var a = BANDS[i], b = BANDS[i+1];
+      var t = (alat - a[0])/(b[0] - a[0]);
+      out[0] = a[1] + (b[1]-a[1])*t;
+      out[1] = a[2] + (b[2]-a[2])*t;
+      out[2] = a[3] + (b[3]-a[3])*t;
+    }
+
+    function splat(field, W, H, lon, lat, rad, amp){
+      var fx = (lon + 180)/360*W, fy = (90 - lat)/180*H;
+      var stretch = 1/Math.max(0.25, Math.cos(lat*D2R));
+      var rx = Math.ceil(rad*stretch), ry = Math.ceil(rad);
+      for(var dy = -ry; dy <= ry; dy++){
+        var y = Math.round(fy + dy);
+        if(y < 0 || y >= H) continue;
+        for(var dx = -rx; dx <= rx; dx++){
+          var q = (dx/stretch)*(dx/stretch) + dy*dy;
+          if(q > rad*rad) continue;
+          var x = Math.round(fx + dx) % W; if(x < 0) x += W;
+          var f = 1 - q/(rad*rad);
+          /* break the blob up so a city reads as a cluster, not a perfect dot */
+          f *= 0.45 + 1.25*vnoise(x*0.55, y*0.55, W);
+          var v = field[y*W + x] + amp*f*f;
+          field[y*W + x] = v > 255 ? 255 : v;
+        }
+      }
+    }
+
+    function bakeBegin(){
+      smoothAll();
+      MASK = new Uint8Array(MW*MH);
+      TEX = new Uint8Array(MW*MH*4);
+      var i, x, y, lat, lon;
+      for(i = 0; i < LAND.length; i++) stampScan(LAND[i], 1);
+      for(i = 0; i < ARID.length; i++) stampWarp(ARID[i], 2, 13);
+      for(i = 0; i < FOREST.length; i++) stampWarp(FOREST[i], 4, 11);
+      for(i = 0; i < HIGHLAND.length; i++) stampWarp(HIGHLAND[i], 5, 8);
+      for(i = 0; i < WATER.length; i++) stampScan(WATER[i].p, WATER[i].k);
+      for(y = 0; y < MH; y++){
+        lat = 90 - (y + 0.5)/MH*180;
+        for(x = 0; x < MW; x++){
+          lon = (x + 0.5)/MW*360 - 180;
+          if(lat <= -72 + 2.5*Math.sin(lon*D2R*2) || lat >= 82) MASK[y*MW + x] = 3;
+        }
+      }
+
+      var seedC = new Uint8Array(HW*HH), seedR = new Uint8Array(HW*HH), k;
+      for(y = 0; y < HH; y++) for(x = 0; x < HW; x++){
+        k = MASK[(y*2)*MW + x*2];
+        seedC[y*HW + x] = k ? 0 : 255;
+        seedR[y*HW + x] = (k === 2 || k === 4 || k === 5) ? 255 : 0;
+      }
+      DIST = chamfer(seedC);
+      RD = chamfer(seedR);
+
+      /* Clouds, banded the way the real atmosphere is, plus city lights. */
+      AUX = new Uint8Array(CW*CH*4);
+      var cloud = new Float32Array(CW*CH);
+      for(y = 0; y < CH; y++){
+        lat = 90 - (y + 0.5)/CH*180;
+        var al = Math.abs(lat);
+        var belt = 0.34
+          + 0.46*Math.exp(-Math.pow((al - 5)/7, 2))
+          + 0.44*Math.exp(-Math.pow((al - 53)/15, 2))
+          - 0.28*Math.exp(-Math.pow((al - 26)/11, 2));
+        for(x = 0; x < CW; x++){
+          var patch = 0.45 + 1.15*vnoise(x/CW*5 + 13, y/CH*2 + 7, 5);
+          var c = fbm(x/CW*11, y/CH*5.5, 11, 6);
+          c = (c - 0.42)*2.5 + 0.42;
+          var a = (c - 0.58)*1.75 * belt * patch;
+          if(a > 0.86) a = 0.86;
+          cloud[y*CW + x] = a <= 0 ? 0 : a;
+        }
+      }
+      var lights = new Float32Array(CW*CH);
+      for(i = 0; i < CITIES.length; i++){
+        splat(lights, CW, CH, CITIES[i][0], CITIES[i][1], 3 + CITIES[i][2]*5, 120 + CITIES[i][2]*160);
+      }
+      for(i = 0; i < CW*CH; i++){
+        AUX[i*4]     = cloud[i]*255;
+        AUX[i*4 + 1] = lights[i];
+        AUX[i*4 + 2] = 0;
+        AUX[i*4 + 3] = 255;
+      }
+      bakeRow = 0;
+    }
+
+    /* Colour rows in slices so the bake never becomes one long task. */
+    function bakeRows(count){
+      var col = [0,0,0];
+      var yEnd = Math.min(MH, bakeRow + count);
+      for(var y = bakeRow; y < yEnd; y++){
+        var lat = 90 - (y + 0.5)/MH*180;
+        var alat = Math.abs(lat);
+        var hy = y >> 1;
+        for(var x = 0; x < MW; x++){
+          var i = y*MW + x;
+          var hi = hy*HW + (x >> 1);
+          var n = fbm(x/MW*18, y/MH*9, 18, 3);
+          var m = vnoise(x/MW*7, y/MH*3.5, 7);
+          var k = MASK[i], r, g, b, ocean = 0;
+
+          if(k === 0){
+            var d = DIST[hi];
+            var shelf = d < 4 ? 1 - d/4 : 0;
+            shelf = shelf*shelf*(3 - 2*shelf);
+            var deep = 0.5 + 0.5*m;
+            r = 11 + shelf*30 + n*4 + (1-deep)*6;
+            g = 44 + shelf*58 + n*5 + (1-deep)*9;
+            b = 88 + shelf*44 + n*5 + (1-deep)*11;
+            var cold = (alat - 44)/22; if(cold < 0) cold = 0; else if(cold > 1) cold = 1;
+            r += cold*18; g += cold*17; b += cold*9;
+            ocean = 255;
+          } else if(k === 6){
+            r = 38 + n*8; g = 82 + n*9; b = 116 + n*8;
+            ocean = 190;
+          } else if(k === 3){
+            r = 218 + n*18; g = 224 + n*17; b = 230 + n*15;
+          } else {
+            band(alat + (m - 0.5)*13, col);
+            r = col[0]; g = col[1]; b = col[2];
+            if(k === 2 || k === 4 || k === 5){
+              var f = RD[hi]/6; if(f > 1) f = 1;
+              f *= (k === 2 ? 0.80 : (k === 4 ? 0.74 : 0.66));
+              var tr, tg, tb;
+              if(k === 2){ tr = 198; tg = 172; tb = 122; }
+              else if(k === 4){ tr = 40; tg = 80; tb = 36; }
+              else { tr = 154; tg = 146; tb = 128; }
+              r = r*(1-f) + tr*f; g = g*(1-f) + tg*f; b = b*(1-f) + tb*f;
+            }
+            var v = (n - 0.5)*11, w = (m - 0.5)*16;
+            r += v + w*0.7; g += v*0.9 + w*0.5; b += v*0.6 + w*0.3;
+          }
+
+          var ice = lat >= 0 ? (lat - (ocean ? 70 : 75))/10 : ((ocean ? -59 : -62) - lat)/9;
+          if(ice > 0){
+            ice = ice*(0.6 + 0.8*m) + (n - 0.5)*0.4;
+            if(ice > 1) ice = 1;
+            if(ice > 0){
+              r = r*(1-ice) + 233*ice; g = g*(1-ice) + 238*ice; b = b*(1-ice) + 243*ice;
+            }
+          }
+          var o = i*4;
+          TEX[o]   = r < 0 ? 0 : (r > 255 ? 255 : r);
+          TEX[o+1] = g < 0 ? 0 : (g > 255 ? 255 : g);
+          TEX[o+2] = b < 0 ? 0 : (b > 255 ? 255 : b);
+          TEX[o+3] = ocean;
+        }
+      }
+      bakeRow = yEnd;
+      return bakeRow >= MH;
+    }
+
+    /* One separable blur over the baked colour. A category mask has hard edges by
+       construction; at a texel under a screen pixel that reads as a crawling
+       staircase along every coast. This is the antialiasing pass. */
+    function blurTex(){
+      var row = new Uint8Array(MW*3), x, y, c, base, xm, xp;
+      for(y = 0; y < MH; y++){
+        base = y*MW*4;
+        for(x = 0; x < MW; x++){
+          row[x*3] = TEX[base+x*4]; row[x*3+1] = TEX[base+x*4+1]; row[x*3+2] = TEX[base+x*4+2];
+        }
+        for(x = 0; x < MW; x++){
+          xm = (x - 1 + MW) % MW; xp = (x + 1) % MW;
+          for(c = 0; c < 3; c++)
+            TEX[base + x*4 + c] = (row[xm*3+c] + 2*row[x*3+c] + row[xp*3+c] + 2) >> 2;
+        }
+      }
+      var prev = new Uint8Array(MW*3), cur = new Uint8Array(MW*3), tmp;
+      for(x = 0; x < MW; x++){
+        prev[x*3] = TEX[x*4]; prev[x*3+1] = TEX[x*4+1]; prev[x*3+2] = TEX[x*4+2];
+      }
+      for(y = 0; y < MH; y++){
+        base = y*MW*4;
+        for(x = 0; x < MW; x++){
+          cur[x*3] = TEX[base+x*4]; cur[x*3+1] = TEX[base+x*4+1]; cur[x*3+2] = TEX[base+x*4+2];
+        }
+        var nb = Math.min(MH-1, y+1)*MW*4;
+        for(x = 0; x < MW; x++)
+          for(c = 0; c < 3; c++)
+            TEX[base + x*4 + c] = (prev[x*3+c] + 2*cur[x*3+c] + TEX[nb + x*4 + c] + 2) >> 2;
+        tmp = prev; prev = cur; cur = tmp;
+      }
+    }
+
+    function subsolar(date){
+      var d = date || new Date();
+      var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+      var day = (Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - yearStart)/86400000 + 1;
+      var decl = -23.44 * Math.cos(2*Math.PI/365 * (day + 10));
+      var hours = d.getUTCHours() + d.getUTCMinutes()/60 + d.getUTCSeconds()/3600;
+      return { lat:decl, lon:-15*(hours - 12) };
+    }
+
+    function proj(lat, lon, rotY, rotX){
+      var la = lat*D2R, lo = lon*D2R + rotY;
+      var x = Math.cos(la)*Math.sin(lo);
+      var y0 = Math.sin(la);
+      var z0 = Math.cos(la)*Math.cos(lo);
+      var cX = Math.cos(rotX), sX = Math.sin(rotX);
+      return { x:x, y:y0*cX - z0*sX, z:y0*sX + z0*cX };
+    }
+
+    var STILL = typeof window !== 'undefined' && window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function cloudDrift(){ return STILL ? 0 : (Date.now()/1000 * 0.0016) % 1; }
+
+    /* ---------- WebGL renderer ---------- */
+    var VERT =
+      'attribute vec2 aPos;' +
+      'void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }';
+
+    var FRAG = [
+      'precision highp float;',
+      'uniform vec2 uCenter;',        /* globe centre, in GL pixel coords    */
+      'uniform float uRadius;',
+      'uniform float uRotY, uRotX;',
+      'uniform vec3 uSunV;',          /* sun direction, view space           */
+      'uniform float uLit;',          /* 1 = day & night, 0 = full daylight  */
+      'uniform float uShift;',        /* cloud drift, in texture units       */
+      'uniform float uReady;',        /* 0 until the surface has baked       */
+      'uniform sampler2D uTex;',
+      'uniform sampler2D uAux;',
+      'const float PI = 3.141592653589793;',
+      'void main(){',
+      '  vec2 p = (gl_FragCoord.xy - uCenter) / uRadius;',
+      '  float r2 = dot(p, p);',
+      '  if(r2 > 1.30) discard;',
+      '  float rr = sqrt(r2);',
+
+      /* the halo of atmosphere just beyond the limb, brighter on the day side */
+      '  if(rr > 1.0){',
+      '    vec3 nv = vec3(p / rr, 0.0);',
+      '    float e = dot(nv, uSunV);',
+      '    float d = mix(1.0, smoothstep(-0.30, 0.30, e), uLit);',
+      '    float a = exp(-(rr - 1.0) * 24.0) * 0.55 * d;',
+      '    gl_FragColor = vec4(vec3(0.40, 0.60, 1.00), a);',
+      '    return;',
+      '  }',
+
+      '  float nz = sqrt(max(0.0, 1.0 - r2));',
+      '  vec3 v = vec3(p.x, p.y, nz);',
+
+      /* undo the tilt to get world-space direction, then to lat/lon */
+      '  float cX = cos(uRotX), sX = sin(uRotX);',
+      '  vec3 w = vec3(v.x, v.y*cX + v.z*sX, -v.y*sX + v.z*cX);',
+      '  float lat = asin(clamp(w.y, -1.0, 1.0));',
+      '  float lon = atan(w.x, w.z) - uRotY;',
+      '  vec2 uv = vec2(lon/(2.0*PI) + 0.5, 0.5 - lat/PI);',
+
+      '  vec4 t = texture2D(uTex, uv);',
+      '  vec3 surf = mix(vec3(0.07, 0.20, 0.38), t.rgb, uReady);',
+      '  float ocean = mix(1.0, t.a, uReady);',
+      '  vec4 aux = texture2D(uAux, vec2(uv.x + uShift, uv.y));',
+      '  float cloud = aux.r * uReady;',
+      '  float lights = texture2D(uAux, uv).g * uReady;',
+
+      '  float ill = dot(v, uSunV);',
+      '  float day = mix(1.0, smoothstep(-0.10, 0.14, ill), uLit);',
+      '  float diff = max(ill, 0.0);',
+
+      '  vec3 litc = surf * (0.34 + 0.98 * diff);',
+      '  vec3 night = surf * 0.055 + vec3(0.012, 0.022, 0.045);',
+      '  night += vec3(1.0, 0.72, 0.38) * lights * 1.45;',
+      '  vec3 col = mix(night, litc, day);',
+
+      /* the warm line of dawn and dusk */
+      '  float dawn = exp(-pow(ill / 0.055, 2.0)) * uLit;',
+      '  col += vec3(0.62, 0.30, 0.10) * dawn * 0.22;',
+
+      /* sun glint off open water */
+      '  vec3 hv = normalize(uSunV + vec3(0.0, 0.0, 1.0));',
+      '  float sp = pow(max(dot(v, hv), 0.0), 620.0) * ocean * day * (1.0 - cloud);',
+      '  col += vec3(1.0, 0.95, 0.86) * sp * 0.30;',
+
+      /* cloud deck, lit by the same sun */
+      '  vec3 cc = vec3(0.95, 0.95, 0.96) * (0.32 + 0.78 * diff);',
+      '  cc = mix(vec3(0.055, 0.075, 0.115) + vec3(0.35,0.22,0.10)*lights, cc, day);',
+      '  cc += vec3(0.30, 0.16, 0.05) * dawn * 0.35;',
+      '  col = mix(col, cc, cloud);',
+
+      /* limb darkening, and air thickening toward the edge */
+      '  col *= (0.88 + 0.12 * nz);',
+      '  float rim = pow(1.0 - nz, 3.0);',
+      '  col += vec3(0.26, 0.46, 0.88) * rim * day * 0.30;',
+
+      '  col = mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, 1.16);',
+      '  float alpha = 1.0 - smoothstep(1.0 - 1.6/uRadius, 1.0, rr);',
+      '  gl_FragColor = vec4(col, alpha);',
+      '}'
+    ].join('\n');
+
+    var G = { gl:null, prog:null, u:{}, tex:null, aux:null, ok:false, tried:false, uploaded:false };
+
+    function compile(gl, type, src){
+      var s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+        G.err = gl.getShaderInfoLog(s);
+        return null;
+      }
+      return s;
+    }
+
+    function initGL(canvas){
+      G.tried = true;
+      var gl = null;
+      try{
+        gl = canvas.getContext('webgl', { alpha:true, antialias:false, premultipliedAlpha:false, depth:false })
+          || canvas.getContext('experimental-webgl', { alpha:true, antialias:false, premultipliedAlpha:false, depth:false });
+      }catch(e){ gl = null; }
+      if(!gl) return false;
+      var vs = compile(gl, gl.VERTEX_SHADER, VERT), fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+      if(!vs || !fs) return false;
+      var prog = gl.createProgram();
+      gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+      if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){ G.err = gl.getProgramInfoLog(prog); return false; }
+      gl.useProgram(prog);
+
+      /* A quad sized to the globe each frame, not a full-screen triangle: outside
+         the disc every fragment is discarded, and those invocations are not free. */
+      var buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(12), gl.DYNAMIC_DRAW);
+      G.quad = buf;
+      var loc = gl.getAttribLocation(prog, 'aPos');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+      ['uCenter','uRadius','uRotY','uRotX','uSunV','uLit','uShift','uReady','uTex','uAux']
+        .forEach(function(n){ G.u[n] = gl.getUniformLocation(prog, n); });
+
+      function makeTex(unit){
+        var tx = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0 + unit);
+        gl.bindTexture(gl.TEXTURE_2D, tx);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array([20, 52, 96, 255]));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        return tx;
+      }
+      G.tex = makeTex(0);
+      G.aux = makeTex(1);
+      gl.uniform1i(G.u.uTex, 0);
+      gl.uniform1i(G.u.uAux, 1);
+
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.clearColor(0, 0, 0, 0);
+      G.gl = gl; G.prog = prog; G.ok = true;
+      return true;
+    }
+
+    function uploadTextures(){
+      var gl = G.gl;
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, G.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, MW, MH, 0, gl.RGBA, gl.UNSIGNED_BYTE, TEX);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, G.aux);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, CW, CH, 0, gl.RGBA, gl.UNSIGNED_BYTE, AUX);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      G.uploaded = true;
+    }
+
+    /* One slice of the bake per frame, so the page never locks up. */
+    function pumpBake(){
+      if(baked || !baking) return;
+      if(!MASK){ bakeBegin(); return; }
+      if(bakeRows(64)){
+        blurTex();
+        baked = true;
+        if(G.ok) uploadTextures();
+      }
+    }
+
+    function paintGL(canvas, o){
+      var gl = G.gl;
+      var w = canvas.width, h = canvas.height;
+      gl.viewport(0, 0, w, h);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      var dpr = o.dpr || 1;
+      var rotYn = o.rotY % (Math.PI*2); if(rotYn < 0) rotYn += Math.PI*2;
+      var sun = o.sun;
+      var sx = 0, sy = 0, sz = 1;
+      if(sun){
+        var sla = sun.lat*D2R, slo = sun.lon*D2R + o.rotY;
+        var wx = Math.cos(sla)*Math.sin(slo), wy = Math.sin(sla), wz = Math.cos(sla)*Math.cos(slo);
+        var cX = Math.cos(o.rotX), sX = Math.sin(o.rotX);
+        sx = wx; sy = wy*cX - wz*sX; sz = wy*sX + wz*cX;
+      }
+      gl.uniform2f(G.u.uCenter, o.cx*dpr, h - o.cy*dpr);
+      gl.uniform1f(G.u.uRadius, o.R*dpr);
+      gl.uniform1f(G.u.uRotY, rotYn);
+      gl.uniform1f(G.u.uRotX, o.rotX);
+      gl.uniform3f(G.u.uSunV, sx, sy, sz);
+      gl.uniform1f(G.u.uLit, sun ? 1 : 0);
+      gl.uniform1f(G.u.uShift, cloudDrift());
+      gl.uniform1f(G.u.uReady, baked && G.uploaded ? 1 : 0);
+      var pad = 1.32 * o.R * dpr;
+      var xc = o.cx*dpr, yc = h - o.cy*dpr;
+      var x0 = (xc - pad)/w*2 - 1, x1 = (xc + pad)/w*2 - 1;
+      var y0 = (yc - pad)/h*2 - 1, y1 = (yc + pad)/h*2 - 1;
+      gl.bindBuffer(gl.ARRAY_BUFFER, G.quad);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0,
+        new Float32Array([x0,y0, x1,y0, x0,y1, x0,y1, x1,y0, x1,y1]));
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    /* The canvas is handed in so the caller can stack a 2D overlay on top of it. */
+    function paint(canvas, o){
+      if(!baking && !baked){ baking = true; }
+      if(!G.tried) initGL(canvas);
+      pumpBake();
+      if(G.ok){ paintGL(canvas, o); return true; }
+      return false;
+    }
+
+    return {
+      paint: paint,
+      subsolar: subsolar,
+      proj: proj,
+      CITIES: CITIES,
+      ready: function(){ return baked; },
+      usingGL: function(){ return G.ok; },
+      error: function(){ return G.err || null; }
+    };
+  })();
+
+  var globe = {
+    canvas:null, ctx:null, w:0, h:0, dpr:1,
+    rotY:1.66, rotX:0.34, targetRotY:null, targetRotX:null,
+    dragging:false, lastX:0, lastY:0, moved:0, autoRotate:true,
+    raf:null, inited:false, screenPoints:[]
+  };
+  var globeWindow = 0;
+  var globeTour = { on:false, i:0, timer:null, currentId:null };
+
+  function globeEvents(){
+    return events.filter(function(e){
+      return e.lat != null && (e.win === undefined ? 4 : e.win) <= globeWindow;
+    });
+  }
+
+  function setGlobeWindow(i){
+    globeWindow = Math.max(0, Math.min(GLOBE_WINDOWS.length-1, i));
+    stopGlobeTour(true);
+    renderGlobeTimeline();
+    drawGlobe();
+    saveState();
+  }
+
+  function renderGlobeTimeline(){
+    var win = GLOBE_WINDOWS[globeWindow];
+    document.getElementById('timeline-stops').innerHTML = GLOBE_WINDOWS.map(function(w,i){
+      return '<button class="timeline-stop'+(i===globeWindow?' on':'')+'" tabindex="-1" onclick="setGlobeWindow('+i+')">'
+        + w.short + '</button>';
+    }).join('');
+    var pct = (globeWindow/(GLOBE_WINDOWS.length-1))*100;
+    document.getElementById('timeline-fill').style.width = pct + '%';
+    document.getElementById('timeline-dot').style.left = pct + '%';
+    var trk = document.getElementById('timeline-track');
+    trk.setAttribute('aria-valuenow', String(globeWindow));
+    trk.setAttribute('aria-valuetext', win.label);
+    document.getElementById('timeline-sub').textContent = win.sub;
+    document.getElementById('globe-window').textContent = win.label;
+    var n = globeEvents().length;
+    document.getElementById('globe-count').textContent = n + (n===1 ? ' gathering' : ' gatherings');
+  }
+
+  /* Day & night: the terminator is real — it follows the sun for a given moment.
+     "Now" tracks the clock; dragging the slider walks the sun round the planet. */
+  var sun = { on:true, live:true, minutes:720, shown:-1, ready:false };
+  function nowMinutes(){ var d = new Date(); return d.getUTCHours()*60 + d.getUTCMinutes(); }
+  function currentSun(){
+    if(!sun.on) return null;
+    var mins = sun.live ? nowMinutes() : sun.minutes;
+    var d = new Date();
+    d.setUTCHours(Math.floor(mins/60), mins%60, 0, 0);
+    return PLANET.subsolar(d);
+  }
+  function pad2(n){ return (n<10?'0':'') + n; }
+  function syncSunUI(){
+    var mins = sun.live ? nowMinutes() : sun.minutes;
+    if(mins === sun.shown && sun.ready) return;
+    sun.shown = mins; sun.ready = true;
+    document.getElementById('sun-range').value = mins;
+    document.getElementById('sun-time').textContent = pad2(Math.floor(mins/60)) + ':' + pad2(mins%60) + ' UTC';
+    document.getElementById('sun-now').classList.toggle('on', sun.live);
+    document.getElementById('sunrow').hidden = !sun.on;
+    var btn = document.getElementById('globe-mode-btn');
+    btn.classList.toggle('on', sun.on);
+    btn.setAttribute('aria-pressed', String(sun.on));
+    document.getElementById('globe-mode-label').textContent = sun.on ? 'Day & night' : 'Full daylight';
+  }
+  function toggleDayNight(){
+    sun.on = !sun.on; sun.ready = false; syncSunUI(); drawGlobe(); saveState();
+    showToast(sun.on ? 'Following the sun' : 'Full daylight');
+  }
+  function setSunMinutes(v){
+    sun.on = true; sun.live = false; sun.minutes = Math.max(0, Math.min(1435, parseInt(v,10) || 0));
+    sun.ready = false; syncSunUI(); drawGlobe(); saveState();
+  }
+  function setSunLive(){ sun.live = true; sun.ready = false; syncSunUI(); drawGlobe(); saveState(); }
+
+  function toggleGlobeTour(){ globeTour.on ? stopGlobeTour() : startGlobeTour(); }
+  function startGlobeTour(){
+    var list = globeEvents();
+    if(!list.length){ showToast('Nothing on the planet in this window yet'); return; }
+    globeTour.on = true; globeTour.i = -1;
+    globe.autoRotate = false;
+    document.getElementById('globe-tour-label').textContent = 'Stop the tour';
+    globeTourStep();
+    globeTour.timer = setInterval(globeTourStep, 3200);
+  }
+  function stopGlobeTour(quiet){
+    if(!globeTour.on && quiet) return;
+    globeTour.on = false; globeTour.currentId = null;
+    clearInterval(globeTour.timer); globeTour.timer = null;
+    globe.autoRotate = true;
+    var label = document.getElementById('globe-tour-label');
+    if(label) label.textContent = 'Play the tour';
+    var card = document.getElementById('globe-card');
+    if(card) card.hidden = true;
+    drawGlobe();
+  }
+  function globeTourStep(){
+    var list = globeEvents();
+    if(!list.length){ stopGlobeTour(); return; }
+    globeTour.i = (globeTour.i + 1) % list.length;
+    var ev = list[globeTour.i];
+    globeTour.currentId = ev.id;
+    document.getElementById('globe-card-title').textContent = ev.title;
+    document.getElementById('globe-card-meta').textContent = ev.location + ' · ' + ev.date;
+    document.getElementById('globe-card').hidden = false;
+    focusGlobeOn(ev.lon, ev.lat);
+  }
+
+  var timelineWired = false;
+  function initTimeline(){
+    if(timelineWired) return;
+    timelineWired = true;
+    var track = document.getElementById('timeline-track');
+    var dragging = false;
+    function windowAtX(clientX){
+      var r = track.getBoundingClientRect();
+      if(r.width <= 0) return globeWindow;
+      var f = (clientX - r.left)/r.width;
+      f = f < 0 ? 0 : (f > 1 ? 1 : f);
+      return Math.round(f*(GLOBE_WINDOWS.length - 1));
+    }
+    track.addEventListener('pointerdown', function(e){
+      dragging = true;
+      track.classList.add('scrubbing');
+      track.setPointerCapture(e.pointerId);
+      setGlobeWindow(windowAtX(e.clientX));
+      e.preventDefault();
+    });
+    track.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      var i = windowAtX(e.clientX);
+      if(i !== globeWindow) setGlobeWindow(i);
+    });
+    function endScrub(){
+      if(!dragging) return;
+      dragging = false;
+      track.classList.remove('scrubbing');
+      showToast(globeEvents().length + ' gatherings · ' + GLOBE_WINDOWS[globeWindow].label.toLowerCase());
+    }
+    track.addEventListener('pointerup', endScrub);
+    track.addEventListener('pointercancel', endScrub);
+    track.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowRight' || e.key === 'ArrowUp'){ e.preventDefault(); setGlobeWindow(globeWindow+1); }
+      else if(e.key === 'ArrowLeft' || e.key === 'ArrowDown'){ e.preventDefault(); setGlobeWindow(globeWindow-1); }
+      else if(e.key === 'Home'){ e.preventDefault(); setGlobeWindow(0); }
+      else if(e.key === 'End'){ e.preventDefault(); setGlobeWindow(GLOBE_WINDOWS.length-1); }
+    });
+  }
+
+  function initGlobe(){
+    if(globe.inited) return;
+    globe.inited = true;
+    globe.canvas = document.getElementById('globe-canvas');
+    globe.overlay = document.getElementById('globe-overlay');
+    globe.ctx = globe.overlay.getContext('2d');
+    var wrap = document.getElementById('globe-area'), el = wrap;
+
+    el.addEventListener('pointerdown', function(e){
+      globe.dragging = true; globe.autoRotate = false; globe.moved = 0;
+      globe.targetRotY = null; globe.targetRotX = null;
+      globe.lastX = e.clientX; globe.lastY = e.clientY;
+      wrap.classList.add('grabbing');
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener('pointermove', function(e){
+      if(!globe.dragging) return;
+      var dx = e.clientX - globe.lastX, dy = e.clientY - globe.lastY;
+      globe.moved += Math.abs(dx) + Math.abs(dy);
+      globe.rotY += dx * 0.007;
+      globe.rotX = Math.max(-1.1, Math.min(1.1, globe.rotX - dy * 0.007));
+      globe.lastX = e.clientX; globe.lastY = e.clientY;
+    });
+    function endDrag(e){
+      if(!globe.dragging) return;
+      globe.dragging = false;
+      wrap.classList.remove('grabbing');
+      if(globe.moved < 8 && e.clientX != null) handleGlobeTap(e.clientX, e.clientY);
+      else if(globe.moved >= 8) stopGlobeTour(true);
+      setTimeout(function(){ if(!globeTour.on) globe.autoRotate = true; }, 1400);
+    }
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', function(){ globe.dragging = false; wrap.classList.remove('grabbing'); });
+    /* WCAG 2.5.7 Dragging Movements — orbiting must not require a drag. */
+    globe.canvas.addEventListener('keydown', function(e){
+      var step = e.shiftKey ? 0.30 : 0.10, used = true;
+      switch(e.key){
+        case 'ArrowLeft':  globe.rotY -= step; break;
+        case 'ArrowRight': globe.rotY += step; break;
+        case 'ArrowUp':    globe.rotX = Math.min(1.2, globe.rotX + step); break;
+        case 'ArrowDown':  globe.rotX = Math.max(-1.2, globe.rotX - step); break;
+        case 'Home':       globe.rotY = 0; globe.rotX = 0.34; break;
+        default: used = false;
+      }
+      if(!used) return;
+      e.preventDefault();
+      stopGlobeTour(true);
+      globe.autoRotate = false;
+      clearTimeout(globe.keyIdle);
+      globe.keyIdle = setTimeout(function(){ if(!globeTour.on) globe.autoRotate = true; }, 2600);
+      drawGlobe();
+    });
+    window.addEventListener('resize', function(){ if(mainView === 'map'){ resizeGlobe(); drawGlobe(); } });
+  }
+
+  /* Most browsers run this shader on the GPU and never notice it. Where WebGL
+     falls back to software, drop the render scale rather than drop frames. */
+  var perf = { n:0, sum:0, scale:1, last:0 };
+  function watchFrame(){
+    var t = performance.now();
+    if(perf.last){
+      perf.sum += t - perf.last; perf.n++;
+      if(perf.n === 30){
+        var avg = perf.sum/perf.n;
+        perf.n = 0; perf.sum = 0;
+        if(avg > 34 && perf.scale > 0.55){ perf.scale = Math.max(0.55, perf.scale - 0.2); resizeGlobe(); }
+        else if(avg < 15 && perf.scale < 1){ perf.scale = Math.min(1, perf.scale + 0.1); resizeGlobe(); }
+      }
+    }
+    perf.last = t;
+  }
+
+  function resizeGlobe(){
+    var wrap = document.getElementById('globe-area');
+    var rect = wrap.getBoundingClientRect();
+    if(rect.width < 4 || rect.height < 4) return;
+    globe.dpr = Math.min(1.75, (window.devicePixelRatio || 1)) * perf.scale;
+    globe.w = rect.width; globe.h = rect.height;
+    globe.canvas.width = Math.round(rect.width * globe.dpr);
+    globe.canvas.height = Math.round(rect.height * globe.dpr);
+    globe.overlay.width = globe.canvas.width;
+    globe.overlay.height = globe.canvas.height;
+    globe.ctx.setTransform(globe.dpr, 0, 0, globe.dpr, 0, 0);
+  }
+
+  function projectGlobePoint(lat, lon){ return PLANET.proj(lat, lon, globe.rotY, globe.rotX); }
+
+  function drawGlobe(){
+    var ctx = globe.ctx;
+    if(!ctx || globe.w < 4) return;
+    var w = globe.w, h = globe.h, cx = w/2, cy = h/2;
+    var R = Math.min(w,h)/2 * 0.80;
+    ctx.clearRect(0,0,w,h);
+    PLANET.paint(globe.canvas, { cx:cx, cy:cy, R:R, rotY:globe.rotY, rotX:globe.rotX, dpr:globe.dpr, sun:currentSun() });
+
+    globe.screenPoints = [];
+    var accent = '#F5A85E';
+    var core = '#0C1F33';
+
+    // Gatherings past the current window sit as faint marks, so scrubbing fills the planet in.
+    var shown = globeEvents(), shownIds = {};
+    shown.forEach(function(e){ shownIds[e.id] = true; });
+    ctx.fillStyle = 'rgba(250,244,234,.42)';
+    events.forEach(function(ev){
+      if(shownIds[ev.id] || ev.lat == null) return;
+      var q = projectGlobePoint(ev.lat, ev.lon);
+      if(q.z <= -0.12) return;
+      ctx.beginPath(); ctx.arc(cx+q.x*R, cy-q.y*R, 2, 0, Math.PI*2); ctx.fill();
+    });
+
+    shown.forEach(function(ev){
+      var pt = projectGlobePoint(ev.lat, ev.lon);
+      var px = cx+pt.x*R, py = cy-pt.y*R;
+      var front = pt.z > -0.12;
+      var scale = 0.55 + 0.45 * Math.max(0,(pt.z+1)/2);
+      var isTourPoint = globeTour.on && globeTour.currentId === ev.id;
+      var base = Math.max(4.5, R*0.034);
+      var r = (isTourPoint ? base*1.4 : base) * scale;
+      ctx.globalAlpha = front ? Math.min(1, 0.5 + (pt.z+0.12)*1.4) : 0.16;
+      ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2); ctx.fillStyle = accent; ctx.fill();
+      ctx.globalAlpha = 1;
+      if(front){
+        ctx.beginPath(); ctx.arc(px,py,r*0.4,0,Math.PI*2); ctx.fillStyle = core; ctx.fill();
+        if(isTourPoint){
+          ctx.beginPath(); ctx.arc(px,py,r+base*1.5,0,Math.PI*2);
+          ctx.strokeStyle = accent; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+        globe.screenPoints.push({ x:px, y:py, r:Math.max(16, r+10), id:ev.id });
+      }
+    });
+  }
+
+  function globeLoop(){
+    if(mainView !== 'map'){ globe.raf = null; return; }
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(globe.targetRotX !== null){
+      var dX = globe.targetRotX - globe.rotX;
+      globe.rotX += dX * 0.08;
+      if(Math.abs(dX) < 0.003){ globe.rotX = globe.targetRotX; globe.targetRotX = null; }
+    }
+    if(globe.targetRotY !== null){
+      var dY = globe.targetRotY - globe.rotY;
+      while(dY > Math.PI) dY -= Math.PI*2;
+      while(dY < -Math.PI) dY += Math.PI*2;
+      globe.rotY += dY * 0.08;
+      if(Math.abs(dY) < 0.003) globe.targetRotY = null;
+    } else if(globe.autoRotate && !globe.dragging && !reduce){
+      globe.rotY += 0.0016;
+    }
+    if(sun.on && sun.live){
+      syncSunUI();
+      if(currentScene === 1 && ++statTick % 90 === 0) refreshStats();
+    }
+    drawGlobe();
+    watchFrame();
+    globe.raf = requestAnimationFrame(globeLoop);
+  }
+  function startGlobeLoop(){ if(!globe.raf) globeLoop(); }
+
+  function focusGlobeOn(lon, lat){
+    var ty = -lon*Math.PI/180;
+    var tx = lat == null ? globe.rotX : Math.max(-0.85, Math.min(0.85, lat*Math.PI/180 * 0.7));
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      globe.rotY = ty; globe.rotX = tx; drawGlobe(); return;
+    }
+    globe.targetRotY = ty; globe.targetRotX = tx;
+  }
+
+  function handleGlobeTap(clientX, clientY){
+    var rect = globe.canvas.getBoundingClientRect();
+    var x = clientX - rect.left, y = clientY - rect.top;
+    var best = null, bestDist = Infinity;
+    globe.screenPoints.forEach(function(p){
+      var d = Math.hypot(p.x-x, p.y-y);
+      if(d < p.r && d < bestDist){ bestDist = d; best = p; }
+    });
+    if(best){ stopGlobeTour(true); openEvent(best.id); }
+  }
+
+  /* ---------- the globe's pages ----------
+     Scrolling the planet screen re-poses the globe: where it looks, which time
+     window is loaded, and where the sun is. */
+  var SCENES = [
+    { lon:-95, lat:26, win:0, sun:'live' },
+    { lon:-88, lat:24, win:0, sun:200  },
+    { lon:-10, lat:32, win:2, sun:'live' },
+    { lon:128, lat:26, win:3, sun:560  },
+    { lon:-60, lat:14, win:4, sun:'live' }
+  ];
+  var currentScene = -1, statTick = 0, stageWired = false;
+
+  function applyScene(i){
+    if(i === currentScene) return;
+    var sc = SCENES[i];
+    if(!sc) return;
+    currentScene = i;
+    if(sc.sun === 'live'){ sun.on = true; sun.live = true; }
+    else { sun.on = true; sun.live = false; sun.minutes = sc.sun; }
+    sun.ready = false; syncSunUI();
+    if(globeWindow !== sc.win){ globeWindow = sc.win; renderGlobeTimeline(); }
+    stopGlobeTour(true);
+    globe.autoRotate = false;
+    focusGlobeOn(sc.lon, sc.lat);
+    setTimeout(function(){ if(currentScene === i) globe.autoRotate = true; }, 2600);
+    refreshStats();
+  }
+
+  function nightCount(){
+    var s0 = currentSun();
+    if(!s0) return 0;
+    var sla = s0.lat*Math.PI/180, slo = s0.lon*Math.PI/180;
+    var sx = Math.cos(sla)*Math.sin(slo), sy = Math.sin(sla), sz = Math.cos(sla)*Math.cos(slo);
+    return globeEvents().filter(function(e){
+      var la = e.lat*Math.PI/180, lo = e.lon*Math.PI/180;
+      return (Math.cos(la)*Math.sin(lo)*sx + Math.sin(la)*sy + Math.cos(la)*Math.cos(lo)*sz) < 0;
+    }).length;
+  }
+  function refreshStats(){
+    var all = events.filter(function(e){ return e.lat != null; });
+    var cities = {};
+    all.forEach(function(e){ cities[e.location] = 1; });
+    var set = function(id, v){ var el = document.getElementById(id); if(el) el.textContent = v; };
+    set('pstat-night', nightCount());
+    set('pstat-weekend', events.filter(function(e){ return e.lat != null && (e.win === undefined ? 4 : e.win) <= 2; }).length);
+    set('pstat-cities', Object.keys(cities).length);
+    set('pstat-all', all.length);
+  }
+
+  function initStage(){
+    if(stageWired) return;
+    stageWired = true;
+    var root = document.getElementById('planet-scroll');
+    var sticky = document.querySelector('.planet-sticky');
+    var pages = Array.prototype.slice.call(document.querySelectorAll('.ppage'));
+    if(!root || !sticky || !pages.length) return;
+
+    /* The globe is pinned over the top of the screen, so the reading line sits
+       below the panel — a plain viewport-middle test picks a page the panel hides. */
+    function lineY(){
+      var b = sticky.getBoundingClientRect().bottom;
+      var bottom = root.getBoundingClientRect().bottom;
+      return b + (bottom - b)*0.42;
+    }
+    function pick(){
+      var line = lineY(), chosen = 0, bestD = Infinity, i, r, d;
+      for(i = 0; i < pages.length; i++){
+        r = pages[i].getBoundingClientRect();
+        if(r.top <= line && r.bottom > line){ chosen = i; break; }
+        d = r.top > line ? r.top - line : line - r.bottom;
+        if(d < bestD){ bestD = d; chosen = i; }
+      }
+      applyScene(chosen);
+    }
+    var queued = false;
+    root.addEventListener('scroll', function(){
+      if(queued) return;
+      queued = true;
+      requestAnimationFrame(function(){ queued = false; pick(); });
+    }, { passive:true });
+    window.addEventListener('resize', pick);
+    pick();
+  }
+
+  function showGlobe(){
+    initGlobe();
+    initTimeline();
+    initStage();
+    refreshStats();
+    resizeGlobe();
+    renderGlobeTimeline();
+    syncSunUI();
+    drawGlobe();
+    startGlobeLoop();
+  }
+
+  function openEvent(id){
+    activeEventId = id;
+    var ev = events.filter(function(e){ return e.id === id; })[0];
+    document.getElementById('ev-tag').textContent = ev.tag;
+    document.getElementById('ev-title').textContent = ev.title;
+    document.getElementById('ev-date2').textContent = ev.date;
+    document.getElementById('ev-loc2').textContent = ev.location;
+    document.getElementById('ev-host').textContent = 'Hosted by ' + ev.host;
+    document.getElementById('ev-desc').textContent = ev.desc;
+    document.getElementById('ev-rating').textContent = ev.rating ? '★ ' + ev.rating.toFixed(1) + ' average rating' : 'No ratings yet — be the first to review';
+    updateRsvpButton();
+    updateSaveButton();
+    renderStarPicker();
+    setSheet('sheet-event', true);
+  }
+  function renderStarPicker(){
+    var existing = myRatings[activeEventId];
+    pendingStars = existing ? existing.stars : 0;
+    document.getElementById('rate-comment').value = existing ? existing.comment : '';
+    paintStars();
+  }
+  function paintStars(){
+    var html = '';
+    for(var i = 1; i <= 5; i++){
+      html += '<button type="button" class="star-btn" style="min-width:36px;min-height:36px;" onclick="setStar('+i+')" aria-label="'+i+' star'+(i>1?'s':'')+'"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="'+(i<=pendingStars?'var(--accent)':'none')+'" stroke="var(--accent)" stroke-width="1.6"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.6l-5.9 3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button>';
+    }
+    document.getElementById('rate-stars').innerHTML = html;
+  }
+  function setStar(n){ pendingStars = n; paintStars(); }
+  function submitRating(){
+    if(pendingStars === 0){ showToast('Pick a star rating first'); return; }
+    var comment = document.getElementById('rate-comment').value.trim();
+    myRatings[activeEventId] = { stars: pendingStars, comment: comment };
+    showToast('Thanks for your review!');
+    saveState();
+  }
+  function updateSaveButton(){
+    var icon = document.getElementById('save-icon');
+    var btn = document.getElementById('save-btn');
+    var isSaved = saved.has(activeEventId);
+    icon.setAttribute('fill', isSaved ? 'var(--accent)' : 'none');
+    icon.setAttribute('stroke', isSaved ? 'var(--accent)' : 'var(--ink)');
+    btn.setAttribute('aria-label', isSaved ? 'Remove from saved' : 'Save event');
+  }
+  function toggleSave(){
+    if(saved.has(activeEventId)){ saved.delete(activeEventId); showToast('Removed from Saved'); }
+    else { saved.add(activeEventId); showToast('Saved'); }
+    updateSaveButton();
+    if(document.getElementById('screen-profile').classList.contains('active')) renderProfile();
+    saveState();
+  }
+  function closeEvent(){
+    setSheet('sheet-event', false);
+    setSheet('sheet-invite', false);
+  }
+  function updateRsvpButton(){
+    var btn = document.getElementById('rsvp-btn');
+    btn.textContent = rsvps.has(activeEventId) ? "You're Going ✓" : "I'm Going";
+    btn.onclick = toggleRSVP;
+  }
+  function toggleRSVP(){
+    if(rsvps.has(activeEventId)){ rsvps.delete(activeEventId); showToast('Removed from your events'); }
+    else { rsvps.add(activeEventId); showToast('Added to your events'); }
+    updateRsvpButton();
+    document.getElementById('stat-going').querySelector('b').textContent = rsvps.size;
+    if(document.getElementById('screen-profile').classList.contains('active')) renderProfile();
+    saveState();
+  }
+
+  function toggleCheck(btn){
+    btn.classList.toggle('on');
+    btn.innerHTML = btn.classList.contains('on') ? '<svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFF7EF" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>' : '';
+  }
+  function sendInvites(){
+    var n = document.querySelectorAll('#sheet-invite .checkbox.on').length;
+    showToast(n + ' invite' + (n===1?'':'s') + ' sent');
+    go('event');
+  }
+
+  function pickType(btn, label){
+    document.querySelectorAll('#ev-type-row .type-tag').forEach(function(b){ b.classList.remove('on'); });
+    btn.classList.add('on');
+  }
+  function formatEventDateTime(dateStr, timeStr){
+    if(!dateStr) return 'Date TBD';
+    var parts = dateStr.split('-');
+    var d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+    var dayLabel = d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+    if(!timeStr) return dayLabel;
+    var tp = timeStr.split(':');
+    var h = +tp[0], m = tp[1];
+    var suffix = h >= 12 ? 'PM' : 'AM';
+    var h12 = h % 12 || 12;
+    return dayLabel + ' · ' + h12 + ':' + m + ' ' + suffix;
+  }
+  function createEvent(){
+    var name = document.getElementById('ev-name').value.trim();
+    if(!name){ showToast('Give your event a name first'); return; }
+    var date = formatEventDateTime(document.getElementById('ev-date-input').value, document.getElementById('ev-time-input').value);
+    var loc = document.getElementById('ev-loc').value.trim() || 'Location TBD';
+    var type = document.querySelector('#ev-type-row .type-tag.on').textContent;
+    var id = 'custom-' + Date.now();
+    events.unshift({id:id, title:name, tag:type, date:date, location:loc, host:'You', going:1, desc:'Created just now — invite people to join!'});
+    document.getElementById('ev-name').value = '';
+    document.getElementById('ev-date-input').value = '';
+    document.getElementById('ev-time-input').value = '';
+    document.getElementById('ev-loc').value = '';
+    document.getElementById('stat-hosted').querySelector('b').textContent = hostedBase + events.filter(function(e){ return e.host === 'You'; }).length;
+    showToast('Event created');
+    go('discover');
+    saveState();
+  }
+
+  function renderChat(){
+    document.getElementById('chat-log').innerHTML = chatLog.map(function(m){
+      if(m.typing) return '<div class="chatrow"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));flex-shrink:0;"></div><div class="bubble-ai"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
+      if(m.who === 'ai') return '<div class="chatrow"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));flex-shrink:0;"></div><div class="bubble-ai">'+m.text+'</div></div>';
+      return '<div class="bubble-me">'+m.text+'</div>';
+    }).join('');
+    var log = document.getElementById('chat-log'); log.scrollTop = log.scrollHeight;
+  }
+  function sendChat(){
+    var input = document.getElementById('chat-input');
+    var text = input.value.trim();
+    if(!text) return;
+    chatLog.push({who:'me', text:text});
+    chatLog.push({who:'ai', typing:true});
+    input.value = '';
+    renderChat();
+    setTimeout(function(){
+      chatLog.pop();
+      var q = text.toLowerCase();
+      var match = events.filter(function(e){ return q.split(' ').some(function(w){ return w.length>3 && (e.title.toLowerCase().indexOf(w)!==-1 || e.tag.toLowerCase().indexOf(w)!==-1 || e.location.toLowerCase().indexOf(w)!==-1); }); })[0];
+      var reply = match ? ('Here\'s one you might like: <b>'+match.title+'</b> — '+match.date+' in '+match.location+'.') : 'Found a few options near you — check Discover for what\'s trending this week.';
+      chatLog.push({who:'ai', text:reply});
+      renderChat();
+    }, 900);
+  }
+
+  function setProfileTab(tab){
+    document.querySelectorAll('#screen-profile .tab').forEach(function(t){ t.classList.toggle('on', t.dataset.tab===tab); });
+    renderProfile(tab);
+  }
+  function renderProfile(tab){
+    tab = tab || (document.querySelector('#screen-profile .tab.on') || {}).dataset && document.querySelector('#screen-profile .tab.on').dataset.tab || 'upcoming';
+    var box = document.getElementById('profile-list');
+    document.getElementById('stat-going').querySelector('b').textContent = rsvps.size;
+    document.getElementById('stat-hosted').querySelector('b').textContent = hostedBase + events.filter(function(e){ return e.host === 'You'; }).length;
+
+    if(tab === 'hosted'){
+      var hostedList = events.filter(function(e){ return e.host === 'You'; });
+      if(hostedList.length === 0){
+        box.innerHTML = '<div style="text-align:center;color:var(--ink-faint);font-size:13px;padding:24px 0;">You haven\'t created an event yet — tap the + button to host one.</div>';
+        return;
+      }
+      box.innerHTML = hostedList.map(function(ev){
+        return '<div class="card" style="padding:12px;">'
+          + '<div style="display:flex;align-items:center;gap:12px;">'
+          + '<div class="thumb" style="width:44px;height:44px;border-radius:9px;background:var(--surface-2);flex-shrink:0;"></div>'
+          + '<div style="flex:1;"><b style="font-size:14px;font-weight:700;">'+ev.title+'</b><div style="font-size:11.5px;color:var(--ink-dim);margin-top:2px;">'+ev.date+' · '+ev.going+' going</div></div>'
+          + '</div>'
+          + '<button class="btn-secondary" style="width:100%;margin-top:10px;padding:9px;font-size:12.5px;" onclick="openAnalytics(\''+ev.id+'\')">View Analytics</button>'
+          + '</div>';
+      }).join('');
+      return;
+    }
+
+    var list, emptyMsg;
+    if(tab === 'upcoming'){ list = events.filter(function(e){ return rsvps.has(e.id); }); emptyMsg = "You haven't RSVP'd to anything yet — tap \"I'm Going\" on any event."; }
+    else { list = events.filter(function(e){ return saved.has(e.id); }); emptyMsg = 'Nothing saved yet.'; }
+    if(list.length === 0){
+      box.innerHTML = '<div style="text-align:center;color:var(--ink-faint);font-size:13px;padding:24px 0;">'+emptyMsg+'</div>';
+      return;
+    }
+    box.innerHTML = list.map(eventCardHtml).join('');
+  }
+
+  function openConnections(){
+    document.getElementById('connections-list').innerHTML = contacts.map(function(c){
+      return '<div class="contact"><div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));flex-shrink:0;"></div>'
+        + '<div style="flex:1;"><div style="font-weight:700;font-size:13.5px;">'+c.name+'</div><div style="font-size:11px;color:var(--ink-dim);">'+c.loc+'</div></div>'
+        + '<button class="btn-secondary" style="padding:8px 14px;font-size:12px;" onclick="showToast(\'Messaging is not part of this prototype yet\')">Message</button>'
+        + '</div>';
+    }).join('');
+    setSheet('sheet-connections', true);
+  }
+  function closeConnections(){
+    setSheet('sheet-connections', false);
+  }
+
+  function pseudoViews(ev){
+    var seed = 0;
+    for(var i=0;i<ev.id.length;i++){ seed += ev.id.charCodeAt(i); }
+    return ev.going * 5 + (seed % 60) + 20;
+  }
+  function openAnalytics(id){
+    var ev = events.filter(function(e){ return e.id === id; })[0];
+    var views = pseudoViews(ev);
+    document.getElementById('an-title').textContent = ev.title;
+    document.getElementById('an-sub').textContent = ev.date + ' · ' + ev.location;
+    document.getElementById('an-views').textContent = views.toLocaleString();
+    document.getElementById('an-rsvps').textContent = ev.going;
+    document.getElementById('an-conv').textContent = Math.round(ev.going / views * 100) + '%';
+    document.getElementById('an-rating').textContent = ev.rating ? '★ ' + ev.rating.toFixed(1) + ' average' : 'No reviews yet';
+    setSheet('sheet-analytics', true);
+  }
+  function closeAnalytics(){
+    setSheet('sheet-analytics', false);
+  }
+
+  function toggleSwitch(btn){ btn.classList.toggle('on'); btn.setAttribute('aria-checked', btn.classList.contains('on')); saveState(); }
+
+  function renderLiveComments(){
+    document.getElementById('live-comments').innerHTML = liveComments.map(function(c){
+      var shown = (translateOn && c.translated) ? c.translated : c.text;
+      var note = (translateOn && c.translated) ? ' <span style="color:#8A7F6E;font-size:10.5px;">· translated from '+c.lang+'</span>' : '';
+      return '<div style="font-size:12.5px;"><b>'+c.name+'</b> <span style="color:#E3D9C6;">'+shown+'</span>'+note+'</div>';
+    }).join('');
+    var box = document.getElementById('live-comments');
+    box.scrollTop = box.scrollHeight;
+  }
+  function postLiveComment(){
+    var input = document.getElementById('live-input');
+    var text = input.value.trim();
+    if(!text) return;
+    liveComments.push({name:'You', text:text});
+    input.value = '';
+    renderLiveComments();
+  }
+  function toggleTranslate(){
+    translateOn = !translateOn;
+    var btn = document.getElementById('translate-toggle');
+    btn.style.background = translateOn ? 'var(--accent)' : 'rgba(250,246,238,.14)';
+    btn.style.color = translateOn ? 'var(--accent-ink)' : '#F1E9D8';
+    btn.style.borderColor = translateOn ? 'var(--accent)' : 'rgba(250,246,238,.32)';
+    renderLiveComments();
+  }
+
+  var notifIcons = {
+    live: {bg:'#F5E5DA', stroke:'#B9482F', svg:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M21 9l-9 6-9-6"/>'},
+    social: {bg:'var(--surface-2)', stroke:'var(--ink-dim)', svg:'<circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.6-3.6 4.6-5.4 7-5.4S18.4 16.4 20 20"/>'},
+    reminder: {bg:'#E7EFE0', stroke:'#5C8A52', svg:'<path d="M12 21s7-6.1 7-11.5A7 7 0 105 9.5C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/>'}
+  };
+  function renderNotifications(){
+    document.getElementById('notif-list').innerHTML = notifications.map(function(n){
+      var ic = notifIcons[n.kind] || notifIcons.social;
+      var bg = n.read ? '' : 'background:#F5EEDD;';
+      var dot = n.read ? '' : '<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>';
+      return '<div class="event-row" style="'+bg+'border-radius:12px;cursor:pointer;margin:0 20px 10px;" onclick="handleNotifTap(\''+n.id+'\')">'
+        + '<div class="thumb" style="background:'+ic.bg+';display:flex;align-items:center;justify-content:center;"><svg aria-hidden="true" focusable="false" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="'+ic.stroke+'" stroke-width="2">'+ic.svg+'</svg></div>'
+        + '<div class="meta" style="flex:1;"><b>'+n.title+'</b><span>'+n.time+'</span></div>'
+        + dot
+        + '</div>';
+    }).join('');
+    updateBellBadge();
+  }
+  function handleNotifTap(id){
+    var n = notifications.filter(function(x){ return x.id === id; })[0];
+    n.read = true;
+    renderNotifications();
+    saveState();
+    if(n.eventId) openEvent(n.eventId);
+  }
+  function markAllNotifRead(){
+    notifications.forEach(function(n){ n.read = true; });
+    renderNotifications();
+    saveState();
+  }
+  function updateBellBadge(){
+    var badge = document.getElementById('bell-badge');
+    if(!badge) return;
+    var anyUnread = notifications.some(function(n){ return !n.read; });
+    badge.classList.toggle('hidden', !anyUnread);
+  }
+
+  function toggleDarkMode(){
+    var btn = document.getElementById('sw-dark');
+    btn.classList.toggle('on');
+    btn.setAttribute('aria-checked', btn.classList.contains('on'));
+    document.getElementById('phone').classList.toggle('dark', btn.classList.contains('on'));
+    saveState();
+  }
+
+  function markOnboarded(){ try{ localStorage.setItem('convene_onboarded','1'); }catch(e){} }
+  function clearOnboarded(){ try{ localStorage.removeItem('convene_onboarded'); }catch(e){} }
+
+  function toggleInterest(btn){
+    btn.classList.toggle('on');
+  }
+  function finishSignupToApp(){
+    userInterests = Array.from(document.querySelectorAll('#su-interests .type-tag.on')).map(function(b){ return b.dataset.val; });
+    markOnboarded();
+    showToast('Welcome to Convene!');
+    go('discover');
+    saveState();
+  }
+  function resetLocalData(){
+    try{ localStorage.removeItem('convene_state'); }catch(e){}
+    clearOnboarded();
+    location.reload();
+  }
+
+  function openEditProfile(){
+    document.getElementById('edit-name').value = document.getElementById('profile-name').textContent;
+    var loc = document.getElementById('profile-location').textContent.split(' · ')[0];
+    document.getElementById('edit-location').value = loc;
+    document.getElementById('edit-avatar-letter').textContent = document.getElementById('profile-avatar-letter').textContent;
+    go('edit-profile');
+  }
+  function onEditProfileInput(){
+    var name = document.getElementById('edit-name').value.trim();
+    document.getElementById('edit-avatar-letter').textContent = name ? name.charAt(0).toUpperCase() : '';
+  }
+  function saveProfileEdit(){
+    var name = document.getElementById('edit-name').value.trim();
+    if(!name){ showToast('Enter a name'); return; }
+    var location = document.getElementById('edit-location').value.trim();
+    document.getElementById('profile-name').textContent = name;
+    var joined = document.getElementById('profile-location').textContent.split(' · ')[1] || 'Joined 2026';
+    document.getElementById('profile-location').textContent = (location || 'Somewhere out there') + ' · ' + joined;
+    document.getElementById('profile-avatar-letter').textContent = name.charAt(0).toUpperCase();
+    showToast('Profile updated');
+    go('profile');
+    saveState();
+  }
+
+  /* ---------- persistence ---------- */
+  var STORAGE_KEY = 'convene_state';
+  function saveState(){
+    try{
+      var customEvents = events.filter(function(e){ return e.host === 'You'; });
+      var state = {
+        profileName: document.getElementById('profile-name').textContent,
+        profileLocation: document.getElementById('profile-location').textContent,
+        hostedBase: hostedBase,
+        rsvps: Array.from(rsvps),
+        saved: Array.from(saved),
+        customEvents: customEvents,
+        notif: document.getElementById('sw-notif').classList.contains('on'),
+        loc: document.getElementById('sw-loc').classList.contains('on'),
+        dark: document.getElementById('sw-dark').classList.contains('on'),
+        userInterests: userInterests,
+        recentSearches: recentSearches,
+        myRatings: myRatings,
+        readNotifIds: notifications.filter(function(n){ return n.read; }).map(function(n){ return n.id; }),
+        globeWindow: globeWindow,
+        sunOn: sun.on, sunLive: sun.live, sunMinutes: sun.minutes
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){}
+  }
+  function loadState(){
+    var raw = null;
+    try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
+    if(!raw) return;
+    try{
+      var state = JSON.parse(raw);
+      if(state.customEvents && state.customEvents.length){
+        state.customEvents.forEach(function(ce){
+          if(!events.some(function(e){ return e.id === ce.id; })) events.unshift(ce);
+        });
+      }
+      if(state.rsvps) rsvps = new Set(state.rsvps);
+      if(state.saved) saved = new Set(state.saved);
+      if(typeof state.hostedBase === 'number') hostedBase = state.hostedBase;
+      if(state.userInterests) userInterests = state.userInterests;
+      if(state.recentSearches) recentSearches = state.recentSearches;
+      if(state.myRatings) myRatings = state.myRatings;
+      if(typeof state.globeWindow === 'number') globeWindow = Math.max(0, Math.min(GLOBE_WINDOWS.length-1, state.globeWindow));
+      if(typeof state.sunOn === 'boolean') sun.on = state.sunOn;
+      if(typeof state.sunLive === 'boolean') sun.live = state.sunLive;
+      if(typeof state.sunMinutes === 'number') sun.minutes = Math.max(0, Math.min(1435, state.sunMinutes));
+      if(state.readNotifIds){
+        state.readNotifIds.forEach(function(id){
+          var n = notifications.filter(function(x){ return x.id === id; })[0];
+          if(n) n.read = true;
+        });
+      }
+      if(state.profileName) document.getElementById('profile-name').textContent = state.profileName;
+      if(state.profileLocation) document.getElementById('profile-location').textContent = state.profileLocation;
+      document.getElementById('profile-avatar-letter').textContent = document.getElementById('profile-name').textContent.charAt(0).toUpperCase();
+      document.getElementById('stat-going').querySelector('b').textContent = rsvps.size;
+      document.getElementById('stat-hosted').querySelector('b').textContent = hostedBase + events.filter(function(e){ return e.host === 'You'; }).length;
+      var swN = document.getElementById('sw-notif'); if(swN){ swN.classList.toggle('on', state.notif !== false); swN.setAttribute('aria-checked', state.notif !== false); }
+      var swL = document.getElementById('sw-loc'); if(swL){ swL.classList.toggle('on', state.loc !== false); swL.setAttribute('aria-checked', state.loc !== false); }
+      var swD = document.getElementById('sw-dark');
+      if(swD){
+        swD.classList.toggle('on', state.dark === true);
+        swD.setAttribute('aria-checked', state.dark === true);
+        document.getElementById('phone').classList.toggle('dark', state.dark === true);
+      }
+      updateBellBadge();
+    }catch(e){}
+  }
+
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    var t = e.target;
+    if(t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')){ t.blur(); return; }
+    if(document.querySelector('.sheet-overlay.open')){ closeEvent(); return; }
+    closeConnections(); closeAnalytics();
+  });
+
+  initSheets();
+  buildNav('discover');
+  loadState();
+  renderUpcoming();
+
+  (function initSession(){
+    var onboarded = false;
+    try{ onboarded = localStorage.getItem('convene_onboarded') === '1'; }catch(e){}
+    if(onboarded){ go('discover'); return; }
+    setTimeout(function(){
+      if(document.getElementById('screen-splash').classList.contains('active')) goToOnboarding();
+    }, 3000);
+  })();
+</script>

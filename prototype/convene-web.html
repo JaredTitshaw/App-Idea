@@ -1,0 +1,2585 @@
+<title>Convene</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Convene's own two-color system — terracotta + forest green, flat and solid. No gradients, no glow. */
+  :root{
+    --bg:#F7F3EA; --surface:#FFFFFF; --surface-2:#ECE5D5; --rail:#EFE9DA;
+    --ink:#211C16; --ink-dim:#5C5346; --ink-faint:#6B6457;
+    --accent:#9E4F2D; --accent-ink:#FCF6EC;
+    --green:#4C7745; --green-ink:#FCF6EC;
+    --line:#DFD6C1;
+    --shadow:0 1px 2px rgba(33,28,22,.05);
+    --shadow-lg:0 16px 36px rgba(33,28,22,.12);
+    --radius:14px; --danger:#A63244;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1B1712; --surface:#252019; --surface-2:#302A20; --rail:#161310;
+      --ink:#F1EAD9; --ink-dim:#B7AC96; --ink-faint:#9B927F;
+      --accent:#D17F54; --accent-ink:#1B1712;
+      --green:#7A9C6E; --green-ink:#1B1712;
+      --line:#393226;
+      --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 18px 40px rgba(0,0,0,.45); --danger:#E98392;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1B1712; --surface:#252019; --surface-2:#302A20; --rail:#161310;
+    --ink:#F1EAD9; --ink-dim:#B7AC96; --ink-faint:#9B927F;
+    --accent:#D17F54; --accent-ink:#1B1712;
+    --green:#7A9C6E; --green-ink:#1B1712;
+    --line:#393226;
+    --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 18px 40px rgba(0,0,0,.45); --danger:#E98392;
+  }
+  :root[data-theme="light"]{
+    --bg:#F7F3EA; --surface:#FFFFFF; --surface-2:#ECE5D5; --rail:#EFE9DA;
+    --ink:#211C16; --ink-dim:#5C5346; --ink-faint:#6B6457;
+    --accent:#9E4F2D; --accent-ink:#FCF6EC;
+    --green:#4C7745; --green-ink:#FCF6EC;
+    --line:#DFD6C1;
+    --shadow:0 1px 2px rgba(33,28,22,.05); --shadow-lg:0 16px 36px rgba(33,28,22,.12); --danger:#A63244;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Work Sans",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{ font-family:"Fraunces",Georgia,serif; font-optical-sizing:auto; }
+  h1,h2,h3{ text-wrap:balance; margin:0; }
+  button,input,textarea,select{ font-family:inherit; }
+  button{ cursor:pointer; }
+  img,svg{ display:block; }
+  ::selection{ background:var(--surface-2); }
+
+  /* ---------- accessibility foundations ---------- */
+  /* One focus ring for the whole product. Keyboard users get a visible, high-contrast
+     ring everywhere; pointer users never see it. */
+  :root{ --focus:#1F6FEB; --focus-on-dark:#8FC2FF; }
+  :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{
+    outline:3px solid var(--focus); outline-offset:2px; border-radius:6px;
+  }
+  body.planet-mode :where(a,button,input,select,textarea,[tabindex]):focus-visible{
+    outline-color:var(--focus-on-dark);
+  }
+  /* Sticky topbar must never sit on top of the thing you just focused. */
+  html{ scroll-padding-top:72px; scroll-padding-bottom:84px; }
+
+  .vh{
+    position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+    overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0;
+  }
+  .skip-link{
+    position:fixed; top:8px; left:8px; z-index:200;
+    transform:translateY(-160%); transition:transform .16s ease;
+    background:var(--accent); color:var(--accent-ink);
+    padding:10px 16px; border-radius:10px; font-size:13px; font-weight:700;
+    text-decoration:none;
+  }
+  .skip-link:focus-visible{ transform:translateY(0); }
+
+  /* A text button that reads as a link but is a real, focusable control. */
+  .linkbtn{
+    background:none; border:none; padding:0; font:inherit; color:var(--accent);
+    font-weight:700; cursor:pointer;
+  }
+  .linkbtn:hover{ text-decoration:underline; }
+
+  @media (prefers-reduced-motion: reduce){
+    .skip-link{ transition:none; }
+  }
+
+  /* ---------- app shell ---------- */
+  .app{ display:grid; grid-template-columns:240px 1fr; min-height:100vh; }
+  .rail{
+    background:var(--rail); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; padding:22px 16px;
+    position:sticky; top:0; height:100vh;
+  }
+  .rail-brand{ display:flex; align-items:center; gap:10px; padding:0 8px 26px; }
+  .rail-brand svg{ flex-shrink:0; }
+  .rail-brand b{ font-family:"Fraunces",Georgia,serif; font-style:italic; font-size:19px; }
+  .rail-nav{ display:flex; flex-direction:column; gap:2px; flex:1; }
+  .rail-link{
+    display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px;
+    background:none; border:none; color:var(--ink-dim); font-size:14px; font-weight:600;
+    text-align:left; transition:background .12s, color .12s;
+  }
+  .rail-link svg{ flex-shrink:0; width:19px; height:19px; }
+  .rail-link:hover{ background:var(--surface-2); color:var(--ink); }
+  .rail-link.on{ background:var(--surface-2); color:var(--accent); }
+  .rail-link .rail-label{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rail-create{
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    background:var(--accent); color:var(--accent-ink); border:none; border-radius:12px;
+    padding:12px 14px; font-weight:700; font-size:13.5px; margin:14px 0 4px;
+  }
+  .rail-create:hover{ opacity:.9; }
+  .rail-foot{ display:flex; flex-direction:column; gap:2px; padding-top:10px; border-top:1px solid var(--line); }
+
+  .main{ min-width:0; display:flex; flex-direction:column; }
+  .topbar{
+    display:flex; align-items:center; gap:16px; padding:16px 28px;
+    border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:20;
+  }
+  .topbar-crumb{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); }
+  .topbar-spacer{ flex:1; }
+  .icon-btn{
+    background:none; border:1.5px solid var(--line); border-radius:10px; width:38px; height:38px;
+    display:flex; align-items:center; justify-content:center; color:var(--ink-dim); flex-shrink:0;
+  }
+  .icon-btn:hover{ color:var(--ink); border-color:var(--ink-faint); }
+  .guest-chip{
+    display:flex; align-items:center; gap:9px; padding:6px 12px 6px 6px; border-radius:999px;
+    background:var(--surface); border:1.5px solid var(--line); flex-shrink:0;
+  }
+  .guest-avatar{
+    width:28px; height:28px; border-radius:50%; background:var(--green);
+    display:flex; align-items:center; justify-content:center; color:var(--green-ink); font-size:12px; font-weight:700;
+    font-family:"Fraunces",Georgia,serif; flex-shrink:0;
+  }
+  .guest-chip span{ font-size:12.5px; font-weight:700; white-space:nowrap; }
+
+  .view{ padding:28px; flex:1; }
+  .view[hidden]{ display:none; }
+  .view-head{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:4px; flex-wrap:wrap; }
+  .eyebrow{ font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); }
+  .view h1{ font-size:32px; font-weight:600; font-style:italic; margin-top:6px; letter-spacing:-.01em; color:var(--ink); }
+  .view-sub{ font-size:13.5px; color:var(--ink-dim); margin-top:6px; max-width:560px; line-height:1.55; }
+
+  /* ---------- chips / filters ---------- */
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin:18px 0 26px; }
+  .chip{
+    background:var(--surface); border:1.5px solid var(--line); color:var(--ink-dim);
+    border-radius:999px; padding:8px 15px; font-size:12.5px; font-weight:700;
+  }
+  .chip.on{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .chip:hover:not(.on){ border-color:var(--ink-faint); color:var(--ink); }
+
+  /* ---------- moments strip (replaces Live Now) ---------- */
+  .section-label{ font-size:15px; font-weight:800; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between; }
+  .section-label a{ font-size:12px; font-weight:700; color:var(--accent); text-decoration:none; }
+  .moments-strip{ display:flex; gap:14px; overflow-x:auto; padding-bottom:4px; margin-bottom:34px; scrollbar-width:thin; }
+  .moment-card{
+    flex:0 0 220px; border-radius:14px; overflow:hidden; background:var(--surface);
+    border:1px solid var(--line); cursor:pointer; transition:transform .12s;
+  }
+  .moment-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+  .moment-thumb{ height:130px; position:relative; }
+  .moment-thumb .pill{ position:absolute; top:10px; left:10px; }
+  .moment-body{ padding:11px 13px 13px; }
+  .moment-body b{ font-size:12.5px; display:block; }
+  .moment-body span{ font-size:11px; color:var(--ink-faint); }
+
+  /* ---------- event grid ---------- */
+  .event-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px; }
+  .event-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden;
+    cursor:pointer; transition:transform .12s,box-shadow .12s; display:flex; flex-direction:column;
+  }
+  .event-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+  .event-thumb{ height:128px; position:relative; flex-shrink:0; }
+  .event-thumb .pill{ position:absolute; top:10px; left:10px; }
+  .event-save{
+    position:absolute; top:8px; right:8px; width:30px; height:30px; border-radius:50%;
+    background:rgba(255,247,239,.9); border:none; display:flex; align-items:center; justify-content:center;
+  }
+  .event-body{ padding:13px 14px 15px; flex:1; display:flex; flex-direction:column; gap:4px; }
+  .event-body b{ font-size:14px; line-height:1.3; }
+  .event-meta{ font-size:11.5px; color:var(--ink-dim); }
+  .event-foot{ margin-top:auto; padding-top:8px; font-size:11px; color:var(--green); font-weight:700; }
+
+  .pill{ display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; font-size:10.5px; font-weight:800; }
+
+  /* ---------- hero: the planet is the front door ---------- */
+  .view-discover{ padding-top:0; }
+  /* ---------- THE PLANET: a full-bleed stage ---------- */
+  /* In planet mode the whole shell goes dark by swapping the tokens, so the rail
+     and topbar recede and the globe is the page. */
+  /* The tokens are overridden on body, not .app: body resolves its own `color`
+     from --ink, and everything that just inherits colour would otherwise keep the
+     light theme's value and disappear against the dark stage. */
+  body.planet-mode{
+    background:#08090B;
+    --bg:#08090B; --surface:#131519; --surface-2:#1A1D22; --rail:#08090B;
+    --ink:#F4F0E6; --ink-dim:#A6A29A; --ink-faint:#89857E;
+    --accent:#E9B44C; --accent-ink:#17120A;
+    --green:#7FA06B; --green-ink:#0F1409;
+    --line:#212429;
+    --shadow:none; --shadow-lg:0 24px 60px rgba(0,0,0,.6);
+    color:#F4F0E6;
+  }
+  body.planet-mode .guest-avatar{ background:var(--accent); color:var(--accent-ink); }
+  body.planet-mode .topbar{ background:transparent; border-bottom-color:transparent; }
+  body.planet-mode .rail{ border-right-color:#16181C; }
+  body.planet-mode .view-planet{ padding:0; }
+
+  .view-planet{ padding:0; display:flex; flex-direction:column; }
+  .stage{
+    position:relative; flex:1; min-height:calc(100vh - 69px); overflow:hidden;
+    cursor:grab; touch-action:none; background:#08090B;
+  }
+  .stage.grabbing{ cursor:grabbing; }
+  .stage canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #globe-overlay{ pointer-events:none; }
+  .stage-scrim{
+    position:absolute; left:0; right:0; bottom:0; height:230px; pointer-events:none;
+    background:linear-gradient(to top, #08090B 12%, rgba(8,9,11,.82) 46%, rgba(8,9,11,0));
+  }
+
+  .stage-copy{ z-index:2; position:absolute; left:clamp(20px,4vw,64px); top:50%; transform:translateY(-54%); max-width:min(38vw,430px); }
+  .stage-eyebrow{
+    font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:20px;
+  }
+  .stage-title{
+    font-size:clamp(38px,4.6vw,66px); line-height:1.02; letter-spacing:-.03em;
+    font-weight:500; color:var(--ink); text-wrap:balance;
+  }
+  .stage-sub{ font-size:13.5px; line-height:1.7; color:var(--ink-dim); margin:20px 0 0; max-width:42ch; text-wrap:pretty; }
+  .stage-search{
+    display:flex; align-items:center; gap:10px; margin-top:26px; padding:12px 15px;
+    background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:11px; max-width:330px;
+  }
+  .stage-search svg{ flex-shrink:0; color:var(--ink-faint); }
+  .stage-search input{ flex:1; min-width:0; border:none; outline:none; background:none; font-size:13.5px; color:var(--ink); }
+  .stage-search input::placeholder{ color:var(--ink-faint); }
+  .stage-chips{ margin-top:16px; }
+
+  .stage-now{ z-index:2; position:absolute; right:clamp(20px,4vw,56px); top:clamp(24px,5vh,54px); text-align:right; max-width:240px; }
+  .stage-now-label{ font-size:9.5px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-faint); }
+  .stage-now-name{ font-size:34px; font-style:italic; font-weight:600; line-height:1.05; margin-top:4px; color:var(--ink); }
+  .stage-now-count{ font-size:12px; color:var(--ink-dim); margin-top:5px; font-variant-numeric:tabular-nums; }
+  .stage-now-link{
+    margin-top:12px; background:none; border:none; padding:0;
+    font-size:11.5px; font-weight:700; color:var(--accent);
+  }
+
+  .stage-controls{
+    z-index:2; position:absolute; left:0; right:0; bottom:132px; display:flex; justify-content:center;
+    align-items:center; gap:8px; flex-wrap:wrap; padding:0 20px;
+  }
+  .mode-btn{
+    background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--ink-dim);
+    font-size:11.5px; font-weight:700; padding:9px 15px; border-radius:999px;
+  }
+  .mode-btn.on{ background:var(--ink); border-color:var(--ink); color:#0B0C0E; }
+  .sun-ctl{
+    display:flex; align-items:center; gap:9px; background:rgba(255,255,255,.06);
+    border:1px solid var(--line); border-radius:999px; padding:6px 12px 6px 13px;
+  }
+  .sun-ctl[hidden]{ display:none; }
+  .sun-ico{ color:var(--ink-faint); flex-shrink:0; }
+  #sun-range{ width:108px; accent-color:var(--accent); height:16px; cursor:pointer; }
+  .sun-time{ font-size:11px; font-weight:700; color:var(--ink-dim); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .sun-now{ background:none; border:none; color:var(--ink-faint); font-size:11px; font-weight:700; padding:2px 4px; }
+  .sun-now.on{ color:var(--accent); }
+  .tour-btn{
+    display:inline-flex; align-items:center; gap:8px; background:var(--accent); color:var(--accent-ink);
+    border:none; border-radius:999px; padding:10px 18px; font-size:11.5px; font-weight:700; flex-shrink:0;
+  }
+
+  .timeline{ z-index:2; position:absolute; left:0; right:0; bottom:0; padding:0 clamp(20px,4vw,56px) 26px; }
+  .kbd{
+    flex-shrink:0; font:inherit; font-size:11px; font-weight:700; line-height:1; color:var(--ink-faint);
+    border:1px solid var(--line); border-radius:5px; padding:4px 7px; background:rgba(255,255,255,.05);
+  }
+
+  @media (max-width:900px){
+    .stage{ min-height:calc(100vh - 61px); }
+    .stage-scrim{ height:180px; }
+    .stage-copy{
+      position:static; transform:none; max-width:none; padding:22px clamp(16px,5vw,28px) 0;
+    }
+    .stage-title{ font-size:clamp(30px,8vw,40px); }
+    /* Give the planet the room: the supporting line goes, and the readout
+       collapses to a single compact row. */
+    .stage-sub{ display:none; }
+    .stage-search{ margin-top:16px; max-width:none; padding:10px 13px; }
+    .stage-chips{ margin-top:12px; }
+    .stage-now{
+      position:static; max-width:none; padding:14px clamp(16px,5vw,28px) 0;
+      display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
+    }
+    .stage-now-label{ display:none; }
+    .stage-now-name{ font-size:19px; margin:0; }
+    .stage-now-count{ margin:0; font-size:11.5px; }
+    .stage-now-link{ margin:0 0 0 auto; }
+    .stage-controls{ bottom:112px; gap:6px; justify-content:center; }
+    .timeline{ padding-bottom:18px; }
+    .timeline-hint{ display:none; }
+    .timeline-head{ margin-bottom:12px; }
+    .mode-btn{ padding:8px 12px; font-size:10.5px; }
+    #sun-range{ width:74px; }
+    .tour-btn span{ display:none; }
+    .tour-btn{ padding:10px 12px; }
+    .kbd{ display:none; }
+  }
+
+  .hero-window{
+    position:absolute; top:18px; right:18px; text-align:right; pointer-events:none;
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:10px 14px 12px;
+  }
+  .hero-window-label{ font-size:9.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); }
+  .hero-window-name{ font-size:26px; font-style:italic; font-weight:600; line-height:1.1; margin-top:2px; color:var(--ink); }
+  .hero-window-count{ font-size:11.5px; color:var(--ink-dim); margin-top:3px; font-variant-numeric:tabular-nums; }
+  .hero-modes{ position:absolute; left:18px; right:18px; bottom:18px; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .sun-ctl{
+    display:flex; align-items:center; gap:8px; background:var(--surface);
+    border:1px solid var(--line); border-radius:999px; padding:5px 10px 5px 11px;
+  }
+  .sun-ctl[hidden]{ display:none; }
+  .sun-ico{ color:var(--ink-faint); flex-shrink:0; }
+  #sun-range{ width:104px; accent-color:var(--accent); height:16px; cursor:pointer; }
+  .sun-time{ font-size:11px; font-weight:700; color:var(--ink-dim); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .sun-now{ background:none; border:none; color:var(--ink-faint); font-size:11px; font-weight:700; padding:2px 4px; }
+  .sun-now.on{ color:var(--accent); }
+  .mode-btn{
+    background:var(--surface); border:1px solid var(--line); color:var(--ink-dim);
+    font-size:11px; font-weight:700; padding:7px 13px; border-radius:999px;
+  }
+  .mode-btn.on{ background:var(--ink); border-color:var(--ink); color:var(--bg); }
+  .tour-btn{
+    margin-left:auto; display:flex; align-items:center; gap:8px;
+    background:var(--accent); color:var(--accent-ink); border:none; border-radius:999px;
+    padding:9px 17px; font-size:12px; font-weight:700; flex-shrink:0;
+  }
+  .tour-btn:hover{ opacity:.9; }
+  .tour-card{ z-index:3;
+    position:absolute; left:18px; top:18px; width:216px; padding:13px 15px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  }
+  .tour-card[hidden]{ display:none; }
+  .tour-card-label{ font-size:9.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); }
+  .tour-card b{ display:block; font-size:14px; margin-top:5px; line-height:1.3; }
+  .tour-card span{ display:block; font-size:11.5px; color:var(--ink-dim); margin-top:3px; }
+  .tour-card-btn{
+    margin-top:10px; width:100%; background:none; border:1px solid var(--line); color:var(--ink);
+    border-radius:8px; padding:7px; font-size:11.5px; font-weight:700;
+  }
+
+  /* timeline scrubber */
+  .timeline{ flex-shrink:0; }
+  .timeline-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px 16px; flex-wrap:wrap; margin-bottom:20px; }
+  .timeline-hint{ min-width:0; }
+  .timeline-title{ font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); }
+  .timeline-hint{ font-size:11.5px; color:var(--ink-faint); }
+  .timeline-track{ position:relative; height:54px; }
+  .timeline-line{ position:absolute; left:0; right:0; top:5px; height:1px; background:var(--line); }
+  .timeline-fill{ position:absolute; left:0; top:5px; height:1px; background:var(--accent); transition:width .28s ease; }
+  .timeline-dot{
+    position:absolute; top:0; width:11px; height:11px; border-radius:50%; background:var(--accent);
+    transform:translateX(-50%); transition:left .28s ease;
+  }
+  .timeline-track{ cursor:grab; touch-action:pan-y; }
+  .timeline-track.scrubbing{ cursor:grabbing; }
+  .timeline-track.scrubbing .timeline-dot,
+  .timeline-track.scrubbing .timeline-fill{ transition:none; }
+  .timeline-track.scrubbing .timeline-dot{ transform:translateX(-50%) scale(1.35); }
+  .timeline-track:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:4px; }
+  .timeline-stops{ position:absolute; inset:0; display:flex; justify-content:space-between; }
+  .timeline-stop{
+    background:none; border:none; padding:16px 0 0; text-align:left; flex:1;
+    display:flex; flex-direction:column; gap:2px; position:relative;
+  }
+  .timeline-stop:last-child{ flex:0 0 auto; text-align:right; }
+  .timeline-stop::before{
+    content:""; position:absolute; top:-9px; left:0; width:1px; height:9px; background:var(--line);
+  }
+  .timeline-stop:last-child::before{ left:auto; right:0; }
+  .timeline-stop b{ font-size:12px; font-weight:700; color:var(--ink-faint); white-space:nowrap; }
+  .timeline-stop i{ font-style:normal; }
+  .tl-s{ display:none; }
+  .timeline-stop span{ font-size:10.5px; color:var(--ink-faint); opacity:.75; white-space:nowrap; }
+  .timeline-stop.on b{ color:var(--accent); }
+  .timeline-stop.on span{ color:var(--ink-dim); opacity:1; }
+
+  /* ---------- moments feed ---------- */
+  .moments-layout{ display:grid; grid-template-columns:minmax(0,600px) 280px; gap:28px; align-items:start; }
+  .composer{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:22px; }
+  .composer textarea{
+    width:100%; border:none; outline:none; resize:none; font-size:13.5px; font-family:inherit; color:var(--ink);
+    min-height:44px; background:none;
+  }
+  .composer textarea::placeholder{ color:var(--ink-faint); }
+  .composer-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
+  .composer-foot select{
+    border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:12px; color:var(--ink-dim); background:var(--bg);
+  }
+  .feed{ display:flex; flex-direction:column; gap:18px; }
+  .feed-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .feed-head{ display:flex; align-items:center; gap:10px; padding:14px 16px 0; }
+  .feed-avatar{ width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--green); }
+  .feed-head b{ font-size:13px; display:block; }
+  .feed-head span{ font-size:11px; color:var(--ink-faint); }
+  .feed-img{ height:280px; margin-top:12px; }
+  .feed-caption{ padding:13px 16px 6px; font-size:13.5px; line-height:1.55; }
+  .feed-actions{ display:flex; gap:18px; padding:6px 16px 15px; }
+  .feed-action{ display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--ink-dim); font-size:12px; font-weight:700; }
+  .feed-action.liked{ color:var(--accent); }
+  .feed-action svg{ width:17px; height:17px; }
+  .moments-side{ display:flex; flex-direction:column; gap:16px; position:sticky; top:100px; }
+  .side-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; }
+  .side-card h4{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); margin:0 0 12px; }
+
+  /* ---------- companion ---------- */
+  .companion-layout{ max-width:680px; margin:0 auto; display:flex; flex-direction:column; height:calc(100vh - 160px); }
+  .chat-log{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding:6px 2px 20px; }
+  .bubble-row{ display:flex; gap:10px; }
+  .bubble-row.me{ flex-direction:row-reverse; }
+  .bubble-avatar{ width:28px; height:28px; border-radius:50%; flex-shrink:0; background:var(--green); }
+  .bubble{ max-width:72%; padding:11px 14px; border-radius:14px; font-size:13.5px; line-height:1.5; }
+  .bubble-row:not(.me) .bubble{ background:var(--surface); border:1px solid var(--line); border-bottom-left-radius:4px; }
+  .bubble-row.me .bubble{ background:var(--accent); color:var(--accent-ink); border-bottom-right-radius:4px; font-weight:600; }
+  .chat-suggestions{ display:flex; gap:8px; flex-wrap:wrap; padding-bottom:12px; }
+  .chat-input-row{ display:flex; gap:10px; border-top:1px solid var(--line); padding-top:14px; }
+  .chat-input-row input{
+    flex:1; border:1.5px solid var(--line); border-radius:12px; padding:12px 15px; font-size:13.5px;
+    outline:none; background:var(--surface); color:var(--ink);
+  }
+  .chat-input-row input:focus{ border-color:var(--accent); }
+  .send-btn{
+    width:44px; height:44px; border-radius:12px; background:var(--accent); color:var(--accent-ink);
+    border:none; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+
+  /* ---------- profile ---------- */
+  .profile-layout{ display:grid; grid-template-columns:280px 1fr; gap:28px; align-items:start; }
+  .profile-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px; text-align:center; position:sticky; top:100px; }
+  .profile-avatar-lg{ width:76px; height:76px; border-radius:50%; margin:0 auto 14px; background:var(--green); display:flex; align-items:center; justify-content:center; color:var(--accent-ink); font-size:28px; }
+  .profile-card h3{ font-size:18px; }
+  .profile-card .loc{ font-size:12px; color:var(--ink-dim); margin-top:3px; }
+  .profile-stats{ display:flex; justify-content:center; gap:24px; margin:18px 0; }
+  .profile-stats .stat b{ display:block; font-size:17px; }
+  .profile-stats .stat span{ font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; }
+  .btn-outline{ width:100%; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:none; color:var(--ink); font-weight:700; font-size:12.5px; }
+  .profile-tabs{ display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:18px; }
+  .profile-tab{ background:none; border:none; padding:9px 4px; margin-right:20px; font-size:13px; font-weight:700; color:var(--ink-faint); border-bottom:2px solid transparent; }
+  .profile-tab.on{ color:var(--ink); border-color:var(--accent); }
+  .empty-note{ color:var(--ink-faint); font-size:13px; padding:30px 0; text-align:center; }
+
+  /* ---------- buttons ---------- */
+  .btn-primary{ background:var(--accent); color:var(--accent-ink); border:none; border-radius:11px; padding:12px 20px; font-weight:700; font-size:13.5px; }
+  .btn-primary:hover{ opacity:.9; }
+  .btn-secondary{ background:none; border:1.5px solid var(--line); color:var(--ink); border-radius:11px; padding:12px 20px; font-weight:700; font-size:13.5px; }
+
+  /* ---------- drawer / modal / scrim ---------- */
+  .scrim{ position:fixed; inset:0; background:rgba(20,14,8,.42); opacity:0; pointer-events:none; transition:opacity .2s; z-index:60; }
+  .scrim.open{ opacity:1; pointer-events:auto; }
+  .drawer{
+    position:fixed; top:0; right:0; bottom:0; width:440px; max-width:92vw; background:var(--bg);
+    box-shadow:var(--shadow-lg); transform:translateX(100%); transition:transform .28s cubic-bezier(.4,0,.2,1);
+    z-index:70; display:flex; flex-direction:column;
+  }
+  .drawer.open{ transform:translateX(0); }
+  .drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:20px 22px; border-bottom:1px solid var(--line); flex-shrink:0; }
+  .drawer-head h2{ font-size:17px; }
+  .drawer-body{ flex:1; overflow-y:auto; padding:22px; }
+  .drawer-foot{ padding:16px 22px 22px; border-top:1px solid var(--line); flex-shrink:0; }
+
+  .modal-wrap{ position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity .18s; }
+  .modal-wrap.open{ opacity:1; pointer-events:auto; }
+  .modal{ background:var(--bg); border-radius:18px; width:480px; max-width:100%; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); transform:scale(.97) translateY(6px); transition:transform .18s; }
+  .modal-wrap.open .modal{ transform:scale(1) translateY(0); }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:20px 22px; border-bottom:1px solid var(--line); }
+  .modal-body{ padding:22px; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px; }
+  .field input,.field textarea{
+    width:100%; border:1.5px solid var(--line); border-radius:10px; padding:11px 13px; font-size:13.5px;
+    outline:none; background:var(--surface); color:var(--ink); font-family:inherit;
+  }
+  .field input:focus,.field textarea:focus{ border-color:var(--accent); }
+  .type-row{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .srow{ display:flex; align-items:center; justify-content:space-between; padding:15px 0; border-bottom:1px solid var(--line); }
+  .switch{ width:42px; height:25px; border-radius:13px; background:var(--surface-2); border:1px solid var(--line); position:relative; flex-shrink:0; }
+  .switch::after{ content:""; position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background:var(--surface); box-shadow:0 1px 2px rgba(0,0,0,.2); transition:transform .15s; }
+  .switch.on{ background:var(--accent); border-color:var(--accent); }
+  .switch.on::after{ transform:translateX(17px); background:#fff; }
+
+  .contact-row{ display:flex; align-items:center; gap:12px; padding:11px 0; }
+  .contact-row .av{ width:38px; height:38px; border-radius:50%; background:var(--green); flex-shrink:0; }
+  .contact-row b{ font-size:13px; display:block; }
+  .contact-row span{ font-size:11px; color:var(--ink-dim); }
+
+  .toast{
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(10px); background:var(--ink); color:var(--bg);
+    font-size:13px; font-weight:600; padding:12px 20px; border-radius:11px; opacity:0; pointer-events:none;
+    transition:opacity .2s, transform .2s; z-index:90;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- responsive ---------- */
+  .bottom-nav{ display:none; }
+  /* Between the rail staying wide and the layout stacking, the pinned column gets
+     narrow — short tick labels and a tighter copy column keep the timeline inside it. */
+  @media (min-width:981px) and (max-width:1200px){
+    .stage{ grid-template-columns:minmax(250px,330px) 1fr; column-gap:26px; }
+    .timeline-stop span{ display:none; }
+    .timeline-stop b{ font-size:10.5px; }
+    .tl-l{ display:none; }
+    .tl-s{ display:inline; }
+    .timeline-hint{ display:none; }
+  }
+
+  @media (max-width:980px){
+    .app{ grid-template-columns:72px 1fr; }
+    .rail{ padding:20px 10px; align-items:center; }
+    .rail-brand{ padding:0 0 22px; }
+    .rail-brand b{ display:none; }
+    .rail-link{ justify-content:center; padding:11px; width:44px; }
+    .rail-label{ display:none; }
+    .rail-create{ padding:12px; width:44px; }
+    .rail-create span{ display:none; }
+    .moments-layout{ grid-template-columns:1fr; }
+    .moments-side{ position:static; flex-direction:row; overflow-x:auto; }
+    .profile-layout{ grid-template-columns:1fr; }
+    .profile-card{ position:static; }
+    .stage{ display:block; }
+    .stage-sticky{
+      position:sticky; top:70px; height:auto; min-height:0;
+      background:var(--bg); padding-bottom:12px; gap:12px; z-index:5;
+    }
+    .hero-globe{ flex:none; height:min(44vh, 320px); }
+    .timeline-head{ margin-bottom:14px; }
+    .timeline-track{ height:34px; }
+    .timeline-stop{ padding-top:13px; }
+    .timeline-stop span{ display:none; }
+    .tl-l{ display:none; }
+    .tl-s{ display:inline; }
+    .timeline-stop b{ font-size:10.5px; }
+    /* keep the globe's controls to one row so they cover less of the planet */
+    .hero-modes{ left:12px; right:12px; bottom:12px; gap:6px; flex-wrap:nowrap; }
+    .mode-btn{ padding:7px 11px; font-size:10.5px; white-space:nowrap; }
+    .sun-ctl{ padding:5px 8px; gap:6px; min-width:0; }
+    #sun-range{ width:62px; }
+    .sun-time{ font-size:10px; }
+    .tour-btn{ padding:9px 11px; }
+    .tour-btn span{ display:none; }
+  }
+  @media (max-width:700px){
+    .app{ grid-template-columns:1fr; }
+    .rail{ display:none; }
+    .bottom-nav{
+      display:flex; position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--line);
+      padding:8px 4px calc(8px + env(safe-area-inset-bottom)); z-index:50; justify-content:space-around;
+    }
+    .bottom-nav button{ background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--ink-faint); font-size:9.5px; font-weight:700; flex:1; padding:4px; }
+    .bottom-nav button.on{ color:var(--accent); }
+    .bottom-nav svg{ width:20px; height:20px; }
+    .main{ padding-bottom:64px; }
+    .topbar{ padding:14px 16px; }
+    .guest-chip span{ display:none; }
+    .guest-chip{ padding:6px; }
+    .view{ padding:18px 16px; }
+    .view h1{ font-size:22px; }
+    .view-planet{ padding:0; }
+    .stage{ min-height:calc(100vh - 53px - 64px); }
+    .hero{ padding-top:18px; gap:22px; }
+    .hero-title{ font-size:30px; }
+    .hero-globe{ height:300px; }
+    .hero-window-name{ font-size:20px; }
+    .tour-card{ width:170px; padding:11px 12px; }
+    .timeline-stop span{ display:none; }
+    .timeline-stop b{ font-size:11px; }
+    .drawer{ width:100%; max-width:100%; top:auto; height:88vh; border-radius:20px 20px 0 0; transform:translateY(100%); }
+    .drawer.open{ transform:translateY(0); }
+    .event-grid{ grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+  /* ---------- utility layer (declared last so it wins) ---------- */
+  /* ---------- spacing utilities (replacing one-off inline styles) ---------- */
+  .modal-title{ font-size:17px; }
+  .view-head-tight{ margin-bottom:14px; }
+  .mt-xs{ margin-top:6px; } .mt-sm{ margin-top:16px; } .mt-md{ margin-top:22px; }
+  .mt-lg{ margin-top:24px; } .mt-xl{ margin-top:34px; }
+  .full{ width:100%; } .span-all{ grid-column:1/-1; }
+  .flex-1{ flex:1; }
+  .row{ display:flex; }
+  .gap-6{ gap:6px; } .gap-10{ gap:10px; } .gap-12{ gap:12px; }
+  .pt-sm{ padding-top:16px; } .pt-md{ padding-top:22px; }
+  .rule-top{ border-top:1px solid var(--line); padding-top:16px; }
+  .no-rule{ border-bottom:none; }
+  .list-row{ display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); }
+  .list-title{ font-size:13px; font-weight:700; }
+  .list-sub{ font-size:12px; color:var(--ink-dim); margin-top:4px; }
+  .prose-sm{ font-size:13px; line-height:1.6; color:var(--ink-dim); }
+  .prose-xs{ font-size:12.5px; color:var(--ink-dim); line-height:1.6; margin:0; }
+  .note{ font-size:11.5px; color:var(--ink-faint); text-align:center; margin-top:10px; }
+  .card-h{ font-size:13px; font-weight:700; margin-bottom:10px; }
+  .avatar-sm{ width:32px; height:32px; border-radius:50%; background:var(--green); flex-shrink:0; }
+  .avatar-md{ width:48px; height:48px; }
+  .btn-sm{ padding:8px 14px; font-size:12px; }
+  .btn-danger{ color:var(--danger); }
+  .chip-static{ cursor:default; }
+  .chip-plain{ background:var(--surface); color:var(--ink); }
+  .chip-green{ background:var(--green); color:var(--green-ink); }
+  .badge-corner{ position:absolute; top:12px; left:12px; background:var(--green); color:var(--green-ink); }
+  .moment-cover{ height:170px; border-radius:14px; position:relative; }
+  .icon-bare{ background:none; border:none; padding:2px; }
+  .stat-lg{ margin-top:16px; font-size:21px; }
+  .m0{ margin:0; }
+
+  /* A heading focused programmatically after navigation should move the caret,
+     not draw a box — the ring belongs on things you can actually operate. */
+  h1[tabindex="-1"]:focus, h1[tabindex="-1"]:focus-visible{ outline:none; }
+
+  /* The card is clickable for pointers, but the title is the real control, so the card
+     is reachable and operable from the keyboard too. It inherits the title's type. */
+  .card-open{
+    background:none; border:none; padding:0; margin:0; font:inherit; color:inherit;
+    text-align:left; cursor:pointer; width:100%;
+  }
+  .card-open:focus-visible{ outline:3px solid var(--focus); outline-offset:3px; border-radius:4px; }
+  .event-card:has(.card-open:focus-visible), .moment-card:has(.card-open:focus-visible){
+    box-shadow:var(--shadow-lg);
+  }
+
+</style>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+<p class="vh" id="view-live" role="status" aria-live="polite"></p>
+
+<div class="app">
+  <aside class="rail">
+    <div class="rail-brand">
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 100 100" width="22" height="22"><circle cx="38" cy="38" r="24" fill="var(--accent)" opacity=".92"/><circle cx="62" cy="62" r="24" fill="var(--green)" opacity=".8"/></svg>
+      <b>Convene</b>
+    </div>
+    <nav class="rail-nav" id="rail-nav" aria-label="Sections"></nav>
+    <button class="rail-create" onclick="openCreate()">
+      <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+      <span>Host an event</span>
+    </button>
+    <div class="rail-foot">
+      <button class="rail-link" onclick="openSettings()">
+        <svg aria-hidden="true" focusable="false" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.33 1.87M4.6 9a1.7 1.7 0 00-.33-1.87M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
+        <span class="rail-label">Settings</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main" id="main" tabindex="-1">
+    <header class="topbar">
+      <div class="topbar-crumb" id="topbar-crumb">The planet</div>
+      <div class="topbar-spacer"></div>
+      <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <svg aria-hidden="true" focusable="false" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <div class="guest-chip">
+        <div class="guest-avatar serif" id="topbar-avatar">G</div>
+        <span id="topbar-name">Guest</span>
+      </div>
+    </header>
+
+    <!-- THE PLANET — a full-bleed stage, nothing below the globe but the timeline -->
+    <section class="view view-planet" id="view-discover">
+      <div class="stage" id="map-canvas">
+        <canvas id="globe-canvas" tabindex="0" aria-describedby="globe-help" role="img" aria-label="A photoreal globe showing the Earth with the real day and night line. Points of light mark gatherings happening in the selected time window."></canvas>
+        <canvas id="globe-overlay" aria-hidden="true"></canvas>
+        <p class="vh" id="globe-help">Drag the planet to orbit it, or focus it and use the arrow keys. Page Up and Page Down travel through time.</p>
+        <div class="stage-scrim" aria-hidden="true"></div>
+
+        <div class="stage-copy">
+          <div class="stage-eyebrow">Free to walk into &middot; No account needed</div>
+          <h1 class="stage-title">See where the<br>world is gathering.</h1>
+          <p class="stage-sub">Every point of light is a real gathering &mdash; a street festival, a morning run club, a lecture, a family picnic. Spin the planet, travel through the week.</p>
+          <div class="stage-search">
+            <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <label class="vh" for="hero-search">Search gatherings by city, name or tag</label>
+            <input id="hero-search" placeholder="Search a city, an event, a tag" oninput="onHeroSearch()">
+            <kbd class="kbd" aria-hidden="true">/</kbd>
+          </div>
+          <div class="chip-row stage-chips" id="interest-chips"></div>
+        </div>
+
+        <div class="stage-now">
+          <div class="stage-now-label">Showing</div>
+          <div class="serif stage-now-name" id="window-name">Tonight</div>
+          <div class="stage-now-count" id="window-count"></div>
+          <button class="stage-now-link" onclick="go('gatherings')">See the list &rarr;</button>
+        </div>
+
+        <div class="tour-card" id="tour-card" hidden>
+          <div class="tour-card-label">On the tour</div>
+          <b id="tour-title"></b>
+          <span id="tour-meta"></span>
+          <button class="tour-card-btn" id="tour-open" onclick="openEvent(tour.currentId)">See event</button>
+        </div>
+
+        <div class="stage-controls">
+          <button class="mode-btn on" id="mode-daynight" aria-pressed="true" onclick="toggleDayNight()">Day &amp; night</button>
+          <div class="sun-ctl" id="sun-ctl">
+            <svg class="sun-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg>
+            <input type="range" id="sun-range" min="0" max="1435" step="5" value="720" aria-label="Time of day, UTC" oninput="setSunMinutes(this.value)">
+            <span class="sun-time" id="sun-time">12:00 UTC</span>
+            <button class="sun-now on" id="sun-now" onclick="setSunLive()">Now</button>
+          </div>
+          <button class="tour-btn" id="tour-btn" onclick="toggleTour()">
+            <svg aria-hidden="true" focusable="false" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>
+            <span id="tour-btn-label">Play the tour</span>
+          </button>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-head">
+            <span class="timeline-title">Convene through time</span>
+            <span class="timeline-hint">Scroll or drag to travel through time &nbsp;·&nbsp; Drag the planet to orbit, or focus it and use the arrow keys</span>
+          </div>
+          <div class="timeline-track" id="timeline-track">
+            <div class="timeline-line"></div>
+            <div class="timeline-fill" id="timeline-fill"></div>
+            <div class="timeline-dot" id="timeline-dot"></div>
+            <div class="timeline-stops" id="timeline-stops"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GATHERINGS — the list, on its own page -->
+    <section class="view" id="view-gatherings" hidden>
+      <div class="view-head">
+        <div><div class="eyebrow">Free to walk into</div><h1 class="serif">Gatherings</h1></div>
+      </div>
+      <div class="section-label mt-md" id="discover-count">Happening tonight</div>
+      <div class="event-grid" id="discover-grid"></div>
+      <div class="section-label mt-xl">Latest Moments<button class="linkbtn" onclick="go('moments')">See all &rarr;</button></div>
+      <div class="moments-strip" id="moments-strip"></div>
+    </section>
+
+    <!-- MOMENTS -->
+    <section class="view" id="view-moments" hidden>
+      <div class="view-head"><div><div class="eyebrow">Recaps &amp; highlights</div><h1 class="serif">Moments</h1></div></div>
+      <p class="view-sub">What people shared after real events — no live video, no streaming, just what actually happened. Posted after the fact, browsed whenever.</p>
+      <div class="moments-layout mt-lg">
+        <div>
+          <div class="composer">
+            <label class="vh" for="moment-text">Share something from an event you went to</label>
+            <textarea id="moment-text" placeholder="Share something from an event you went to…"></textarea>
+            <div class="composer-foot">
+              <label class="vh" for="moment-event">Which event is this about?</label>
+              <select id="moment-event"></select>
+              <button class="btn-primary" onclick="postMoment()">Post</button>
+            </div>
+          </div>
+          <div class="feed" id="moments-feed"></div>
+        </div>
+        <aside class="moments-side">
+          <div class="side-card">
+            <h4>Why not live?</h4>
+            <p class="prose-xs">Streaming needs bandwidth, moderation and a crowd watching at the same minute. Moments works for everyone, on any connection, at any hour — you don't have to be there at 8&nbsp;PM sharp to see what happened.</p>
+          </div>
+          <div class="side-card">
+            <h4>Trending tags</h4>
+            <div class="m0 chip-row" id="side-tags"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- COMPANION -->
+    <section class="view" id="view-companion" hidden>
+      <div class="companion-layout">
+        <div class="view-head view-head-tight"><div><div class="eyebrow">Your guide</div><h1 class="serif">Companion</h1></div></div>
+        <div class="chat-log" id="chat-log"></div>
+        <div class="chat-suggestions" id="chat-suggestions"></div>
+        <div class="chat-input-row">
+          <label class="vh" for="chat-input">Ask the Companion a question</label>
+          <input id="chat-input" placeholder="Ask about events, places, anything…" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="send-btn" onclick="sendChat()" aria-label="Send">
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="view" id="view-profile" hidden>
+      <div class="view-head"><div><div class="eyebrow">Your space</div><h1 class="serif">Profile</h1></div></div>
+      <div class="profile-layout mt-md">
+        <div class="profile-card">
+          <div class="profile-avatar-lg serif" id="profile-avatar">G</div>
+          <h3 id="profile-name">Guest</h3>
+          <div class="loc" id="profile-loc">Somewhere out there</div>
+          <div class="profile-stats">
+            <div class="stat"><b id="stat-hosted">0</b><span>Hosted</span></div>
+            <div class="stat"><b id="stat-going">0</b><span>Going</span></div>
+          </div>
+          <button class="btn-outline" onclick="openEditProfile()">Edit profile</button>
+        </div>
+        <div>
+          <div class="profile-tabs">
+            <button class="profile-tab on" data-tab="upcoming" onclick="setProfileTab('upcoming')">Upcoming</button>
+            <button class="profile-tab" data-tab="hosted" onclick="setProfileTab('hosted')">Hosted</button>
+            <button class="profile-tab" data-tab="saved" onclick="setProfileTab('saved')">Saved</button>
+          </div>
+          <div class="event-grid" id="profile-grid"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav" aria-label="Primary"></nav>
+
+<div class="scrim" id="scrim" onclick="closeAllOverlays()"></div>
+
+<!-- EVENT DETAIL DRAWER -->
+<div class="drawer" id="drawer-event" role="dialog" aria-modal="true" aria-labelledby="drawer-event-title">
+  <div class="drawer-head"><h2 id="drawer-event-title">Event</h2><button class="icon-btn" onclick="closeDrawer('drawer-event')" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="drawer-body">
+    <div id="ed-cover" class="moment-cover"><span class="badge-corner pill" id="ed-tag"></span></div>
+    <h2 class="stat-lg serif" id="ed-title"></h2>
+    <div id="ed-rating" class="list-sub"></div>
+    <div class="list-row">
+      <svg aria-hidden="true" focusable="false" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+      <span id="ed-date" class="list-title"></span>
+    </div>
+    <div class="list-row">
+      <svg aria-hidden="true" focusable="false" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 21s7-6.1 7-11.5A7 7 0 105 9.5C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+      <span id="ed-loc" class="list-title"></span>
+    </div>
+    <div class="list-row">
+      <div class="avatar-sm av"></div>
+      <span id="ed-host" class="list-title"></span>
+    </div>
+    <p id="ed-desc" class="prose-sm"></p>
+    <div class="rule-top">
+      <div class="card-h">Rate this event</div>
+      <div id="ed-stars" class="row gap-6"></div>
+    </div>
+  </div>
+  <div class="row gap-10 drawer-foot">
+    <button class="avatar-md icon-btn" id="ed-save" onclick="toggleSave()" aria-label="Save">
+      <svg aria-hidden="true" focusable="false" id="ed-save-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
+    </button>
+    <button class="flex-1 btn-primary" id="ed-rsvp" onclick="toggleRSVP()"></button>
+  </div>
+</div>
+
+<!-- CONNECTIONS DRAWER -->
+<div class="drawer" id="drawer-connections" role="dialog" aria-modal="true" aria-labelledby="drawer-connections-title">
+  <div class="drawer-head"><h2 id="drawer-connections-title">Connections</h2><button class="icon-btn" onclick="closeDrawer('drawer-connections')" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="drawer-body" id="connections-list"></div>
+</div>
+
+<!-- SETTINGS DRAWER -->
+<div class="drawer" id="drawer-settings" role="dialog" aria-modal="true" aria-labelledby="drawer-settings-title">
+  <div class="drawer-head"><h2 id="drawer-settings-title">Settings</h2><button class="icon-btn" onclick="closeDrawer('drawer-settings')" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="drawer-body">
+    <div class="srow"><span id="sw-notif-label">Notifications</span><button aria-labelledby="sw-notif-label" class="switch on" id="sw-notif" role="switch" aria-checked="true" onclick="toggleSwitch(this)"></button></div>
+    <div class="srow"><span id="sw-loc-label">Location services</span><button aria-labelledby="sw-loc-label" class="switch on" id="sw-loc" role="switch" aria-checked="true" onclick="toggleSwitch(this)"></button></div>
+    <div class="no-rule srow"><span id="sw-dark-label">Dark mode</span><button aria-labelledby="sw-dark-label" class="switch" id="sw-dark" role="switch" aria-checked="false" onclick="toggleTheme()"></button></div>
+    <div class="pt-md"><button class="full btn-danger btn-secondary" onclick="resetLocalData()">Reset local data</button></div>
+    <p class="note">No account, no server — this only clears what's saved in this browser.</p>
+  </div>
+</div>
+
+<!-- EDIT PROFILE DRAWER -->
+<div class="drawer" id="drawer-edit-profile" role="dialog" aria-modal="true" aria-labelledby="drawer-edit-profile-title">
+  <div class="drawer-head"><h2 id="drawer-edit-profile-title">Edit profile</h2><button class="icon-btn" onclick="closeDrawer('drawer-edit-profile')" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="drawer-body">
+    <div class="field"><label for="edit-name">Display name</label><input id="edit-name" placeholder="Guest"></div>
+    <div class="field"><label for="edit-loc">Location</label><input id="edit-loc" placeholder="Somewhere out there"></div>
+  </div>
+  <div class="drawer-foot"><button class="full btn-primary" onclick="saveProfileEdit()">Save changes</button></div>
+</div>
+
+<!-- CREATE EVENT MODAL -->
+<div class="modal-wrap" id="modal-create" role="dialog" aria-modal="true" aria-labelledby="modal-create-title">
+  <div class="modal">
+    <div class="modal-head"><h2 class="modal-title" id="modal-create-title">Host an event</h2><button class="icon-btn" onclick="closeModal('modal-create')" aria-label="Close"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="field"><label for="ev-name">Event name</label><input id="ev-name" placeholder="Give your event a name"></div>
+      <div class="row gap-12">
+        <div class="flex-1 field"><label for="ev-date">Date</label><input id="ev-date" type="date"></div>
+        <div class="flex-1 field"><label for="ev-time">Time</label><input id="ev-time" type="time"></div>
+      </div>
+      <div class="field"><label for="ev-loc-input">Location</label><input id="ev-loc-input" placeholder="Where's it happening?"></div>
+      <div class="field">
+        <label>Type</label>
+        <div class="type-row" id="ev-type-row">
+          <button type="button" class="chip on" data-val="Family" onclick="pickType(this)">Family</button>
+          <button type="button" class="chip" data-val="Community" onclick="pickType(this)">Community</button>
+          <button type="button" class="chip" data-val="Business" onclick="pickType(this)">Business</button>
+        </div>
+      </div>
+      <button class="full mt-xs btn-primary" onclick="createEvent()">Create event</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* win: which horizon an event first appears in — 0 tonight, 1 tomorrow, 2 weekend, 3 next week, 4 this month */
+  var events = [
+    {id:'e1', title:'Riverside Founders Mixer', tag:'Business', win:0, date:'Tonight · 6:00 PM', location:'Austin, TX', host:'Austin Founders Collective', going:142, rating:4.6, lat:30.27, lon:-97.74, desc:'A relaxed evening mixer for founders, operators, and anyone building something new along the river.'},
+    {id:'e4', title:'Outdoor Movie Night', tag:'Family', win:0, date:'Tonight · 7:30 PM', location:'Brandon, FL', host:'Brandon Parks & Rec', going:112, rating:4.4, lat:27.94, lon:-82.29, desc:'Bring a blanket for a free outdoor screening under the stars.'},
+    {id:'e9', title:'Tokyo Night Market', tag:'Community', win:0, date:'Tonight · 7:00 PM JST', location:'Tokyo, Japan', host:'Shimokitazawa Collective', going:203, rating:4.9, lat:35.68, lon:139.69, desc:'Street food, small-batch crafts, and live music through a neighborhood night market. Already underway on the other side of the planet.'},
+    {id:'e5', title:'Sunset Yoga in the Park', tag:'Community', win:1, date:'Tomorrow · 7:00 PM', location:'Miami, FL', host:'Miami Wellness Collective', going:38, rating:4.9, lat:25.76, lon:-80.19, desc:'A free, all-levels yoga session as the sun goes down — mats provided, just bring water.'},
+    {id:'e6', title:'Startup Demo Night', tag:'Business', win:1, date:'Tomorrow · 6:30 PM', location:'Seattle, WA', host:'Seattle Founders Guild', going:410, rating:4.5, lat:47.61, lon:-122.33, desc:'Ten early-stage startups pitch live, straight from the demo floor — jump in and cheer them on.'},
+    {id:'e3', title:'Zoo Adventure Day', tag:'Family', win:2, date:'Saturday · 10:00 AM', location:'Tampa, FL', host:'Tampa Family Network', going:63, rating:4.7, lat:27.95, lon:-82.46, desc:'A guided morning at the zoo for families, with a scavenger hunt for the kids.'},
+    {id:'e2', title:'Community Culture Fair', tag:'Family', win:2, date:'Sunday · 11:00 AM', location:'Portland, OR', host:'Culture Fair Collective', going:86, rating:4.9, lat:45.52, lon:-122.68, desc:"A free, family-friendly celebration of the neighborhood's cultures — live music, food trucks, craft stalls, and bilingual storytelling for kids."},
+    {id:'e7', title:'Neighborhood Potluck', tag:'Community', win:2, date:'Saturday · 5:00 PM', location:'Denver, CO', host:'Five Points Neighbors', going:57, rating:4.8, lat:39.74, lon:-104.99, desc:'Bring a dish, meet your neighbors — a low-key evening of food and conversation on the block.'},
+    {id:'e8', title:'Lisbon Founders Breakfast', tag:'Business', win:3, date:'Next Tuesday · 8:30 AM', location:'Lisbon, Portugal', host:'Lisboa Builders', going:74, rating:4.8, lat:38.72, lon:-9.14, desc:'Coffee, pastéis de nata, and a room full of people building companies across three time zones.'},
+    {id:'e10', title:'Rooftop Cine Club', tag:'Family', win:3, date:'Next Thursday · 8:00 PM', location:'Mexico City, Mexico', host:'Colonia Roma Vecinos', going:128, rating:4.7, lat:19.43, lon:-99.13, desc:'A free open-air screening on a rooftop in Roma Norte, with blankets and elote from the corner stand.'},
+    {id:'e11', title:'Harbour Lantern Walk', tag:'Community', win:4, date:'In three weeks', location:'Sydney, Australia', host:'Glebe Foreshore Group', going:96, rating:4.8, lat:-33.87, lon:151.21, desc:'A slow evening walk along the foreshore, lanterns provided, ending with tea at the boatshed.'},
+    {id:'e12', title:'Nairobi Makers Fair', tag:'Business', win:4, date:'End of the month', location:'Nairobi, Kenya', host:'Ngong Road Makers', going:154, rating:4.9, lat:-1.29, lon:36.82, desc:'Hardware tinkerers, textile studios and small manufacturers showing what they built this year.'}
+  ];
+  var moments = [
+    {id:'m1', eventId:'e1', name:'Sofia Marín', time:'2 days ago', caption:"Great turnout at the Riverside Mixer — met three people building things I actually want to use.", likes:24, tag:'Business'},
+    {id:'m2', eventId:'e2', name:'Carlos Reyes', time:'3 days ago', caption:"The bilingual storytelling tent at the Culture Fair was the highlight for my kids. Already circled next year.", likes:41, tag:'Family'},
+    {id:'m3', eventId:'e5', name:'Giulia Conti', time:'5 days ago', caption:"Sunset yoga on the sand, mats provided. Simple and exactly what the week needed.", likes:33, tag:'Community'},
+    {id:'m4', eventId:'e6', name:'Amara Ellis', time:'1 week ago', caption:"Ten startups, ten minutes each — the fastest hour of feedback I've watched all year.", likes:52, tag:'Business'}
+  ];
+  var contacts = [
+    {name:'Sofia Marín', loc:'Tampa, FL'},
+    {name:'Carlos Reyes', loc:'Austin, TX'},
+    {name:'Giulia Conti', loc:'Milan, Italy'}
+  ];
+  var COVER_GROUND = { Family:'#20303A', Business:'#2A2622', Community:'#1F2E24', Culture:'#2E2430', Outdoors:'#1E2E2A' };
+  function hashId(id){ var h=2166136261; for(var i=0;i<id.length;i++){ h^=id.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+  /* Each cover is the same scene the globe shows, at street level: a handful of lights
+     clustered where people are. Deterministic, so a card looks the same every visit. */
+  function thumbFor(id, tag){
+    var h = hashId(id), ground = COVER_GROUND[tag] || '#262019', layers = [];
+    var n = 5 + (h % 4);
+    for(var i=0;i<n;i++){
+      h = (Math.imul(h, 1664525) + 1013904223) >>> 0;
+      var x = 8 + (h % 84), y = 12 + ((h >>> 8) % 76), r = 3 + ((h >>> 16) % 7);
+      var a = 0.30 + ((h >>> 20) % 55) / 100;
+      // 'circle' only takes a length; percentage radii must be an ellipse.
+      layers.push('radial-gradient(ellipse '+r+'% '+(r*1.7)+'% at '+x+'% '+y+'%, rgba(233,180,76,'+a.toFixed(2)+') 0%, rgba(233,180,76,0) 70%)');
+    }
+    // A faint horizon so the ground reads as a surface, not a swatch.
+    layers.push('linear-gradient(175deg, rgba(255,255,255,.05) 0%, rgba(0,0,0,.18) 100%)');
+    layers.push(ground);
+    return layers.join(',');
+  }
+
+  var STORAGE_KEY = 'convene_web_state';
+  var rsvps = new Set(), saved = new Set(), liked = new Set(), userInterests = [];
+  var hostedBase = 0, activeEventId = null, pendingStars = 0, myRatings = {};
+  var currentView = 'discover', profileTab = 'upcoming';
+
+  var NAV = [
+    {id:'discover', label:'The planet', svg:'<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M4.5 7.5h15M4.5 16.5h15"/>'},
+    {id:'gatherings', label:'Gatherings', svg:'<rect x="3" y="4" width="7" height="7" rx="1.6"/><rect x="14" y="4" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/>'},
+    {id:'moments', label:'Moments', svg:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/>'},
+    {id:'companion', label:'Companion', svg:'<path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/>'},
+    {id:'profile', label:'Profile', svg:'<circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.6-3.6 4.6-5.4 7-5.4S18.4 16.4 20 20"/>'}
+  ];
+
+  function buildNav(){
+    document.getElementById('rail-nav').innerHTML = NAV.map(function(n){
+      return '<button class="rail-link'+(n.id===currentView?' on':'')+'" data-nav="'+n.id+'"'+(n.id===currentView?' aria-current="page"':'')+' onclick="go(\''+n.id+'\')"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">'+n.svg+'</svg><span class="rail-label">'+n.label+'</span></button>';
+    }).join('');
+    document.getElementById('bottom-nav').innerHTML = NAV.map(function(n){
+      return '<button class="'+(n.id===currentView?'on':'')+'" data-nav="'+n.id+'"'+(n.id===currentView?' aria-current="page"':'')+' onclick="go(\''+n.id+'\')"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">'+n.svg+'</svg>'+n.label+'</button>';
+    }).join('');
+  }
+
+  var navReady = false;
+  function go(view){
+    var target = document.getElementById('view-'+view);
+    if(!target) return;
+    currentView = view;
+    document.querySelectorAll('.view').forEach(function(v){ v.hidden = true; });
+    target.hidden = false;
+    document.querySelectorAll('[data-nav]').forEach(function(b){
+      var on = b.dataset.nav===view;
+      b.classList.toggle('on', on);
+      if(on) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+    });
+    var nav = NAV.filter(function(n){ return n.id===view; })[0];
+    document.getElementById('topbar-crumb').textContent = nav ? nav.label : '';
+    if(view!=='discover') stopTour(true);
+    document.body.classList.toggle('planet-mode', view === 'discover');
+    if(view==='discover') renderDiscover();
+    if(view==='gatherings') renderGatherings();
+    if(view==='moments') renderMoments();
+    if(view==='companion') renderChat();
+    if(view==='profile') renderProfile();
+    window.scrollTo(0,0);
+    // Announce the change and put the caret at the top of the new view. Without this a
+    // keyboard user stays parked in the nav and a screen reader says nothing happened.
+    var live = document.getElementById('view-live');
+    if(live) live.textContent = (nav ? nav.label : view) + ' — ' + (view==='discover' ? 'the planet' : 'page loaded');
+    // Only on a real navigation. On first render focus belongs at the top of the
+    // document so the skip link is still the first thing a keyboard user reaches.
+    if(navReady){
+      var h = target.querySelector('h1');
+      if(h){ h.setAttribute('tabindex','-1'); h.focus({preventScroll:true}); }
+    }
+  }
+
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+
+  /* ---------- theme ---------- */
+  function toggleTheme(){
+    var root = document.documentElement;
+    var isDark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('sw-dark').classList.toggle('on', !isDark);
+    document.getElementById('sw-dark').setAttribute('aria-checked', String(!isDark));
+    saveState();
+  }
+
+  /* ---------- interests ---------- */
+  var ALL_TAGS = ['Family','Business','Community'];
+  function renderInterestChips(){
+    document.getElementById('interest-chips').innerHTML = ALL_TAGS.map(function(t){
+      return '<button class="chip'+(userInterests.indexOf(t)!==-1?' on':'')+'" onclick="toggleInterest(\''+t+'\')">'+t+'</button>';
+    }).join('');
+  }
+  function toggleInterest(tag){
+    var i = userInterests.indexOf(tag);
+    if(i===-1) userInterests.push(tag); else userInterests.splice(i,1);
+    renderInterestChips();
+    renderDiscover();
+    saveState();
+  }
+
+  /* ---------- time horizons ---------- */
+  /* The timeline widens the horizon rather than jumping to a date: each stop
+     includes everything before it, so scrubbing right reveals more of the planet. */
+  var WINDOWS = [
+    {id:'tonight',  label:'Tonight',      short:'Tonight', sub:'next few hours'},
+    {id:'tomorrow', label:'Tomorrow',     short:'Tmrw',    sub:'through the day'},
+    {id:'weekend',  label:'This weekend', short:'Wknd',    sub:'Fri – Sun'},
+    {id:'week',     label:'Next week',    short:'Week',    sub:'seven days out'},
+    {id:'month',    label:'This month',   short:'Month',   sub:'everything ahead'}
+  ];
+  var windowIndex = 0;
+
+  function heroQuery(){ var el = document.getElementById('hero-search'); return el ? (el.value||'').toLowerCase().trim() : ''; }
+  function visibleEvents(){
+    var q = heroQuery();
+    return events.filter(function(e){
+      if((e.win === undefined ? 4 : e.win) > windowIndex) return false;
+      if(q && (e.title+e.location+e.tag+e.date).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+  }
+  function setWindow(i, announce){
+    windowIndex = Math.max(0, Math.min(WINDOWS.length-1, i));
+    stopTour(true);
+    renderTimeline();
+    renderDiscover();
+    saveState();
+    if(announce) showToast(visibleEvents().length + ' gatherings ' + WINDOWS[windowIndex].label.toLowerCase());
+  }
+  function renderTimeline(){
+    var track = document.getElementById('timeline-stops');
+    if(track.childElementCount !== WINDOWS.length){
+      track.innerHTML = WINDOWS.map(function(w,i){
+        return '<button class="timeline-stop" tabindex="-1" onclick="setWindow('+i+',true)">'
+          + '<b><i class="tl-l">'+w.label+'</i><i class="tl-s">'+w.short+'</i></b><span>'+w.sub+'</span></button>';
+      }).join('');
+    }
+    for(var si = 0; si < track.children.length; si++)
+      track.children[si].classList.toggle('on', si === windowIndex);
+    var pct = WINDOWS.length===1 ? 0 : (windowIndex/(WINDOWS.length-1))*100;
+    document.getElementById('timeline-fill').style.width = pct+'%';
+    document.getElementById('timeline-dot').style.left = pct+'%';
+    document.getElementById('timeline-track').setAttribute('aria-valuenow', String(windowIndex));
+    document.getElementById('timeline-track').setAttribute('aria-valuetext', WINDOWS[windowIndex].label);
+    document.getElementById('window-name').textContent = WINDOWS[windowIndex].label;
+    var n = visibleEvents().length;
+    document.getElementById('window-count').textContent = n + (n===1?' gathering':' gatherings') + ' on the planet';
+  }
+  var wheelLock = 0;
+  function initTimeline(){
+    var track = document.getElementById('timeline-track');
+    track.setAttribute('tabindex','0');
+    track.setAttribute('role','slider');
+    track.setAttribute('aria-label','Travel through time');
+    track.setAttribute('aria-valuemin','0');
+    track.setAttribute('aria-valuemax', String(WINDOWS.length-1));
+    /* Drag anywhere along the track to scrub: pointer capture means the drag keeps
+       working past the ends of the track and past the edge of the window. */
+    var dragging = false;
+    function windowAtX(clientX){
+      var r = track.getBoundingClientRect();
+      if(r.width <= 0) return windowIndex;
+      var f = (clientX - r.left)/r.width;
+      f = f < 0 ? 0 : (f > 1 ? 1 : f);
+      return Math.round(f*(WINDOWS.length - 1));
+    }
+    track.addEventListener('pointerdown', function(e){
+      dragging = true;
+      track.classList.add('scrubbing');
+      track.setPointerCapture(e.pointerId);
+      var i = windowAtX(e.clientX);
+      if(i !== windowIndex) setWindow(i, false);
+      e.preventDefault();
+    });
+    track.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      var i = windowAtX(e.clientX);
+      if(i !== windowIndex) setWindow(i, false);
+    });
+    function endScrub(){
+      if(!dragging) return;
+      dragging = false;
+      track.classList.remove('scrubbing');
+      showToast(visibleEvents().length + ' gatherings ' + WINDOWS[windowIndex].label.toLowerCase());
+    }
+    track.addEventListener('pointerup', endScrub);
+    track.addEventListener('pointercancel', endScrub);
+
+    track.addEventListener('wheel', function(e){
+      var d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if(Math.abs(d) < 2) return;
+      var next = windowIndex + (d > 0 ? 1 : -1);
+      if(next < 0 || next > WINDOWS.length-1) return;
+      e.preventDefault();
+      var now = Date.now();
+      if(now - wheelLock < 320) return;
+      wheelLock = now;
+      setWindow(next, true);
+    }, { passive:false });
+    track.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowRight' || e.key === 'ArrowUp'){ e.preventDefault(); setWindow(windowIndex+1, true); }
+      else if(e.key === 'ArrowLeft' || e.key === 'ArrowDown'){ e.preventDefault(); setWindow(windowIndex-1, true); }
+      else if(e.key === 'Home'){ e.preventDefault(); setWindow(0, true); }
+      else if(e.key === 'End'){ e.preventDefault(); setWindow(WINDOWS.length-1, true); }
+    });
+  }
+
+  /* ---------- the tour ---------- */
+  var tour = { on:false, i:0, timer:null, currentId:null };
+  function toggleTour(){ tour.on ? stopTour() : startTour(); }
+  function startTour(){
+    var list = visibleEvents();
+    if(!list.length){ showToast('Nothing to tour in this window yet'); return; }
+    tour.on = true; tour.i = -1;
+    document.getElementById('tour-btn-label').textContent = 'Stop the tour';
+    tourStep();
+  }
+  function stopTour(quiet){
+    if(!tour.on && quiet) return;
+    tour.on = false;
+    clearTimeout(tour.timer);
+    var card = document.getElementById('tour-card');
+    if(card) card.hidden = true;
+    var label = document.getElementById('tour-btn-label');
+    if(label) label.textContent = 'Play the tour';
+  }
+  function tourStep(){
+    if(!tour.on) return;
+    var list = visibleEvents();
+    if(!list.length){ stopTour(); return; }
+    tour.i = (tour.i + 1) % list.length;
+    var ev = list[tour.i];
+    tour.currentId = ev.id;
+    focusGlobeOn(ev.lon, ev.lat);
+    var card = document.getElementById('tour-card');
+    card.hidden = false;
+    document.getElementById('tour-title').textContent = ev.title;
+    document.getElementById('tour-meta').textContent = ev.location + ' · ' + ev.date;
+    tour.timer = setTimeout(tourStep, 3200);
+  }
+
+  /* ---------- discover ---------- */
+  function onHeroSearch(){ stopTour(true); renderTimeline(); renderDiscover(); }
+  function eventCardHtml(ev){
+    return '<div class="event-card" onclick="openEvent(\''+ev.id+'\')">'
+      + '<div class="event-thumb" style="background:'+thumbFor(ev.id, ev.tag)+';">'
+      + '<span class="chip-green pill">'+ev.tag+'</span>'
+      + '<button class="event-save" onclick="event.stopPropagation();quickSave(\''+ev.id+'\')" aria-label="Save"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="'+(saved.has(ev.id)?'var(--accent)':'none')+'" stroke="var(--accent)" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg></button>'
+      + '</div>'
+      + '<div class="event-body"><b><button class="card-open" onclick="event.stopPropagation();openEvent(\''+ev.id+'\')">'+ev.title+'</button></b><div class="event-meta">'+ev.date+'</div><div class="event-meta">'+ev.location+'</div><div class="event-foot">'+ev.going+' going · Free</div></div>'
+      + '</div>';
+  }
+  function renderDiscover(){
+    renderInterestChips();
+    initGlobe();
+    resizeGlobe();
+    startGlobeLoop();
+    renderGatherings();
+  }
+
+  function renderGatherings(){
+    var list = visibleEvents();
+    if(userInterests.length){
+      list = list.slice().sort(function(a,b){ return (userInterests.indexOf(a.tag)!==-1?0:1) - (userInterests.indexOf(b.tag)!==-1?0:1); });
+    }
+    var q = heroQuery();
+    var head = document.getElementById('discover-count');
+    if(head) head.firstChild.textContent =
+      q ? ('Results for "'+q+'"') : ('Happening ' + WINDOWS[windowIndex].label.toLowerCase());
+    var grid = document.getElementById('discover-grid');
+    if(grid) grid.innerHTML = list.length ? list.map(eventCardHtml).join('')
+      : '<div class="span-all empty-note">Nothing in this window yet — widen the timeline to see more.</div>';
+
+    var strip = document.getElementById('moments-strip');
+    if(strip) strip.innerHTML = moments.slice(0,4).map(function(m){
+      var ev = events.filter(function(e){return e.id===m.eventId;})[0];
+      return '<div class="moment-card" onclick="go(\'moments\')">'
+        + '<div class="moment-thumb" style="background:'+thumbFor(m.id, m.tag)+';"><span class="chip-plain pill">'+m.tag+'</span></div>'
+        + '<div class="moment-body"><b><button class="card-open" onclick="event.stopPropagation();go(\'moments\')">'+(ev?ev.title:'Moment')+'</button></b><span>'+m.name+' · '+m.time+'</span></div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function quickSave(id){
+    if(saved.has(id)){ saved.delete(id); showToast('Removed from saved'); } else { saved.add(id); showToast('Saved'); }
+    renderDiscover(); saveState();
+  }
+
+  /* ---------- map ---------- */
+  /* ---------- PLANET ----------
+     The surface is baked once into an equirectangular texture (coastlines checked
+     against 183 known coordinates, see geo_source.py) and drawn by a WebGL shader:
+     hardware filtering is what keeps a globe this large smooth rather than grainy,
+     and it leaves room for a real terminator, sun glint and city lights. A 2D
+     canvas path is kept as a fallback for anything without WebGL. */
+  var PLANET = (function(){
+    var D2R = Math.PI/180;
+
+    /* Coastlines, then seas and lakes carved back out. Sculpting by subtraction
+       keeps every outline simple and non-self-intersecting; the shapes below are
+       checked against 116 known city and open-water coordinates. */
+    var LAND = [
+      [[-5.6,35.6],[0,36.6],[8,37.2],[11,34],[15,32],[20,31],[25,32],[30,31],[33,31],[34,28],[35,24],[37,21],[39,18],[41,15],[43,12],[45,11],[48,11],[51,12],[51,10],[48,6],[45,4],[42,1],[41,-2],[40,-6],[39,-8],[40,-11],[40,-15],[36,-18],[34,-22],[32,-26],[30,-31],[27,-33],[22,-34],[18,-34],[15,-27],[13,-23],[12,-18],[12,-13],[13,-8],[12,-6],[9,0],[9,4],[4,6],[0,5],[-4,5],[-8,4],[-13,9],[-16.2,12],[-17.8,14.8],[-17,21],[-14,25],[-10,29],[-8.5,33]], /* africa */
+      [[-9.5,37],[-9.5,43.8],[-8,43.8],[-4,43.5],[-1.8,43.4],[-1.2,46],[-2.2,47.3],[-4.8,48.5],[-1.6,49.4],[1.4,50.6],[1.8,51],[3.4,51.5],[4.8,53],[7,53.6],[8.2,55],[8.2,56.8],[10.6,57.7],[10.6,56],[9.9,54.8],[12.5,54.4],[14.5,54.1],[18.8,54.7],[21,55.3],[23,56.4],[24.5,57.7],[24.2,58.4],[24.5,59.5],[26,59.5],[28.5,59.5],[30.2,59.9],[27,60.2],[25,59.9],[22.5,60.4],[21.3,61.5],[21.5,63.2],[24.5,65.2],[25.2,65.8],[23,65.8],[21,63.6],[18.5,62.5],[17.4,60.9],[18.8,59.5],[16.8,58.6],[16.6,56.2],[14,55.4],[12.9,55.4],[12.5,56.3],[11.2,58.3],[10.6,59.4],[8.5,58],[5.5,58.6],[5,60.4],[7,62.5],[9.5,63.5],[12.5,65],[14.5,67],[16.5,68.5],[19,69.8],[23,70.5],[26,71],[29,71],[31,70.2],[33,69.3],[41,67],[44,68],[47,67.5],[53,68.5],[58,70],[65,71],[75,73],[85,75],[95,78],[105,77],[115,74],[125,73],[135,72],[145,71],[155,70],[165,69],[175,68],[180,66],[180,62],[172,61],[165,59],[160,56],[156,51],[158,55],[150,59],[142,54],[141,45],[135,43],[130,42.5],[127,42],[124,40.5],[122,40],[122.8,37.4],[119.2,34.5],[120.5,32.5],[121.9,31],[120.5,28],[119,25.5],[116,23],[113,22],[110,21.2],[108.5,18.5],[107,16],[105,10],[104,8.5],[103.6,5],[104.1,1.1],[103.3,1],[100.5,3],[100,6],[98.5,8],[97,10],[96,12],[92,20],[88,22],[84,17],[80.5,13.5],[79.9,10.3],[77.5,8.1],[72,18],[66,24],[60,25],[55,26],[50,29],[48,30],[50,28.5],[52,24.6],[54,24.4],[56,25.8],[56.8,26.3],[57.8,24],[59,22.4],[58,18],[55,17],[52,15],[48,13],[45,12.2],[43,12.6],[39,17],[36,23],[34,28],[34,31],[36,36],[30,37],[22,38],[14,40],[6,41],[-2,37]], /* eurasia */
+      [[7.6,43.9],[10,44],[12.4,44.3],[13.8,45.7],[12.4,45.5],[12.6,43.8],[14.2,42],[15.5,41.9],[16.3,41.4],[18.5,40.2],[17.2,39.9],[16.5,38.9],[15.6,38],[15,38.9],[15.3,40],[14,40.8],[12.9,41.3],[11,42.4],[10,43.4],[8.6,44.4]], /* italy */
+      [[12.4,38],[13.4,38.2],[15.1,38.2],[15.3,37.3],[14.5,36.7],[12.6,37.6]], /* sicily */
+      [[21,40],[25,41],[26,40],[24,38],[22,37],[20,38]], /* greece */
+      [[-168,66],[-160,70],[-150,70],[-140,70],[-130,70],[-120,69],[-110,69],[-100,69],[-95,69],[-90,70],[-85,73],[-80,73],[-75,70],[-68,64],[-62,58],[-56,52],[-60,47],[-64,46],[-67,45],[-70,42],[-74,39],[-76,35],[-79,33],[-81.4,30.7],[-80.9,28.5],[-80,26.9],[-80.1,25.3],[-81.1,25.2],[-82,26.8],[-82.7,27.9],[-82.6,28.9],[-83.7,29.9],[-84.3,30.1],[-85.4,29.7],[-88,30.3],[-90,29],[-95,29],[-97,26],[-95,19],[-90,19],[-87,21],[-88,16],[-84,10],[-79,9],[-83,8],[-87,13],[-92,16],[-97,16],[-105,20],[-110,23],[-114,28],[-117,32],[-121,35],[-124,40],[-124,48],[-128,52],[-133,55],[-140,60],[-150,59],[-155,57],[-162,55],[-165,60]], /* n_america */
+      [[-81,-4],[-79,0],[-77,4],[-75,9],[-71,12],[-66,11],[-62,9],[-60,6],[-52,5],[-50,1],[-44,-2],[-38,-5],[-35,-8],[-38,-13],[-39,-18],[-42,-23],[-48,-26],[-53,-33],[-55,-35],[-57,-36],[-60,-38.5],[-62,-39],[-63,-43],[-66,-46],[-69,-52],[-68,-55],[-74,-53],[-75,-47],[-74,-42],[-73,-37],[-71,-30],[-70,-23],[-71,-18],[-76,-14],[-79,-8]], /* s_america */
+      [[113,-22],[114,-26],[115,-31],[118,-35],[123,-34],[129,-32],[134,-33],[136,-35],[138,-35],[140,-38],[145,-39],[148,-38],[150,-37],[153.6,-32],[153.5,-28],[153,-25.5],[152.5,-24.5],[149,-21],[146,-19],[143,-14],[142,-11],[140,-17],[137,-12],[132,-11],[130,-12],[127,-14],[123,-17],[120,-20],[116,-21]], /* australia */
+      [[-43,60],[-52,64],[-53,68],[-56,72],[-60,76],[-64,78],[-58,81],[-45,83],[-32,83],[-22,80],[-20,75],[-24,71],[-30,68],[-38,65],[-43,61]], /* greenland */
+      [[11,55.3],[12.2,56.1],[12.75,55.9],[12.65,55],[11.4,54.8]], /* zealand */
+      [[-5.5,50],[-4,51],[-3,51.4],[-1,50.7],[1.4,51],[1.8,52.9],[0,53.6],[-1,54.6],[-3,54.8],[-3,55.9],[-2,56.5],[-2,57.7],[-3.5,58.6],[-5,58.5],[-5.8,57.4],[-5.4,56.4],[-4.8,55.4],[-5,54.4],[-4.5,53.4],[-4.8,52.8],[-5.2,51.7]], /* britain */
+      [[-10.4,51.6],[-9.8,53.2],[-10.2,54.2],[-8.2,55.2],[-6,55.2],[-6,53.4],[-6.2,52.2],[-8,51.5]], /* ireland */
+      [[-24,65],[-22,66],[-17,66],[-14,65],[-19,64],[-22,64]], /* iceland */
+      [[130.9,34.4],[132,34.8],[135,34.7],[136.8,34.5],[138,34.6],[139.8,34.9],[140.9,35.6],[141,36.5],[140.6,38.3],[141.5,39.5],[141.5,41.4],[140.3,41.5],[139.9,40],[139.8,38.5],[137,37.3],[135.5,35.6],[133,35.5],[131.5,35.2]], /* honshu */
+      [[140,42],[144,43],[145,44],[143,45],[141,45]], /* hokkaido */
+      [[130,31],[132,33],[131,34],[129,33]], /* kyushu */
+      [[142,46],[143,49],[143,54],[142,54],[141,50],[141,46]], /* sakhalin */
+      [[156,51],[159,52],[162,57],[163,60],[160,60],[157,57],[155,54]], /* kamchatka */
+      [[126.4,37.9],[127.5,38.3],[129.2,38.3],[129.5,35.6],[128.5,34.9],[126.5,34.4],[126.2,36.5]], /* korea */
+      [[120.1,22.6],[120.9,24.6],[121.8,25.3],[122,24.3],[121.2,22.9],[120.6,22.1]], /* taiwan */
+      [[95,6],[100,3],[104,-2],[106,-6],[103,-5],[99,0],[96,4]], /* sumatra */
+      [[105.2,-5.9],[107,-5.9],[110,-6.5],[112.6,-6.9],[114.5,-7.7],[114.4,-8.4],[111,-8.3],[108,-7.7],[105.5,-6.9]], /* java */
+      [[109,2],[113,4],[117,4],[119,-1],[116,-4],[111,-3],[109,0]], /* borneo */
+      [[119,-1],[121,1],[125,1],[124,-2],[121,-5],[119,-4]], /* sulawesi */
+      [[131,-1],[136,-2],[141,-3],[147,-6],[150.5,-10.7],[146.5,-9.9],[143,-9.2],[141,-9.3],[137.5,-8.4],[133,-4.5]], /* new_guinea */
+      [[120,18],[122,17],[124,12],[126,8],[126,6],[122,7],[121,11],[120,14]], /* philippines */
+      [[173,-35],[175,-37],[178,-38],[177,-40],[174,-41],[172,-39],[172,-37]], /* nz_north */
+      [[171,-41],[174,-42],[172,-45],[168,-47],[166,-45],[169,-42]], /* nz_south */
+      [[144.7,-40.7],[146.5,-41],[148.3,-40.9],[148.2,-42.3],[147.3,-43.5],[145.5,-43],[144.6,-41.9]], /* tasmania */
+      [[43,-12],[48,-13],[50,-16],[50,-21],[47,-25],[45,-23],[44,-17]], /* madagascar */
+      [[79.7,8.3],[80.5,9.6],[81.3,8.5],[81.9,7.2],[81.2,6.1],[79.85,6.2]], /* sri_lanka */
+      [[-84.9,21.9],[-82.5,23.2],[-80.3,23.1],[-77.5,21.6],[-74.9,20.2],[-77.2,20],[-79.8,20.7],[-82.8,21.4]], /* cuba */
+      [[-74.4,20],[-71.6,19.9],[-69.2,19.9],[-68.3,18.6],[-70,18.2],[-72.4,18.2],[-74.4,18.5]], /* hispaniola */
+      [[-66.3,45.3],[-64,45.8],[-61.5,45.6],[-60,45.9],[-61,44.6],[-63.6,44.2],[-65.8,43.6],[-66.5,44.6]], /* nova_scotia */
+      [[-59,48],[-56,50],[-53,50],[-53,47],[-56,47]], /* newfoundland */
+      [[-85,70],[-80,73],[-72,74],[-62,67],[-66,64],[-78,67]], /* baffin */
+      [[-118,72],[-110,73],[-102,70],[-110,68],[-117,69]], /* victoria_is */
+      [[-88,78],[-80,83],[-68,83],[-64,78],[-78,76]], /* ellesmere */
+      [[11,77],[20,79],[28,80],[20,80],[12,79]], /* svalbard */
+      [[52,71],[56,73],[68,77],[62,73],[55,70]], /* novaya_zemlya */
+      [[108.7,19.4],[109.6,20.1],[110.8,20],[111,19.2],[110,18.2],[109,18.6]], /* hainan */
+      [[-156,20],[-155,19],[-158,21],[-159,22]], /* hawaii */
+    ];
+
+    /* k:0 sea, k:6 inland water */
+    var WATER = [
+      { k:0, p:[[28.2,41.3],[31,41.6],[35,41.5],[38.5,41.4],[41.5,41.8],[41.8,43.4],[39.5,44.6],[37.5,45.3],[33.5,46.2],[31.2,46.6],[29.6,45.4],[28,43.4]] }, /* black_sea */
+      { k:6, p:[[48.8,37.4],[51.5,36.8],[53.5,37.8],[53.9,39.8],[52.6,41.5],[53.2,43.5],[51.6,45.6],[49.5,46.6],[47.6,45.2],[47.2,42.8],[48.4,40.2],[48.2,38.4]] }, /* caspian */
+      { k:6, p:[[58.2,44.5],[59.8,44.2],[61.2,45],[61,46.2],[59.4,46.6],[58.1,45.8]] }, /* aral */
+      { k:0, p:[[33,28],[35,28],[44,12],[42,12],[38,18],[35,22]] }, /* red_sea */
+      { k:0, p:[[48,30.4],[50.5,29],[53,27],[55.6,25.6],[56.6,26.6],[53,28.8],[50,30.6]] }, /* persian_gulf */
+      { k:0, p:[[-94.5,58.8],[-92,57.2],[-88,55.3],[-84.5,55],[-81,55.6],[-78.5,56.8],[-77.2,58.6],[-77.8,61],[-80,63.5],[-84,64.2],[-87.5,64],[-91,63],[-94,61.2],[-95.2,60]] }, /* hudson_bay */
+      { k:6, p:[[-92,46.7],[-88,48.3],[-84.5,46.5],[-82.6,45.2],[-79.6,43.5],[-76.6,43.85],[-76.8,43.2],[-79.9,43.4],[-82.9,41.4],[-86.5,41.6],[-87.6,43],[-88,44.6],[-90.6,46.4]] }, /* great_lakes */
+      { k:0, p:[[-114.6,31.5],[-112.6,28.8],[-110,24.6],[-108.6,23.2],[-108.2,25],[-110.8,27.5],[-113.3,31.8]] }, /* gulf_california */
+      { k:0, p:[[129,35],[135,35],[140,44],[142,46],[137,44],[130,42],[128,38]] }, /* sea_of_japan */
+      { k:0, p:[[143,46],[150,50],[156,52],[154,58],[148,58],[141,52]] }, /* okhotsk */
+      { k:6, p:[[31.8,-1],[33,-0.4],[34,-1.2],[34.2,-2.4],[33.2,-3],[32,-2.4]] }, /* lake_victoria */
+      { k:6, p:[[103.7,51.6],[105.5,52.6],[107.8,54.2],[109.9,55.8],[109.3,56.3],[107,54.6],[104.8,52.8],[103.4,52]] }, /* baikal */
+      { k:0, p:[[99.5,11],[104.5,12.5],[105,10],[104.2,8.5],[101,6.8],[99.3,8.5]] }, /* gulf_thailand */
+      { k:0, p:[[32.5,66.5],[36,65],[39.5,64.3],[41,65.5],[38.5,66.6],[34.5,67.2]] }, /* white_sea */
+      { k:0, p:[[-78,63.5],[-70,63],[-64,62],[-64,60.5],[-72,61],[-78,62]] }, /* hudson_strait */
+      { k:0, p:[[-66,50],[-61,50.8],[-58.5,50.5],[-58.8,48.2],[-60,46.6],[-64,47.5],[-66.5,49]] }, /* st_lawrence */
+      { k:0, p:[[24.2,36.2],[25.2,35.8],[26.5,36.8],[26.6,39.2],[25.4,40.3],[24.6,39.6],[23.95,37.8]] }, /* med_aegean */
+      { k:0, p:[[12.5,45.5],[16.5,42.5],[19.5,40],[18.5,39.8],[15.5,41.8],[12.3,44.8]] }, /* adriatic */
+    ];
+
+    var ARID = [
+      [[-13,26],[-5,30],[5,31],[16,30],[25,29],[32,27],[33,20],[28,16],[18,15],[6,14],[-4,15],[-11,18],[-15,21]], /* sahara */
+      [[36,29],[44,30],[50,26],[56,22],[52,16],[45,15],[40,20],[36,24]], /* arabian */
+      [[18,-20],[24,-19],[26,-23],[24,-28],[20,-29],[16,-26],[15,-22]], /* kalahari */
+      [[12,-17],[15,-19],[16,-26],[14,-28],[12,-24]], /* namib */
+      [[116,-22],[124,-26],[133,-27],[141,-26],[142,-21],[135,-19],[126,-19],[118,-20]], /* australia */
+      [[88,40],[98,43],[108,43],[116,42],[112,38],[102,37],[92,38]], /* gobi */
+      [[76,37],[84,40],[90,40],[88,36],[80,35]], /* taklamakan */
+      [[69,25],[74,28],[76,26],[73,23],[70,23]], /* thar */
+      [[55,38],[62,41],[66,42],[64,37],[58,36]], /* karakum */
+      [[-71,-19],[-68,-20],[-68,-26],[-70,-28],[-71,-24]], /* atacama */
+      [[-71,-40],[-66,-42],[-65,-48],[-70,-51],[-72,-46]], /* patagonia */
+      [[-117,32],[-114,29],[-110,25],[-107,28],[-104,31],[-104,36],[-108,40],[-113,42],[-118,40],[-119,36]], /* sonoran */
+      [[46,33],[54,34],[60,32],[58,28],[50,29]], /* iran */
+    ];
+
+    var FOREST = [
+      [[-74,-2],[-66,2],[-58,3],[-50,-1],[-46,-6],[-52,-11],[-62,-12],[-71,-9]], /* amazon */
+      [[9,2],[17,4],[26,3],[29,-3],[25,-8],[16,-7],[10,-3]], /* congo */
+      [[96,4],[104,2],[112,3],[119,1],[118,-4],[110,-6],[100,-2],[96,0]], /* indonesia */
+      [[131,-2],[140,-3],[148,-7],[144,-9],[136,-8],[132,-5]], /* new_guinea */
+      [[96,12],[102,16],[108,15],[108,10],[100,6],[96,8]], /* sea_asia */
+      [[-12,5],[-2,6],[8,6],[10,2],[0,3],[-10,3]], /* west_africa */
+    ];
+
+    var HIGHLAND = [
+      [[74,33],[84,36],[94,36],[102,33],[98,28],[88,28],[78,30]], /* tibet */
+      [[74,34],[80,31],[88,28],[95,28],[92,26],[84,28],[76,32]], /* himalaya */
+      [[-79,-2],[-75,-10],[-70,-18],[-69,-26],[-70,-36],[-72,-42],[-74,-38],[-72,-30],[-72,-20],[-76,-12],[-80,-4]], /* andes */
+      [[-127,61],[-122,54],[-117,48],[-112,42],[-107,36],[-104,32],[-108,32],[-110,38],[-114,45],[-120,52],[-128,59]], /* rockies */
+      [[6,45.8],[9,46.9],[12.5,47.2],[15,46.9],[14.2,45.4],[11,45.6],[7.5,44.9]], /* alps */
+      [[35,12],[40,13],[42,8],[38,6],[35,8]], /* ethiopia */
+      [[41.8,42.6],[44.5,43],[47.6,42],[47.4,40.6],[44,41],[41.6,41.4]], /* caucasus */
+    ];
+
+    /* Cities that light up on the night side. */
+    var CITIES = [
+      [-74,40.7,1],[-87.6,41.9,.8],[-118,34,.9],[-95.4,29.8,.7],[-80.2,25.8,.7],[-79.4,43.7,.7],
+      [-123.1,49.3,.6],[-122.3,47.6,.6],[-122.4,37.8,.7],[-104.99,39.7,.5],[-97.7,30.3,.5],
+      [-84.4,33.7,.6],[-75.2,40,.7],[-71.1,42.4,.6],[-90.2,38.6,.4],[-93.3,45,.5],
+      [-112.1,33.4,.5],[-115.1,36.2,.4],[-106.5,31.8,.4],[-99.1,19.4,.9],[-103.3,20.7,.5],
+      [-100.3,25.7,.5],[-89.6,20.97,.3],[-82.4,23.1,.4],[-66.1,18.5,.3],[-79.5,9,.4],
+      [-84.1,9.9,.3],[-74.1,4.7,.6],[-76.5,3.4,.4],[-78.5,-0.2,.4],[-77,-12,.6],
+      [-70.6,-33.4,.6],[-58.4,-34.6,.8],[-56.2,-34.9,.4],[-60.6,-32.9,.3],[-46.6,-23.5,.9],
+      [-43.2,-22.9,.7],[-47.9,-15.8,.4],[-38.5,-12.97,.4],[-34.9,-8.05,.4],[-51.2,-30,.4],
+      [-68.1,-16.5,.3],[-63.2,-17.8,.3],[-57.6,-25.3,.3],
+      [-0.1,51.5,1],[2.3,48.9,.9],[4.9,52.4,.6],[4.35,50.85,.5],[13.4,52.5,.7],[11.6,48.1,.5],
+      [8.7,50.1,.5],[6.96,50.94,.5],[12.5,41.9,.6],[9.2,45.5,.6],[-3.7,40.4,.6],[2.2,41.4,.5],
+      [-9.1,38.7,.4],[-6,37.4,.3],[16.4,48.2,.5],[14.4,50.1,.4],[19,47.5,.4],[21,52.2,.5],
+      [18.1,59.3,.4],[10.7,59.9,.4],[12.6,55.7,.4],[24.9,60.2,.3],[30.3,59.9,.5],[37.6,55.8,.8],
+      [30.5,50.5,.5],[27.6,53.9,.3],[28.98,41,.8],[32.9,39.9,.5],[35.2,31.8,.4],[34.8,32.1,.4],
+      [44.4,33.3,.5],[51.4,35.7,.6],[46.7,24.6,.5],[55.3,25.2,.6],[50.6,26.2,.3],
+      [31.2,30,.7],[3,36.7,.4],[-7.6,33.6,.4],[32.5,15.6,.3],[38.7,9,.3],[36.8,-1.3,.4],
+      [3.4,6.5,.6],[7.5,9.1,.3],[-17.4,14.7,.3],[13.2,-8.8,.3],[28,-26.2,.5],[18.4,-33.9,.4],
+      [31,-29.9,.3],[47.5,-18.9,.3],
+      [72.9,19.1,.9],[77.2,28.6,.9],[88.4,22.6,.8],[80.3,13.1,.6],[77.6,13,.6],[78.5,17.4,.5],
+      [73.9,18.5,.4],[67,24.9,.6],[74.3,31.6,.4],[90.4,23.8,.6],[79.9,6.9,.3],[85.3,27.7,.3],
+      [100.5,13.75,.6],[103.8,1.3,.6],[101.7,3.1,.5],[106.8,-6.2,.8],[112.7,-7.3,.4],
+      [105.8,21,.5],[106.7,10.8,.5],[121,14.6,.6],[96.2,16.8,.4],
+      [121.5,31.2,1],[116.4,39.9,1],[114.2,22.3,.8],[113.3,23.1,.8],[108.9,34.3,.5],
+      [104.1,30.7,.6],[106.5,29.6,.6],[114.3,30.6,.5],[126.98,37.57,.8],[129,35.2,.4],
+      [139.7,35.7,1],[135.5,34.7,.8],[136.9,35.2,.5],[130.4,33.6,.4],[141.3,43.1,.4],
+      [121.6,25,.5],[151.2,-33.9,.6],[144.96,-37.8,.5],[153,-27.5,.4],[115.9,-32,.3],
+      [138.6,-34.9,.3],[174.8,-36.85,.3],[172.6,-43.5,.2]
+    ];
+
+    /* ---------- baked surface ---------- */
+    /* Powers of two so the texture can wrap and mipmap on the GPU. */
+    var MW = 2048, MH = 1024;
+    var CW = 1024, CH = 512;
+    var MASK = null, TEX = null, AUX = null;
+    var baked = false, baking = false, bakeRow = 0, DIST = null, RD = null;
+
+    function hash2(x, y){
+      var n = Math.imul(x|0, 374761393) ^ Math.imul(y|0, 668265263);
+      n = Math.imul(n ^ (n >>> 13), 1274126177);
+      return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+    }
+    function vnoise(x, y, w){
+      var xi = Math.floor(x), yi = Math.floor(y);
+      var xf = x - xi, yf = y - yi;
+      var u = xf*xf*(3 - 2*xf), v = yf*yf*(3 - 2*yf);
+      var x0 = ((xi % w) + w) % w, x1 = (((xi + 1) % w) + w) % w;
+      var a = hash2(x0, yi), b = hash2(x1, yi), c = hash2(x0, yi+1), d = hash2(x1, yi+1);
+      var top = a + (b - a)*u, bot = c + (d - c)*u;
+      return top + (bot - top)*v;
+    }
+    function fbm(x, y, w, oct){
+      var sum = 0, amp = 0.5, f = 1, i;
+      for(i = 0; i < oct; i++){ sum += amp*vnoise(x*f, y*f, w*f); amp *= 0.5; f *= 2; }
+      return sum;
+    }
+
+    /* The outlines are authored coarsely. Subdivide each edge and relax only the
+       inserted points: the original vertices stay put, so the shapes stay the ones
+       that were verified, but the coast reads as a curve rather than a polygon. */
+    function smoothPoly(pts, seg, iters){
+      var n = pts.length, out = [], pin = [], i, j, t, a, b;
+      for(i = 0; i < n; i++){
+        a = pts[i]; b = pts[(i+1)%n];
+        out.push([a[0], a[1]]); pin.push(1);
+        for(j = 1; j < seg; j++){
+          t = j/seg;
+          out.push([a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t]); pin.push(0);
+        }
+      }
+      var m = out.length, k, next;
+      for(k = 0; k < iters; k++){
+        next = new Array(m);
+        for(i = 0; i < m; i++){
+          if(pin[i]){ next[i] = out[i]; continue; }
+          var p = out[(i-1+m)%m], q = out[(i+1)%m];
+          next[i] = [ out[i][0] + ((p[0]+q[0])/2 - out[i][0])*0.5,
+                      out[i][1] + ((p[1]+q[1])/2 - out[i][1])*0.5 ];
+        }
+        out = next;
+      }
+      return out;
+    }
+    var SMOOTHED = false;
+    function smoothAll(){
+      if(SMOOTHED) return;
+      SMOOTHED = true;
+      var i;
+      for(i = 0; i < LAND.length; i++) LAND[i] = smoothPoly(LAND[i], 4, 6);
+      for(i = 0; i < WATER.length; i++) WATER[i].p = smoothPoly(WATER[i].p, 4, 6);
+    }
+
+    function pointInPoly(lon, lat, poly){
+      var inside = false, n = poly.length, i, j, xi, yi, xj, yj;
+      for(i = 0, j = n-1; i < n; j = i++){
+        xi = poly[i][0]; yi = poly[i][1]; xj = poly[j][0]; yj = poly[j][1];
+        if(((yi > lat) !== (yj > lat)) && (lon < (xj-xi)*(lat-yi)/(yj-yi) + xi)) inside = !inside;
+      }
+      return inside;
+    }
+
+    /* Scanline fill: one pass per row rather than a point-in-polygon test per
+       texel, which is what makes a 2048-wide bake affordable at all. */
+    function stampScan(poly, value){
+      var n = poly.length, minLat = 90, maxLat = -90, i;
+      for(i = 0; i < n; i++){
+        if(poly[i][1] < minLat) minLat = poly[i][1];
+        if(poly[i][1] > maxLat) maxLat = poly[i][1];
+      }
+      var y0 = Math.max(0, Math.floor((90 - maxLat)/180*MH));
+      var y1 = Math.min(MH-1, Math.ceil((90 - minLat)/180*MH));
+      var xs = [];
+      for(var y = y0; y <= y1; y++){
+        var lat = 90 - (y + 0.5)/MH*180;
+        xs.length = 0;
+        for(i = 0; i < n; i++){
+          var a = poly[i], b = poly[(i+1)%n];
+          if((a[1] > lat) !== (b[1] > lat)) xs.push(a[0] + (b[0]-a[0])*(lat-a[1])/(b[1]-a[1]));
+        }
+        if(xs.length < 2) continue;
+        xs.sort(function(p,q){ return p-q; });
+        var row = y*MW;
+        for(i = 0; i + 1 < xs.length; i += 2){
+          var xa = Math.round((xs[i] + 180)/360*MW), xb = Math.round((xs[i+1] + 180)/360*MW);
+          if(xb < 0 || xa >= MW) continue;
+          if(xa < 0) xa = 0;
+          if(xb > MW) xb = MW;
+          for(var x = xa; x < xb; x++) MASK[row + x] = value;
+        }
+      }
+    }
+
+    /* Climate regions are small and need a noise-warped edge, so they stay
+       per-texel; their bounding boxes are tiny next to a continent's. */
+    function stampWarp(poly, value, warp){
+      var minLon = 180, maxLon = -180, minLat = 90, maxLat = -90, i;
+      for(i = 0; i < poly.length; i++){
+        if(poly[i][0] < minLon) minLon = poly[i][0];
+        if(poly[i][0] > maxLon) maxLon = poly[i][0];
+        if(poly[i][1] < minLat) minLat = poly[i][1];
+        if(poly[i][1] > maxLat) maxLat = poly[i][1];
+      }
+      var pad = warp;
+      var x0 = Math.max(0, Math.floor((minLon-pad+180)/360*MW)), x1 = Math.min(MW-1, Math.ceil((maxLon+pad+180)/360*MW));
+      var y0 = Math.max(0, Math.floor((90-maxLat-pad)/180*MH)), y1 = Math.min(MH-1, Math.ceil((90-minLat+pad)/180*MH));
+      for(var y = y0; y <= y1; y++){
+        var lat = 90 - (y + 0.5)/MH*180;
+        for(var x = x0; x <= x1; x++){
+          if(!MASK[y*MW + x]) continue;
+          var lon = (x + 0.5)/MW*360 - 180;
+          var tlon = lon + (vnoise(x/MW*9, y/MH*4.5, 9) - 0.5)*warp
+                         + (vnoise(x/MW*40, y/MH*20, 40) - 0.5)*warp*0.45;
+          var tlat = lat + (vnoise(x/MW*9 + 41, y/MH*4.5 + 23, 9) - 0.5)*warp
+                         + (vnoise(x/MW*40 + 91, y/MH*20 + 57, 40) - 0.5)*warp*0.45;
+          if(pointInPoly(tlon, tlat, poly)) MASK[y*MW + x] = value;
+        }
+      }
+    }
+
+    /* Chamfer distance on a half-resolution copy — distances are smooth, so the
+       extra resolution would buy nothing but time. */
+    var HW = MW >> 1, HH = MH >> 1;
+    function chamfer(seed){
+      var D = seed, x, y, i, best;
+      for(y = 0; y < HH; y++) for(x = 0; x < HW; x++){
+        i = y*HW + x; if(!D[i]) continue;
+        best = D[i];
+        if(x > 0 && D[i-1] + 1 < best) best = D[i-1] + 1;
+        if(y > 0 && D[i-HW] + 1 < best) best = D[i-HW] + 1;
+        if(y > 0 && x > 0 && D[i-HW-1] + 1 < best) best = D[i-HW-1] + 1;
+        if(y > 0 && x < HW-1 && D[i-HW+1] + 1 < best) best = D[i-HW+1] + 1;
+        D[i] = best;
+      }
+      for(y = HH-1; y >= 0; y--) for(x = HW-1; x >= 0; x--){
+        i = y*HW + x; if(!D[i]) continue;
+        best = D[i];
+        if(x < HW-1 && D[i+1] + 1 < best) best = D[i+1] + 1;
+        if(y < HH-1 && D[i+HW] + 1 < best) best = D[i+HW] + 1;
+        if(y < HH-1 && x < HW-1 && D[i+HW+1] + 1 < best) best = D[i+HW+1] + 1;
+        if(y < HH-1 && x > 0 && D[i+HW-1] + 1 < best) best = D[i+HW-1] + 1;
+        D[i] = best;
+      }
+      return D;
+    }
+
+    var BANDS = [
+      [0,  44, 90, 42],    /* equatorial forest */
+      [11,116,122, 66],    /* savanna           */
+      [23,158,144,100],    /* subtropical dry   */
+      [35, 92,114, 58],    /* temperate         */
+      [52, 66, 90, 58],    /* boreal            */
+      [64,120,124,104],    /* tundra            */
+      [73,226,231,236]     /* ice               */
+    ];
+    function band(alat, out){
+      var i = 0;
+      while(i < BANDS.length - 1 && alat >= BANDS[i+1][0]) i++;
+      if(i === BANDS.length - 1){ out[0] = BANDS[i][1]; out[1] = BANDS[i][2]; out[2] = BANDS[i][3]; return; }
+      var a = BANDS[i], b = BANDS[i+1];
+      var t = (alat - a[0])/(b[0] - a[0]);
+      out[0] = a[1] + (b[1]-a[1])*t;
+      out[1] = a[2] + (b[2]-a[2])*t;
+      out[2] = a[3] + (b[3]-a[3])*t;
+    }
+
+    function splat(field, W, H, lon, lat, rad, amp){
+      var fx = (lon + 180)/360*W, fy = (90 - lat)/180*H;
+      var stretch = 1/Math.max(0.25, Math.cos(lat*D2R));
+      var rx = Math.ceil(rad*stretch), ry = Math.ceil(rad);
+      for(var dy = -ry; dy <= ry; dy++){
+        var y = Math.round(fy + dy);
+        if(y < 0 || y >= H) continue;
+        for(var dx = -rx; dx <= rx; dx++){
+          var q = (dx/stretch)*(dx/stretch) + dy*dy;
+          if(q > rad*rad) continue;
+          var x = Math.round(fx + dx) % W; if(x < 0) x += W;
+          var f = 1 - q/(rad*rad);
+          /* break the blob up so a city reads as a cluster, not a perfect dot */
+          f *= 0.45 + 1.25*vnoise(x*0.55, y*0.55, W);
+          var v = field[y*W + x] + amp*f*f;
+          field[y*W + x] = v > 255 ? 255 : v;
+        }
+      }
+    }
+
+    function bakeBegin(){
+      smoothAll();
+      MASK = new Uint8Array(MW*MH);
+      TEX = new Uint8Array(MW*MH*4);
+      var i, x, y, lat, lon;
+      for(i = 0; i < LAND.length; i++) stampScan(LAND[i], 1);
+      for(i = 0; i < ARID.length; i++) stampWarp(ARID[i], 2, 13);
+      for(i = 0; i < FOREST.length; i++) stampWarp(FOREST[i], 4, 11);
+      for(i = 0; i < HIGHLAND.length; i++) stampWarp(HIGHLAND[i], 5, 8);
+      for(i = 0; i < WATER.length; i++) stampScan(WATER[i].p, WATER[i].k);
+      for(y = 0; y < MH; y++){
+        lat = 90 - (y + 0.5)/MH*180;
+        for(x = 0; x < MW; x++){
+          lon = (x + 0.5)/MW*360 - 180;
+          if(lat <= -72 + 2.5*Math.sin(lon*D2R*2) || lat >= 82) MASK[y*MW + x] = 3;
+        }
+      }
+
+      var seedC = new Uint8Array(HW*HH), seedR = new Uint8Array(HW*HH), k;
+      for(y = 0; y < HH; y++) for(x = 0; x < HW; x++){
+        k = MASK[(y*2)*MW + x*2];
+        seedC[y*HW + x] = k ? 0 : 255;
+        seedR[y*HW + x] = (k === 2 || k === 4 || k === 5) ? 255 : 0;
+      }
+      DIST = chamfer(seedC);
+      RD = chamfer(seedR);
+
+      /* Clouds, banded the way the real atmosphere is, plus city lights. */
+      AUX = new Uint8Array(CW*CH*4);
+      var cloud = new Float32Array(CW*CH);
+      for(y = 0; y < CH; y++){
+        lat = 90 - (y + 0.5)/CH*180;
+        var al = Math.abs(lat);
+        var belt = 0.34
+          + 0.46*Math.exp(-Math.pow((al - 5)/7, 2))
+          + 0.44*Math.exp(-Math.pow((al - 53)/15, 2))
+          - 0.28*Math.exp(-Math.pow((al - 26)/11, 2));
+        for(x = 0; x < CW; x++){
+          var patch = 0.45 + 1.15*vnoise(x/CW*5 + 13, y/CH*2 + 7, 5);
+          var c = fbm(x/CW*11, y/CH*5.5, 11, 6);
+          c = (c - 0.42)*2.5 + 0.42;
+          var a = (c - 0.58)*1.75 * belt * patch;
+          if(a > 0.86) a = 0.86;
+          cloud[y*CW + x] = a <= 0 ? 0 : a;
+        }
+      }
+      var lights = new Float32Array(CW*CH);
+      for(i = 0; i < CITIES.length; i++){
+        splat(lights, CW, CH, CITIES[i][0], CITIES[i][1], 3 + CITIES[i][2]*5, 120 + CITIES[i][2]*160);
+      }
+      for(i = 0; i < CW*CH; i++){
+        AUX[i*4]     = cloud[i]*255;
+        AUX[i*4 + 1] = lights[i];
+        AUX[i*4 + 2] = 0;
+        AUX[i*4 + 3] = 255;
+      }
+      bakeRow = 0;
+    }
+
+    /* Colour rows in slices so the bake never becomes one long task. */
+    function bakeRows(count){
+      var col = [0,0,0];
+      var yEnd = Math.min(MH, bakeRow + count);
+      for(var y = bakeRow; y < yEnd; y++){
+        var lat = 90 - (y + 0.5)/MH*180;
+        var alat = Math.abs(lat);
+        var hy = y >> 1;
+        for(var x = 0; x < MW; x++){
+          var i = y*MW + x;
+          var hi = hy*HW + (x >> 1);
+          var n = fbm(x/MW*18, y/MH*9, 18, 3);
+          var m = vnoise(x/MW*7, y/MH*3.5, 7);
+          var k = MASK[i], r, g, b, ocean = 0;
+
+          if(k === 0){
+            var d = DIST[hi];
+            var shelf = d < 4 ? 1 - d/4 : 0;
+            shelf = shelf*shelf*(3 - 2*shelf);
+            var deep = 0.5 + 0.5*m;
+            r = 11 + shelf*30 + n*4 + (1-deep)*6;
+            g = 44 + shelf*58 + n*5 + (1-deep)*9;
+            b = 88 + shelf*44 + n*5 + (1-deep)*11;
+            var cold = (alat - 44)/22; if(cold < 0) cold = 0; else if(cold > 1) cold = 1;
+            r += cold*18; g += cold*17; b += cold*9;
+            ocean = 255;
+          } else if(k === 6){
+            r = 38 + n*8; g = 82 + n*9; b = 116 + n*8;
+            ocean = 190;
+          } else if(k === 3){
+            r = 218 + n*18; g = 224 + n*17; b = 230 + n*15;
+          } else {
+            band(alat + (m - 0.5)*13, col);
+            r = col[0]; g = col[1]; b = col[2];
+            if(k === 2 || k === 4 || k === 5){
+              var f = RD[hi]/6; if(f > 1) f = 1;
+              f *= (k === 2 ? 0.80 : (k === 4 ? 0.74 : 0.66));
+              var tr, tg, tb;
+              if(k === 2){ tr = 198; tg = 172; tb = 122; }
+              else if(k === 4){ tr = 40; tg = 80; tb = 36; }
+              else { tr = 154; tg = 146; tb = 128; }
+              r = r*(1-f) + tr*f; g = g*(1-f) + tg*f; b = b*(1-f) + tb*f;
+            }
+            var v = (n - 0.5)*11, w = (m - 0.5)*16;
+            r += v + w*0.7; g += v*0.9 + w*0.5; b += v*0.6 + w*0.3;
+          }
+
+          var ice = lat >= 0 ? (lat - (ocean ? 70 : 75))/10 : ((ocean ? -59 : -62) - lat)/9;
+          if(ice > 0){
+            ice = ice*(0.6 + 0.8*m) + (n - 0.5)*0.4;
+            if(ice > 1) ice = 1;
+            if(ice > 0){
+              r = r*(1-ice) + 233*ice; g = g*(1-ice) + 238*ice; b = b*(1-ice) + 243*ice;
+            }
+          }
+          var o = i*4;
+          TEX[o]   = r < 0 ? 0 : (r > 255 ? 255 : r);
+          TEX[o+1] = g < 0 ? 0 : (g > 255 ? 255 : g);
+          TEX[o+2] = b < 0 ? 0 : (b > 255 ? 255 : b);
+          TEX[o+3] = ocean;
+        }
+      }
+      bakeRow = yEnd;
+      return bakeRow >= MH;
+    }
+
+    /* One separable blur over the baked colour. A category mask has hard edges by
+       construction; at a texel under a screen pixel that reads as a crawling
+       staircase along every coast. This is the antialiasing pass. */
+    function blurTex(){
+      var row = new Uint8Array(MW*3), x, y, c, base, xm, xp;
+      for(y = 0; y < MH; y++){
+        base = y*MW*4;
+        for(x = 0; x < MW; x++){
+          row[x*3] = TEX[base+x*4]; row[x*3+1] = TEX[base+x*4+1]; row[x*3+2] = TEX[base+x*4+2];
+        }
+        for(x = 0; x < MW; x++){
+          xm = (x - 1 + MW) % MW; xp = (x + 1) % MW;
+          for(c = 0; c < 3; c++)
+            TEX[base + x*4 + c] = (row[xm*3+c] + 2*row[x*3+c] + row[xp*3+c] + 2) >> 2;
+        }
+      }
+      var prev = new Uint8Array(MW*3), cur = new Uint8Array(MW*3), tmp;
+      for(x = 0; x < MW; x++){
+        prev[x*3] = TEX[x*4]; prev[x*3+1] = TEX[x*4+1]; prev[x*3+2] = TEX[x*4+2];
+      }
+      for(y = 0; y < MH; y++){
+        base = y*MW*4;
+        for(x = 0; x < MW; x++){
+          cur[x*3] = TEX[base+x*4]; cur[x*3+1] = TEX[base+x*4+1]; cur[x*3+2] = TEX[base+x*4+2];
+        }
+        var nb = Math.min(MH-1, y+1)*MW*4;
+        for(x = 0; x < MW; x++)
+          for(c = 0; c < 3; c++)
+            TEX[base + x*4 + c] = (prev[x*3+c] + 2*cur[x*3+c] + TEX[nb + x*4 + c] + 2) >> 2;
+        tmp = prev; prev = cur; cur = tmp;
+      }
+    }
+
+    function subsolar(date){
+      var d = date || new Date();
+      var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+      var day = (Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - yearStart)/86400000 + 1;
+      var decl = -23.44 * Math.cos(2*Math.PI/365 * (day + 10));
+      var hours = d.getUTCHours() + d.getUTCMinutes()/60 + d.getUTCSeconds()/3600;
+      return { lat:decl, lon:-15*(hours - 12) };
+    }
+
+    function proj(lat, lon, rotY, rotX){
+      var la = lat*D2R, lo = lon*D2R + rotY;
+      var x = Math.cos(la)*Math.sin(lo);
+      var y0 = Math.sin(la);
+      var z0 = Math.cos(la)*Math.cos(lo);
+      var cX = Math.cos(rotX), sX = Math.sin(rotX);
+      return { x:x, y:y0*cX - z0*sX, z:y0*sX + z0*cX };
+    }
+
+    var STILL = typeof window !== 'undefined' && window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function cloudDrift(){ return STILL ? 0 : (Date.now()/1000 * 0.0016) % 1; }
+
+    /* ---------- WebGL renderer ---------- */
+    var VERT =
+      'attribute vec2 aPos;' +
+      'void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }';
+
+    var FRAG = [
+      'precision highp float;',
+      'uniform vec2 uCenter;',        /* globe centre, in GL pixel coords    */
+      'uniform float uRadius;',
+      'uniform float uRotY, uRotX;',
+      'uniform vec3 uSunV;',          /* sun direction, view space           */
+      'uniform float uLit;',          /* 1 = day & night, 0 = full daylight  */
+      'uniform float uShift;',        /* cloud drift, in texture units       */
+      'uniform float uReady;',        /* 0 until the surface has baked       */
+      'uniform sampler2D uTex;',
+      'uniform sampler2D uAux;',
+      'const float PI = 3.141592653589793;',
+      'void main(){',
+      '  vec2 p = (gl_FragCoord.xy - uCenter) / uRadius;',
+      '  float r2 = dot(p, p);',
+      '  if(r2 > 1.30) discard;',
+      '  float rr = sqrt(r2);',
+
+      /* the halo of atmosphere just beyond the limb, brighter on the day side */
+      '  if(rr > 1.0){',
+      '    vec3 nv = vec3(p / rr, 0.0);',
+      '    float e = dot(nv, uSunV);',
+      '    float d = mix(1.0, smoothstep(-0.30, 0.30, e), uLit);',
+      '    float a = exp(-(rr - 1.0) * 24.0) * 0.55 * d;',
+      '    gl_FragColor = vec4(vec3(0.40, 0.60, 1.00), a);',
+      '    return;',
+      '  }',
+
+      '  float nz = sqrt(max(0.0, 1.0 - r2));',
+      '  vec3 v = vec3(p.x, p.y, nz);',
+
+      /* undo the tilt to get world-space direction, then to lat/lon */
+      '  float cX = cos(uRotX), sX = sin(uRotX);',
+      '  vec3 w = vec3(v.x, v.y*cX + v.z*sX, -v.y*sX + v.z*cX);',
+      '  float lat = asin(clamp(w.y, -1.0, 1.0));',
+      '  float lon = atan(w.x, w.z) - uRotY;',
+      '  vec2 uv = vec2(lon/(2.0*PI) + 0.5, 0.5 - lat/PI);',
+
+      '  vec4 t = texture2D(uTex, uv);',
+      '  vec3 surf = mix(vec3(0.07, 0.20, 0.38), t.rgb, uReady);',
+      '  float ocean = mix(1.0, t.a, uReady);',
+      '  vec4 aux = texture2D(uAux, vec2(uv.x + uShift, uv.y));',
+      '  float cloud = aux.r * uReady;',
+      '  float lights = texture2D(uAux, uv).g * uReady;',
+
+      '  float ill = dot(v, uSunV);',
+      '  float day = mix(1.0, smoothstep(-0.10, 0.14, ill), uLit);',
+      '  float diff = max(ill, 0.0);',
+
+      '  vec3 litc = surf * (0.34 + 0.98 * diff);',
+      '  vec3 night = surf * 0.055 + vec3(0.012, 0.022, 0.045);',
+      '  night += vec3(1.0, 0.72, 0.38) * lights * 1.45;',
+      '  vec3 col = mix(night, litc, day);',
+
+      /* the warm line of dawn and dusk */
+      '  float dawn = exp(-pow(ill / 0.055, 2.0)) * uLit;',
+      '  col += vec3(0.62, 0.30, 0.10) * dawn * 0.22;',
+
+      /* sun glint off open water */
+      '  vec3 hv = normalize(uSunV + vec3(0.0, 0.0, 1.0));',
+      '  float sp = pow(max(dot(v, hv), 0.0), 620.0) * ocean * day * (1.0 - cloud);',
+      '  col += vec3(1.0, 0.95, 0.86) * sp * 0.30;',
+
+      /* cloud deck, lit by the same sun */
+      '  vec3 cc = vec3(0.95, 0.95, 0.96) * (0.32 + 0.78 * diff);',
+      '  cc = mix(vec3(0.055, 0.075, 0.115) + vec3(0.35,0.22,0.10)*lights, cc, day);',
+      '  cc += vec3(0.30, 0.16, 0.05) * dawn * 0.35;',
+      '  col = mix(col, cc, cloud);',
+
+      /* limb darkening, and air thickening toward the edge */
+      '  col *= (0.88 + 0.12 * nz);',
+      '  float rim = pow(1.0 - nz, 3.0);',
+      '  col += vec3(0.26, 0.46, 0.88) * rim * day * 0.30;',
+
+      '  col = mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, 1.16);',
+      '  float alpha = 1.0 - smoothstep(1.0 - 1.6/uRadius, 1.0, rr);',
+      '  gl_FragColor = vec4(col, alpha);',
+      '}'
+    ].join('\n');
+
+    var G = { gl:null, prog:null, u:{}, tex:null, aux:null, ok:false, tried:false, uploaded:false };
+
+    function compile(gl, type, src){
+      var s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+        G.err = gl.getShaderInfoLog(s);
+        return null;
+      }
+      return s;
+    }
+
+    function initGL(canvas){
+      G.tried = true;
+      var gl = null;
+      try{
+        gl = canvas.getContext('webgl', { alpha:true, antialias:false, premultipliedAlpha:false, depth:false })
+          || canvas.getContext('experimental-webgl', { alpha:true, antialias:false, premultipliedAlpha:false, depth:false });
+      }catch(e){ gl = null; }
+      if(!gl) return false;
+      var vs = compile(gl, gl.VERTEX_SHADER, VERT), fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+      if(!vs || !fs) return false;
+      var prog = gl.createProgram();
+      gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+      if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){ G.err = gl.getProgramInfoLog(prog); return false; }
+      gl.useProgram(prog);
+
+      /* A quad sized to the globe each frame, not a full-screen triangle: outside
+         the disc every fragment is discarded, and those invocations are not free. */
+      var buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(12), gl.DYNAMIC_DRAW);
+      G.quad = buf;
+      var loc = gl.getAttribLocation(prog, 'aPos');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+      ['uCenter','uRadius','uRotY','uRotX','uSunV','uLit','uShift','uReady','uTex','uAux']
+        .forEach(function(n){ G.u[n] = gl.getUniformLocation(prog, n); });
+
+      function makeTex(unit){
+        var tx = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0 + unit);
+        gl.bindTexture(gl.TEXTURE_2D, tx);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array([20, 52, 96, 255]));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        return tx;
+      }
+      G.tex = makeTex(0);
+      G.aux = makeTex(1);
+      gl.uniform1i(G.u.uTex, 0);
+      gl.uniform1i(G.u.uAux, 1);
+
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.clearColor(0, 0, 0, 0);
+      G.gl = gl; G.prog = prog; G.ok = true;
+      return true;
+    }
+
+    function uploadTextures(){
+      var gl = G.gl;
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, G.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, MW, MH, 0, gl.RGBA, gl.UNSIGNED_BYTE, TEX);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, G.aux);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, CW, CH, 0, gl.RGBA, gl.UNSIGNED_BYTE, AUX);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      G.uploaded = true;
+    }
+
+    /* One slice of the bake per frame, so the page never locks up. */
+    function pumpBake(){
+      if(baked || !baking) return;
+      if(!MASK){ bakeBegin(); return; }
+      if(bakeRows(64)){
+        blurTex();
+        baked = true;
+        if(G.ok) uploadTextures();
+      }
+    }
+
+    function paintGL(canvas, o){
+      var gl = G.gl;
+      var w = canvas.width, h = canvas.height;
+      gl.viewport(0, 0, w, h);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      var dpr = o.dpr || 1;
+      var rotYn = o.rotY % (Math.PI*2); if(rotYn < 0) rotYn += Math.PI*2;
+      var sun = o.sun;
+      var sx = 0, sy = 0, sz = 1;
+      if(sun){
+        var sla = sun.lat*D2R, slo = sun.lon*D2R + o.rotY;
+        var wx = Math.cos(sla)*Math.sin(slo), wy = Math.sin(sla), wz = Math.cos(sla)*Math.cos(slo);
+        var cX = Math.cos(o.rotX), sX = Math.sin(o.rotX);
+        sx = wx; sy = wy*cX - wz*sX; sz = wy*sX + wz*cX;
+      }
+      gl.uniform2f(G.u.uCenter, o.cx*dpr, h - o.cy*dpr);
+      gl.uniform1f(G.u.uRadius, o.R*dpr);
+      gl.uniform1f(G.u.uRotY, rotYn);
+      gl.uniform1f(G.u.uRotX, o.rotX);
+      gl.uniform3f(G.u.uSunV, sx, sy, sz);
+      gl.uniform1f(G.u.uLit, sun ? 1 : 0);
+      gl.uniform1f(G.u.uShift, cloudDrift());
+      gl.uniform1f(G.u.uReady, baked && G.uploaded ? 1 : 0);
+      var pad = 1.32 * o.R * dpr;
+      var xc = o.cx*dpr, yc = h - o.cy*dpr;
+      var x0 = (xc - pad)/w*2 - 1, x1 = (xc + pad)/w*2 - 1;
+      var y0 = (yc - pad)/h*2 - 1, y1 = (yc + pad)/h*2 - 1;
+      gl.bindBuffer(gl.ARRAY_BUFFER, G.quad);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0,
+        new Float32Array([x0,y0, x1,y0, x0,y1, x0,y1, x1,y0, x1,y1]));
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    /* The canvas is handed in so the caller can stack a 2D overlay on top of it. */
+    function paint(canvas, o){
+      if(!baking && !baked){ baking = true; }
+      if(!G.tried) initGL(canvas);
+      pumpBake();
+      if(G.ok){ paintGL(canvas, o); return true; }
+      return false;
+    }
+
+    return {
+      paint: paint,
+      subsolar: subsolar,
+      proj: proj,
+      CITIES: CITIES,
+      ready: function(){ return baked; },
+      usingGL: function(){ return G.ok; },
+      error: function(){ return G.err || null; }
+    };
+  })();
+
+  var globe = { canvas:null, ctx:null, w:0, h:0, dpr:1, rotY:1.66, rotX:0.34, targetRotY:null, targetRotX:null,
+    dragging:false, lastX:0, lastY:0, moved:0, autoRotate:true, raf:null, inited:false, screenPoints:[] };
+
+  /* Day & night: the terminator is real — it follows the sun for a given moment.
+     "Now" tracks the clock; dragging the slider moves the sun around the planet. */
+  var sun = { on:true, live:true, minutes:720, shownMinutes:-1 };
+  function nowMinutes(){ var d = new Date(); return d.getUTCHours()*60 + d.getUTCMinutes(); }
+  function currentSun(){
+    if(!sun.on) return null;
+    var mins = sun.live ? nowMinutes() : sun.minutes;
+    var d = new Date();
+    d.setUTCHours(Math.floor(mins/60), mins%60, 0, 0);
+    return PLANET.subsolar(d);
+  }
+  function pad2(n){ return (n<10?'0':'') + n; }
+  function syncSunUI(){
+    var mins = sun.live ? nowMinutes() : sun.minutes;
+    if(mins === sun.shownMinutes && sun.uiReady) return;
+    sun.shownMinutes = mins; sun.uiReady = true;
+    document.getElementById('sun-range').value = mins;
+    document.getElementById('sun-time').textContent = pad2(Math.floor(mins/60)) + ':' + pad2(mins%60) + ' UTC';
+    document.getElementById('sun-now').classList.toggle('on', sun.live);
+    document.getElementById('sun-ctl').hidden = !sun.on;
+    var btn = document.getElementById('mode-daynight');
+    btn.classList.toggle('on', sun.on);
+    btn.setAttribute('aria-pressed', String(sun.on));
+    btn.textContent = sun.on ? 'Day & night' : 'Full daylight';
+  }
+  function toggleDayNight(){
+    sun.on = !sun.on; sun.uiReady = false; syncSunUI(); drawGlobe(); saveState();
+    showToast(sun.on ? 'Following the sun' : 'Full daylight');
+  }
+  function setSunMinutes(v){
+    sun.on = true; sun.live = false; sun.minutes = Math.max(0, Math.min(1435, parseInt(v,10) || 0));
+    sun.uiReady = false; syncSunUI(); drawGlobe(); saveState();
+  }
+  function setSunLive(){ sun.live = true; sun.uiReady = false; syncSunUI(); drawGlobe(); saveState(); }
+
+  function wrapEl(){ return document.getElementById('map-canvas'); }
+  function initGlobe(){
+    if(globe.inited) return;
+    globe.inited = true;
+    globe.canvas = document.getElementById('globe-canvas');
+    globe.overlay = document.getElementById('globe-overlay');
+    globe.ctx = globe.overlay.getContext('2d');
+    window.addEventListener('resize', function(){ if(currentView==='discover') resizeGlobe(); });
+
+    var el = wrapEl(), wrap = wrapEl();
+    /* The stage captures the pointer to orbit the planet, which would otherwise
+       steal the drag from the timeline and the controls sitting on top of it. */
+    function onChrome(e){
+      return !!(e.target && e.target.closest &&
+        e.target.closest('.timeline, .stage-controls, .stage-copy, .stage-now, .tour-card'));
+    }
+    var chromeHit = false;
+    el.addEventListener('pointerdown', function(e){ chromeHit = onChrome(e); }, true);
+    el.addEventListener('pointerdown', function(e){
+      if(chromeHit || onChrome(e)) return;
+      globe.dragging = true; globe.autoRotate = false; globe.moved = 0;
+      globe.targetRotY = null; globe.targetRotX = null;
+      globe.lastX = e.clientX; globe.lastY = e.clientY;
+      wrap.classList.add('grabbing');
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener('pointermove', function(e){
+      if(!globe.dragging) return;
+      var dx = e.clientX - globe.lastX, dy = e.clientY - globe.lastY;
+      globe.moved += Math.abs(dx) + Math.abs(dy);
+      globe.rotY += dx * 0.006;
+      globe.rotX = Math.max(-1.2, Math.min(1.2, globe.rotX - dy * 0.006));
+      globe.lastX = e.clientX; globe.lastY = e.clientY;
+    });
+    function endDrag(e){
+      if(!globe.dragging) return;
+      globe.dragging = false;
+      wrap.classList.remove('grabbing');
+      if(globe.moved < 6 && e.clientX != null){ handleGlobeClick(e.clientX, e.clientY); }
+      else if(globe.moved >= 6){ stopTour(true); }
+      setTimeout(function(){ globe.autoRotate = true; }, 1400);
+    }
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', function(){ if(globe.dragging){ globe.dragging=false; wrap.classList.remove('grabbing'); } });
+
+    /* WCAG 2.5.7 Dragging Movements: orbiting must not require a drag. The canvas is
+       focusable, and the arrow keys rotate it at the same rate a drag does. */
+    globe.canvas.addEventListener('keydown', function(e){
+      var step = e.shiftKey ? 0.30 : 0.10, used = true;
+      switch(e.key){
+        case 'ArrowLeft':  globe.rotY -= step; break;
+        case 'ArrowRight': globe.rotY += step; break;
+        case 'ArrowUp':    globe.rotX = Math.min(1.2, globe.rotX + step); break;
+        case 'ArrowDown':  globe.rotX = Math.max(-1.2, globe.rotX - step); break;
+        case 'PageUp':     if(windowIndex > 0) setWindow(windowIndex - 1, true); break;
+        case 'PageDown':   if(windowIndex < WINDOWS.length - 1) setWindow(windowIndex + 1, true); break;
+        case 'Home':       globe.rotY = 0; globe.rotX = 0.34; break;
+        default: used = false;
+      }
+      if(!used) return;
+      e.preventDefault();
+      stopTour(true);
+      globe.autoRotate = false;
+      globe.targetRotY = null; globe.targetRotX = null;
+      clearTimeout(globe.keyIdle);
+      globe.keyIdle = setTimeout(function(){ globe.autoRotate = true; }, 2600);
+      drawGlobe();
+    });
+
+    var wheelAt = 0;
+    wrap.addEventListener('wheel', function(e){
+      if(onChrome(e)) return;
+      var d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if(Math.abs(d) < 2) return;
+      var next = windowIndex + (d > 0 ? 1 : -1);
+      if(next < 0 || next > WINDOWS.length - 1) return;
+      e.preventDefault();
+      var now = Date.now();
+      if(now - wheelAt < 320) return;
+      wheelAt = now;
+      setWindow(next, true);
+    }, { passive:false });
+  }
+  /* Most browsers run this shader on the GPU and never notice it. Where WebGL
+     falls back to software, drop the render scale rather than drop frames. */
+  var perf = { n:0, sum:0, scale:1, last:0 };
+  function watchFrame(){
+    var t = performance.now();
+    if(perf.last){
+      perf.sum += t - perf.last; perf.n++;
+      if(perf.n === 30){
+        var avg = perf.sum/perf.n;
+        perf.n = 0; perf.sum = 0;
+        if(avg > 34 && perf.scale > 0.55){ perf.scale = Math.max(0.55, perf.scale - 0.2); resizeGlobe(); }
+        else if(avg < 15 && perf.scale < 1){ perf.scale = Math.min(1, perf.scale + 0.1); resizeGlobe(); }
+      }
+    }
+    perf.last = t;
+  }
+
+  function resizeGlobe(){
+    var wrap = document.getElementById('map-canvas');
+    var rect = wrap.getBoundingClientRect();
+    if(rect.width < 4 || rect.height < 4) return;
+    globe.dpr = Math.min(1.75, (window.devicePixelRatio || 1)) * perf.scale;
+    globe.w = rect.width; globe.h = rect.height;
+    globe.canvas.width = Math.round(rect.width * globe.dpr);
+    globe.canvas.height = Math.round(rect.height * globe.dpr);
+    globe.overlay.width = globe.canvas.width;
+    globe.overlay.height = globe.canvas.height;
+    globe.ctx.setTransform(globe.dpr, 0, 0, globe.dpr, 0, 0);
+  }
+  function projectPoint(lat, lon){
+    var phi = lat * Math.PI / 180;
+    var theta = lon * Math.PI / 180 + globe.rotY;
+    var x = Math.cos(phi) * Math.sin(theta);
+    var y = Math.sin(phi);
+    var z = Math.cos(phi) * Math.cos(theta);
+    var cx2 = Math.cos(globe.rotX), sx2 = Math.sin(globe.rotX);
+    var y2 = y * cx2 - z * sx2;
+    var z2 = y * sx2 + z * cx2;
+    return { x:x, y:y2, z:z2 };
+  }
+  function globeLayout(){
+    var w = globe.w, h = globe.h;
+    if(w >= 900){
+      return { cx:w*0.66, cy:h*0.44, R:Math.max(90, Math.min(w*0.33, h*0.385)) };
+    }
+    /* Stacked: the copy and the controls are laid out in flow, so measure what
+       they actually occupy and drop the planet into the gap between them. */
+    var stage = wrapEl().getBoundingClientRect();
+    var copy = document.querySelector('.stage-copy');
+    var now = document.querySelector('.stage-now');
+    var ctrl = document.querySelector('.stage-controls');
+    var top = 0, bot = h;
+    if(copy) top = Math.max(top, copy.getBoundingClientRect().bottom - stage.top);
+    if(now) top = Math.max(top, now.getBoundingClientRect().bottom - stage.top);
+    if(ctrl) bot = ctrl.getBoundingClientRect().top - stage.top;
+    var avail = bot - top;
+    if(avail < 140){ top = h*0.30; avail = Math.max(140, h*0.42); }
+    return {
+      cx: w*0.5,
+      cy: top + avail/2,
+      R: Math.max(80, Math.min(w*0.44, avail*0.47))
+    };
+  }
+  function drawGlobe(){
+    var ctx = globe.ctx;
+    if(!ctx || globe.w < 4) return;
+    var w = globe.w, h = globe.h;
+    var L = globeLayout(), cx = L.cx, cy = L.cy, R = L.R;
+    globe.cx = cx; globe.cy = cy; globe.R = R;
+    ctx.clearRect(0,0,w,h);
+    PLANET.paint(globe.canvas, { cx:cx, cy:cy, R:R, rotY:globe.rotY, rotX:globe.rotX, dpr:globe.dpr, sun:currentSun() });
+
+    globe.screenPoints = [];
+    var pointColor = '#F0A05A';
+    var coreColor = '#0C1F33';
+
+    // Events beyond the current time window sit on the planet as faint marks,
+    // so scrubbing the timeline visibly fills it in.
+    var shown = visibleEvents();
+    var shownIds = {}; shown.forEach(function(e){ shownIds[e.id] = true; });
+    ctx.fillStyle = 'rgba(250,244,234,.42)';
+    events.forEach(function(ev){
+      if(shownIds[ev.id] || ev.lat == null) return;
+      var q = projectPoint(ev.lat, ev.lon);
+      if(q.z <= -0.12) return;
+      ctx.beginPath(); ctx.arc(cx+q.x*R, cy-q.y*R, Math.max(1.6, R*0.007), 0, Math.PI*2); ctx.fill();
+    });
+
+    shown.forEach(function(ev){
+      var p = projectPoint(ev.lat, ev.lon);
+      var sx = cx+p.x*R, sy = cy-p.y*R;
+      var front = p.z > -0.12;
+      var scale = 0.55 + 0.45 * Math.max(0,(p.z+1)/2);
+      var alpha = front ? Math.min(1, 0.5 + (p.z+0.12)*1.4) : 0.16;
+      var isTourPoint = tour.on && tour.currentId === ev.id;
+      var base = Math.max(4.5, R*0.021);
+      var r = (isTourPoint ? base*1.45 : base) * scale;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2); ctx.fillStyle = pointColor; ctx.fill();
+      ctx.globalAlpha = 1;
+      if(front){
+        ctx.beginPath(); ctx.arc(sx,sy,r*0.4,0,Math.PI*2); ctx.fillStyle = coreColor; ctx.fill();
+        if(isTourPoint){
+          ctx.beginPath(); ctx.arc(sx,sy,r+base*1.5,0,Math.PI*2);
+          ctx.strokeStyle = pointColor; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+        globe.screenPoints.push({ x:sx, y:sy, r:Math.max(13,r+9), id:ev.id });
+      }
+    });
+  }
+  function globeLoop(){
+    if(currentView !== 'discover'){ globe.raf = null; return; }
+    if(globe.targetRotX !== null){
+      var dx2 = globe.targetRotX - globe.rotX;
+      globe.rotX += dx2 * 0.08;
+      if(Math.abs(dx2) < 0.003){ globe.rotX = globe.targetRotX; globe.targetRotX = null; }
+    }
+    if(globe.targetRotY !== null){
+      var diff = globe.targetRotY - globe.rotY;
+      while(diff > Math.PI) diff -= Math.PI*2;
+      while(diff < -Math.PI) diff += Math.PI*2;
+      globe.rotY += diff * 0.08;
+      if(Math.abs(diff) < 0.003) globe.targetRotY = null;
+    } else if(globe.autoRotate && !globe.dragging && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      globe.rotY += 0.0016;
+    }
+    if(sun.on && sun.live){
+      syncSunUI();
+    }
+    drawGlobe();
+    watchFrame();
+    globe.raf = requestAnimationFrame(globeLoop);
+  }
+  function startGlobeLoop(){ if(!globe.raf) globeLoop(); }
+  function handleGlobeClick(clientX, clientY){
+    var rect = globe.canvas.getBoundingClientRect();
+    var x = clientX - rect.left, y = clientY - rect.top;
+    var best = null, bestDist = Infinity;
+    globe.screenPoints.forEach(function(p){
+      var d = Math.hypot(p.x-x, p.y-y);
+      if(d < p.r && d < bestDist){ bestDist = d; best = p; }
+    });
+    if(best) openEvent(best.id);
+  }
+  function focusGlobeOn(lon, lat){
+    var ty = -lon*Math.PI/180;
+    var tx = lat == null ? globe.rotX : Math.max(-0.9, Math.min(0.9, lat*Math.PI/180 * 0.7));
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      globe.rotY = ty; globe.rotX = tx; drawGlobe(); return;
+    }
+    globe.targetRotY = ty;
+    globe.targetRotX = tx;
+  }
+
+
+  /* ---------- moments feed ---------- */
+  function renderMoments(){
+    document.getElementById('moment-event').innerHTML = events.map(function(e){ return '<option value="'+e.id+'">'+e.title+'</option>'; }).join('');
+    document.getElementById('side-tags').innerHTML = ALL_TAGS.map(function(t){ return '<span class="chip-static chip">'+t+'</span>'; }).join('');
+    document.getElementById('moments-feed').innerHTML = moments.slice().reverse().map(function(m){
+      var ev = events.filter(function(e){return e.id===m.eventId;})[0];
+      var isLiked = liked.has(m.id);
+      return '<article class="feed-card">'
+        + '<div class="feed-head"><div class="feed-avatar"></div><div><b>'+m.name+'</b><span>'+m.time+' · '+(ev?ev.title:'')+'</span></div></div>'
+        + '<div class="feed-img" style="background:'+thumbFor(m.id, m.tag)+';"></div>'
+        + '<p class="feed-caption">'+m.caption+'</p>'
+        + '<div class="feed-actions">'
+        + '<button class="feed-action'+(isLiked?' liked':'')+'" onclick="toggleLike(\''+m.id+'\')"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="'+(isLiked?'var(--accent)':'none')+'" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg><span id="likes-'+m.id+'">'+(m.likes+(isLiked?1:0))+'</span></button>'
+        + '<button class="feed-action"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 01-4 4H8l-5 3V6a4 4 0 014-4h10a4 4 0 014 4z"/></svg>Reply</button>'
+        + '</div></article>';
+    }).join('');
+  }
+  function toggleLike(id){
+    if(liked.has(id)) liked.delete(id); else liked.add(id);
+    renderMoments(); saveState();
+  }
+  function postMoment(){
+    var text = document.getElementById('moment-text').value.trim();
+    if(!text){ showToast('Write something first'); return; }
+    var eventId = document.getElementById('moment-event').value;
+    moments.push({id:'m'+Date.now(), eventId:eventId, name: document.getElementById('profile-name').textContent, time:'Just now', caption:text, likes:0, tag: events.filter(function(e){return e.id===eventId;})[0].tag});
+    document.getElementById('moment-text').value = '';
+    renderMoments();
+    showToast('Moment posted');
+    saveState();
+  }
+
+  /* ---------- event drawer ---------- */
+  function openEvent(id){
+    activeEventId = id;
+    var ev = events.filter(function(e){ return e.id===id; })[0];
+    document.getElementById('ed-cover').style.background = thumbFor(id);
+    document.getElementById('ed-tag').textContent = ev.tag;
+    document.getElementById('ed-title').textContent = ev.title;
+    document.getElementById('ed-rating').textContent = '★ '+ev.rating.toFixed(1)+' average rating';
+    document.getElementById('ed-date').textContent = ev.date;
+    document.getElementById('ed-loc').textContent = ev.location;
+    document.getElementById('ed-host').textContent = 'Hosted by '+ev.host;
+    document.getElementById('ed-desc').textContent = ev.desc;
+    updateRsvpBtn(); updateSaveBtn(); renderStars();
+    openDrawer('drawer-event');
+  }
+  function updateRsvpBtn(){
+    var btn = document.getElementById('ed-rsvp');
+    btn.textContent = rsvps.has(activeEventId) ? "You're going ✓" : "I'm going";
+  }
+  function toggleRSVP(){
+    if(rsvps.has(activeEventId)){ rsvps.delete(activeEventId); showToast('Removed from your events'); }
+    else { rsvps.add(activeEventId); showToast('Added to your events'); }
+    updateRsvpBtn();
+    document.getElementById('stat-going').textContent = rsvps.size;
+    saveState();
+  }
+  function updateSaveBtn(){
+    var icon = document.getElementById('ed-save-icon');
+    var on = saved.has(activeEventId);
+    icon.setAttribute('fill', on?'var(--accent)':'none');
+    icon.setAttribute('stroke', on?'var(--accent)':'var(--ink)');
+  }
+  function toggleSave(){
+    if(saved.has(activeEventId)){ saved.delete(activeEventId); showToast('Removed from saved'); }
+    else { saved.add(activeEventId); showToast('Saved'); }
+    updateSaveBtn(); saveState();
+  }
+  function renderStars(){
+    var existing = myRatings[activeEventId];
+    pendingStars = existing ? existing.stars : 0;
+    paintStars();
+  }
+  function paintStars(){
+    document.getElementById('ed-stars').innerHTML = [1,2,3,4,5].map(function(i){
+      return '<button type="button" onclick="setStar('+i+')" class="icon-bare" aria-label="'+i+' stars"><svg aria-hidden="true" focusable="false" width="22" height="22" viewBox="0 0 24 24" fill="'+(i<=pendingStars?'var(--accent)':'none')+'" stroke="var(--accent)" stroke-width="1.6"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.6l-5.9 3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button>';
+    }).join('');
+  }
+  function setStar(n){
+    pendingStars = n; paintStars();
+    myRatings[activeEventId] = {stars:n};
+    showToast('Thanks for rating!');
+    saveState();
+  }
+
+  /* ---------- companion ---------- */
+  var chatLog = [
+    {from:'ai', text:"Hi! I'm your Convene guide. Tell me what kind of experience you're looking for this weekend, and I'll line it up — in any language."}
+  ];
+  var suggestions = ['Something free this weekend','Family-friendly nearby','Business networking'];
+  function renderChat(){
+    document.getElementById('chat-log').innerHTML = chatLog.map(function(m){
+      if(m.from==='ai') return '<div class="bubble-row"><div class="bubble-avatar"></div><div class="bubble">'+m.text+'</div></div>';
+      return '<div class="bubble-row me"><div class="bubble">'+m.text+'</div></div>';
+    }).join('');
+    document.getElementById('chat-suggestions').innerHTML = suggestions.map(function(s){
+      return '<button class="chip" onclick="askSuggestion(\''+s.replace(/'/g,"\\'")+'\')">'+s+'</button>';
+    }).join('');
+    var log = document.getElementById('chat-log'); log.scrollTop = log.scrollHeight;
+  }
+  function askSuggestion(s){ document.getElementById('chat-input').value = s; sendChat(); }
+  function sendChat(){
+    var input = document.getElementById('chat-input');
+    var text = input.value.trim();
+    if(!text) return;
+    chatLog.push({from:'me', text:text});
+    input.value = '';
+    renderChat();
+    setTimeout(function(){
+      chatLog.push({from:'ai', text:"Here's what I'd point you to: the Community Culture Fair in Portland is free, family-friendly, and has great reviews. Want directions or more options?"});
+      renderChat();
+    }, 500);
+  }
+
+  /* ---------- profile ---------- */
+  function setProfileTab(tab){
+    profileTab = tab;
+    document.querySelectorAll('.profile-tab').forEach(function(t){ t.classList.toggle('on', t.dataset.tab===tab); });
+    renderProfile();
+  }
+  function renderProfile(){
+    document.getElementById('stat-going').textContent = rsvps.size;
+    document.getElementById('stat-hosted').textContent = hostedBase + events.filter(function(e){return e.host==='You';}).length;
+    var grid = document.getElementById('profile-grid');
+    var list, empty;
+    if(profileTab==='hosted'){ list = events.filter(function(e){return e.host==='You';}); empty = "You haven't hosted an event yet — tap “Host an event” to create one."; }
+    else if(profileTab==='saved'){ list = events.filter(function(e){return saved.has(e.id);}); empty = 'Nothing saved yet.'; }
+    else { list = events.filter(function(e){return rsvps.has(e.id);}); empty = 'You haven\'t RSVP\'d to anything yet.'; }
+    grid.innerHTML = list.length ? list.map(eventCardHtml).join('') : '<div class="span-all empty-note">'+empty+'</div>';
+  }
+  function openEditProfile(){
+    document.getElementById('edit-name').value = document.getElementById('profile-name').textContent;
+    document.getElementById('edit-loc').value = document.getElementById('profile-loc').textContent;
+    openDrawer('drawer-edit-profile');
+  }
+  function saveProfileEdit(){
+    var name = document.getElementById('edit-name').value.trim() || 'Guest';
+    var loc = document.getElementById('edit-loc').value.trim() || 'Somewhere out there';
+    document.getElementById('profile-name').textContent = name;
+    document.getElementById('profile-loc').textContent = loc;
+    var letter = name.charAt(0).toUpperCase();
+    document.getElementById('profile-avatar').textContent = letter;
+    document.getElementById('topbar-avatar').textContent = letter;
+    document.getElementById('topbar-name').textContent = name;
+    closeDrawer('drawer-edit-profile');
+    showToast('Profile updated');
+    saveState();
+  }
+
+  /* ---------- connections ---------- */
+  function openConnections(){
+    document.getElementById('connections-list').innerHTML = contacts.map(function(c){
+      return '<div class="contact-row"><div class="av"></div><div class="flex-1"><b>'+c.name+'</b><span>'+c.loc+'</span></div><button class="btn-sm btn-secondary" onclick="showToast(\'Messaging is not part of this prototype yet\')">Message</button></div>';
+    }).join('');
+    openDrawer('drawer-connections');
+  }
+
+  /* ---------- create event ---------- */
+  function pickType(btn){
+    document.querySelectorAll('#ev-type-row .chip').forEach(function(c){ c.classList.remove('on'); });
+    btn.classList.add('on');
+  }
+  function openCreate(){ setOverlay('modal-create', true); }
+  function createEvent(){
+    var name = document.getElementById('ev-name').value.trim();
+    if(!name){ showToast('Give your event a name first'); return; }
+    var date = document.getElementById('ev-date').value;
+    var time = document.getElementById('ev-time').value;
+    var loc = document.getElementById('ev-loc-input').value.trim() || 'Location TBD';
+    var tag = document.querySelector('#ev-type-row .chip.on').dataset.val;
+    var id = 'custom-'+Date.now();
+    var dateLabel = date ? new Date(date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}) : 'Date TBD';
+    if(time){ var tp=time.split(':'); var h=+tp[0]; dateLabel += ' · '+((h%12)||12)+':'+tp[1]+' '+(h>=12?'PM':'AM'); }
+    events.unshift({id:id, title:name, tag:tag, date:dateLabel, location:loc, host:'You', going:1, rating:0, lat:(Math.random()*140-70), lon:(Math.random()*360-180), desc:'Created just now — invite people to join!'});
+    document.getElementById('ev-name').value=''; document.getElementById('ev-date').value=''; document.getElementById('ev-time').value=''; document.getElementById('ev-loc-input').value='';
+    closeModal('modal-create');
+    showToast('Event created');
+    go('discover');
+    saveState();
+  }
+
+  /* ---------- settings ---------- */
+  function toggleSwitch(btn){ btn.classList.toggle('on'); btn.setAttribute('aria-checked', btn.classList.contains('on')); saveState(); }
+  function openSettings(){ openDrawer('drawer-settings'); }
+  function resetLocalData(){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    location.reload();
+  }
+
+  /* ---------- drawers / modals ----------
+     A closed overlay is only moved off-screen by a transform, so without `inert` it
+     stays in the tab order and in the accessibility tree — you can tab into a dialog
+     you cannot see. Every open and close goes through setOverlay so that can't drift. */
+  var overlayReturn = null;
+
+  function overlayEls(){ return document.querySelectorAll('.drawer, .modal-wrap'); }
+
+  function syncScrim(){
+    var any = document.querySelector('.drawer.open, .modal-wrap.open');
+    document.getElementById('scrim').classList.toggle('open', !!any);
+    return any;
+  }
+
+  function setOverlay(id, open){
+    var el = document.getElementById(id);
+    if(!el) return;
+    if(open){
+      overlayReturn = document.activeElement;
+      el.classList.add('open');
+      el.removeAttribute('inert');
+      el.removeAttribute('aria-hidden');
+      syncScrim();
+      // Land on the dialog itself, so its name is read before its contents.
+      el.setAttribute('tabindex','-1');
+      el.focus({preventScroll:true});
+    } else {
+      // Never leave focus inside something we are about to make inert.
+      if(el.contains(document.activeElement)){
+        var back = overlayReturn && document.body.contains(overlayReturn) ? overlayReturn : null;
+        if(back) back.focus({preventScroll:true}); else document.getElementById('main').focus({preventScroll:true});
+      }
+      el.classList.remove('open');
+      el.setAttribute('inert','');
+      el.setAttribute('aria-hidden','true');
+      syncScrim();
+    }
+  }
+
+  function openDrawer(id){ setOverlay(id, true); }
+  function closeDrawer(id){ setOverlay(id, false); }
+  function closeModal(id){ setOverlay(id, false); }
+  function closeAllOverlays(){
+    document.querySelectorAll('.drawer.open, .modal-wrap.open').forEach(function(el){ setOverlay(el.id, false); });
+  }
+  function initOverlays(){
+    overlayEls().forEach(function(el){
+      if(!el.classList.contains('open')){ el.setAttribute('inert',''); el.setAttribute('aria-hidden','true'); }
+    });
+  }
+
+  /* ---------- persistence ---------- */
+  function saveState(){
+    try{
+      var state = {
+        profileName: document.getElementById('profile-name').textContent,
+        profileLoc: document.getElementById('profile-loc').textContent,
+        rsvps: Array.from(rsvps), saved: Array.from(saved), liked: Array.from(liked),
+        userInterests: userInterests, myRatings: myRatings,
+        theme: document.documentElement.getAttribute('data-theme'),
+        notif: document.getElementById('sw-notif').classList.contains('on'),
+        loc: document.getElementById('sw-loc').classList.contains('on'),
+        customEvents: events.filter(function(e){return e.host==='You';}),
+        customMoments: moments.filter(function(m){return m.time==='Just now';}),
+        windowIndex: windowIndex, sunOn: sun.on, sunLive: sun.live, sunMinutes: sun.minutes
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){}
+  }
+  function loadState(){
+    var raw = null;
+    try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
+    if(!raw) return;
+    try{
+      var s = JSON.parse(raw);
+      if(s.rsvps) rsvps = new Set(s.rsvps);
+      if(s.saved) saved = new Set(s.saved);
+      if(s.liked) liked = new Set(s.liked);
+      if(s.userInterests) userInterests = s.userInterests;
+      if(s.myRatings) myRatings = s.myRatings;
+      if(typeof s.windowIndex === 'number') windowIndex = Math.max(0, Math.min(WINDOWS.length-1, s.windowIndex));
+      if(typeof s.sunOn === 'boolean') sun.on = s.sunOn;
+      if(typeof s.sunLive === 'boolean') sun.live = s.sunLive;
+      if(typeof s.sunMinutes === 'number') sun.minutes = Math.max(0, Math.min(1435, s.sunMinutes));
+      if(s.customEvents && s.customEvents.length) s.customEvents.forEach(function(ce){ if(!events.some(function(e){return e.id===ce.id;})) events.unshift(ce); });
+      if(s.customMoments) s.customMoments.forEach(function(cm){ if(!moments.some(function(m){return m.id===cm.id;})) moments.push(cm); });
+      if(s.profileName){ document.getElementById('profile-name').textContent = s.profileName; document.getElementById('topbar-name').textContent = s.profileName; var l=s.profileName.charAt(0).toUpperCase(); document.getElementById('profile-avatar').textContent=l; document.getElementById('topbar-avatar').textContent=l; }
+      if(s.profileLoc) document.getElementById('profile-loc').textContent = s.profileLoc;
+      if(s.theme) document.documentElement.setAttribute('data-theme', s.theme);
+      document.getElementById('sw-dark').classList.toggle('on', s.theme==='dark');
+      document.getElementById('sw-notif').classList.toggle('on', s.notif!==false);
+      document.getElementById('sw-loc').classList.toggle('on', s.loc!==false);
+    }catch(e){}
+  }
+
+  /* Keyboard: "/" or Cmd/Ctrl-K jumps to search, Escape backs out of anything open. */
+  document.addEventListener('keydown', function(e){
+    var t = e.target, tag = t && t.tagName;
+    var typing = tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable);
+    if(e.key === 'Escape'){
+      if(typing && t.id === 'hero-search' && t.value){ t.value = ''; onHeroSearch(); return; }
+      closeAllOverlays();
+      if(typing) t.blur();
+      return;
+    }
+    if(typing) return;
+    if(e.key === '/' || ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K'))){
+      var box = document.getElementById('hero-search');
+      if(!box) return;
+      e.preventDefault();
+      if(currentView !== 'discover') go('discover');
+      box.scrollIntoView({ block:'center', behavior:'smooth' });
+      box.focus();
+    }
+  });
+
+  initOverlays();
+  buildNav();
+  loadState();
+  syncSunUI();
+  initTimeline();
+  renderTimeline();
+  go('discover');
+  navReady = true;
+</script>

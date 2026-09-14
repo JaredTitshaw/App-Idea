@@ -77,9 +77,31 @@ The screens themselves are published as three interactive design canvases (split
 - [Explore & Events](https://claude.ai/code/artifact/327dd4c8-80bb-43f1-a08f-653dfdb53dc2) — Explore Map (since replaced by The Planet), Live, Create Event, Event Detail sheet, Invite & Share sheet
 - [Account & Branding](https://claude.ai/code/artifact/f5249ed6-5a31-42d4-af36-6c7ea8671ed4) — Companion (AI), Profile, Settings, Launch Splash, App Icon
 
+## Accessibility
+
+Both prototypes are checked against WCAG 2.1 AA, plus WCAG 2.2's dragging-movements
+rule, and the checks live in `prototype/tests/` so the claims are reproducible rather
+than asserted:
+
+- **Every visible string** was measured against its actual rendered background in both
+  themes and across every view. Nothing on either prototype is below AA.
+- **The planet is operable without a drag** (WCAG 2.2 SC 2.5.7). The canvas is
+  focusable; arrow keys orbit it, `Page Up`/`Page Down` travel through time, `Home`
+  recentres it, and it carries a text description of what it is showing.
+- **Nothing hidden is reachable.** Closed drawers, sheets and modals are `inert`, so a
+  keyboard user can't tab into a dialog that isn't on screen.
+- **Focus is visible and managed** — one ring across the product, a skip link as the
+  first tab stop, focus moved to the heading on navigation and returned to the opener
+  when a dialog closes.
+- **Cards are real controls.** Every event card exposes a focusable button rather than
+  relying on a click handler attached to a `div`.
+
 ## Working on this repo
 
 Two pieces of tooling are checked in so a fresh clone is set up the same way.
+
+The prototype source lives in `prototype/` — two dependency-free HTML files plus the
+test suite. See `prototype/README.md`.
 
 **Design skills.** `.claude/skills/` vendors the seven skills from the
 [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
