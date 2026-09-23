@@ -385,11 +385,86 @@ input[type=range]{
   pointer-events:none; box-shadow:0 0 0 6px rgba(255,90,43,.18);
 }
 
+/* ══ running now ════════════════════════════════════════════════════════
+   A gathering you would walk into partway. Drawn as a ring, because it is
+   open but no longer whole. */
+.node.is-running .dot{ background:transparent; border:2.5px solid var(--signal); box-shadow:none; }
+.node.is-running .nlab{ color:var(--signal-soft); }
+.row.is-running .row-t{ color:var(--signal-soft); }
+.row.is-running .row-r b{ color:var(--signal); text-transform:uppercase; letter-spacing:.08em; font-size:10px; }
+@keyframes breathe{ 0%,100%{ opacity:1 } 50%{ opacity:.45 } }
+.fx .node.is-running .dot{ animation:breathe 2.4s ease-in-out infinite; }
+
+/* filtered out entirely */
+.node.is-off{ opacity:0; pointer-events:none; }
+.row.is-off{ display:none; }
+
+/* ══ filters ════════════════════════════════════════════════════════════ */
+.filters{
+  display:flex; gap:7px; flex-wrap:wrap; align-items:center;
+  padding:2px clamp(14px,3vw,26px) 12px;
+}
+.filters .sep{ width:1px; height:18px; background:var(--line); margin:0 4px; }
+.chip{
+  font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  padding:6px 11px; border:1px solid var(--line); border-radius:999px; color:var(--dim);
+  white-space:nowrap; transition:border-color .15s, color .15s, background .15s;
+}
+.chip:hover{ border-color:var(--spent); color:var(--bone); }
+.chip[aria-pressed="true"]{ background:var(--bone); border-color:var(--bone); color:var(--void); font-weight:600; }
+.chip.lang[aria-pressed="true"]{ background:var(--signal); border-color:var(--signal); color:var(--signal-ink); }
+
+/* ══ the wheel ══════════════════════════════════════════════════════════
+   Three reels spin and settle onto real rows from the set, the way a picker
+   lands. Nothing is invented: every value that stops in the window is one of
+   the gatherings this build actually holds. */
+.wheel{ position:relative; height:126px; margin:8px 0 20px; overflow:hidden; }
+.wheel::before, .wheel::after{
+  content:""; position:absolute; left:0; right:0; height:42px; z-index:2; pointer-events:none;
+}
+.wheel::before{ top:0;    background:linear-gradient(180deg, var(--void) 12%, rgba(11,11,13,0)); }
+.wheel::after { bottom:0; background:linear-gradient(0deg,   var(--void) 12%, rgba(11,11,13,0)); }
+.wheel-band{
+  position:absolute; left:0; right:0; top:42px; height:42px; z-index:1;
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  background:rgba(255,90,43,.05);
+}
+.reels{ display:grid; grid-template-columns:1.5fr 1.2fr .5fr; gap:14px; height:100%; }
+.reel{ overflow:hidden; }
+.reel-in{ will-change:transform; }
+.reel-i{
+  height:42px; display:flex; align-items:center; font-size:12px; letter-spacing:.02em;
+  color:var(--spent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.reel:last-child .reel-i{ justify-content:flex-end; color:var(--signal); }
+.reel-i.hit{ color:var(--bone); }
+
+/* Declared last, after .filters and .clocks define themselves — a media query
+   adds no specificity, so an earlier block loses to a later base rule. */
+@media (max-width:700px){
+  /* One scrolling strip rather than three wrapped rows, so the instrument is
+     not pushed off the bottom of a phone. */
+  .filters, .clocks{
+    flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .filters{ padding-bottom:10px; }
+  .filters::-webkit-scrollbar, .clocks::-webkit-scrollbar{ display:none; }
+  .filters > *, .clocks > *{ flex:0 0 auto; }
+}
 </style>
 
 <div class="boot" id="boot" role="status" aria-label="Starting up">
   <div class="boot-in">
     <div class="boot-mark">Convene<i>FIELD</i></div>
+    <div class="wheel" aria-hidden="true">
+      <div class="wheel-band"></div>
+      <div class="reels">
+        <div class="reel"><div class="reel-in" id="r1"></div></div>
+        <div class="reel"><div class="reel-in" id="r2"></div></div>
+        <div class="reel"><div class="reel-in" id="r3"></div></div>
+      </div>
+    </div>
     <div class="boot-line" id="b1">Device store<b aria-hidden="true">—</b><span class="vh"></span></div>
     <div class="boot-line" id="b2">Gatherings<b aria-hidden="true">—</b><span class="vh"></span></div>
     <div class="boot-line" id="b3">Computing reach<b aria-hidden="true">—</b><span class="vh"></span></div>
@@ -423,6 +498,7 @@ input[type=range]{
   <div class="leave-read" id="leave-read"></div>
 </section>
 
+<div class="filters" id="filters" role="group" aria-label="Filter gatherings"></div>
 <div class="clocks" id="clocks" aria-live="off"></div>
 
 <main id="main" tabindex="-1">
@@ -516,46 +592,46 @@ var BASE = new Date(LOAD.getTime());          // clock anchor for labels
    `alone` share of people who turn up on their own
    `door`  who meets a first-timer, if anyone   */
 var EVENTS = [
-  {id:'a1', t:'Community', title:'Dockside Swap Meet',       venue:'Pier 7 Warehouse',    at:  35, dur:180, reach:12, size:84,  alone:.36, door:'Nadia',
+  {id:'a1', langs:['EN','NL'], t:'Community', title:'Dockside Swap Meet',       venue:'Pier 7 Warehouse',    at:  35, dur:180, reach:12, size:84,  alone:.36, door:'Nadia',
    desc:'Bring something you have stopped using, leave with something you have not. Tools, books, plants, bicycle parts.'},
-  {id:'a2', t:'Business',  title:'Riverside Founders Mixer', venue:'The Boathouse',        at:  55, dur:150, reach:26, size:142, alone:.48, door:'Mia',
+  {id:'a2', langs:['EN'], t:'Business',  title:'Riverside Founders Mixer', venue:'The Boathouse',        at:  55, dur:150, reach:26, size:142, alone:.48, door:'Mia',
    desc:'A slow room of founders and operators. No pitches from a stage, no badge scanning, no one taking names at the door.'},
-  {id:'a3', t:'Family',    title:'Outdoor Screening',      venue:'Kestrel Common',       at:  95, dur:135, reach:34, size:112, alone:.12, door:null,
+  {id:'a3', langs:['EN','ES'], t:'Family',    title:'Outdoor Screening',      venue:'Kestrel Common',       at:  95, dur:135, reach:34, size:112, alone:.12, door:null,
    desc:'A sheet, a projector and whatever the neighbourhood voted for. Blankets welcome, chairs at the back please.'},
-  {id:'a4', t:'Community', title:'Kitchen Table Language Swap', venue:'Alba Community Hall', at: 70, dur:120, reach:48, size:31, alone:.71, door:'Yusuf',
+  {id:'a4', langs:['EN','AR','TR'], t:'Community', title:'Kitchen Table Language Swap', venue:'Alba Community Hall', at: 70, dur:120, reach:48, size:31, alone:.71, door:'Yusuf',
    desc:'Ninety minutes, two languages, one table. You teach yours badly, someone teaches you theirs badly, everyone eats.'},
-  {id:'a5', t:'Culture',   title:'Open Print Room',          venue:'Foundry Studios',      at: 150, dur:180, reach:19, size:44,  alone:.52, door:'Rae',
+  {id:'a5', langs:['EN'], t:'Culture',   title:'Open Print Room',          venue:'Foundry Studios',      at: 150, dur:180, reach:19, size:44,  alone:.52, door:'Rae',
    desc:'The screen-printing floor stays open after hours. Pull one print, clean your own screen, that is the whole deal.'},
-  {id:'a6', t:'Community', title:'Neighbourhood Potluck',    venue:'Shepherd Street',      at: 120, dur:210, reach:62, size:57,  alone:.34, door:'Ben',
+  {id:'a6', langs:['EN','ES'], t:'Community', title:'Neighbourhood Potluck',    venue:'Shepherd Street',      at: 120, dur:210, reach:62, size:57,  alone:.34, door:'Ben',
    desc:'Three streets close, trestle tables come out, and the rule is you bring enough of one thing for eight people.'},
-  {id:'a7', t:'Business',  title:'Demos, Four Minutes Each',       venue:'Warehouse 12',         at: 185, dur:165, reach:29, size:410, alone:.55, door:null,
+  {id:'a7', langs:['EN'], t:'Business',  title:'Demos, Four Minutes Each',       venue:'Warehouse 12',         at: 185, dur:165, reach:29, size:410, alone:.55, door:null,
    desc:'Twelve demos at four minutes each, then two hours of nobody watching the demos any more.'},
-  {id:'a8', t:'Culture',   title:'Bairro Sound Systems',       venue:'Rua da Fábrica',       at: 240, dur:300, reach:41, size:212, alone:.44, door:null,
+  {id:'a8', langs:['PT','EN'], t:'Culture',   title:'Bairro Sound Systems',       venue:'Rua da Fábrica',       at: 240, dur:300, reach:41, size:212, alone:.44, door:null,
    desc:'Four sound systems, three streets, and a queue that never really forms because there is nothing to queue for.'},
-  {id:'a9', t:'Family',    title:'Rooftop Cine Club',        venue:'Granary Roof',         at: 215, dur:150, reach:16, size:128, alone:.25, door:'Tomás',
+  {id:'a9', langs:['EN','PT'], t:'Family',    title:'Rooftop Cine Club',        venue:'Granary Roof',         at: 215, dur:150, reach:16, size:128, alone:.25, door:'Tomás',
    desc:'One film a month on the grain store roof. Doors early because the lift only takes six at a time.'},
-  {id:'a10',t:'Community', title:'Repair Café',              venue:'Ironmonger Rooms',     at: 300, dur:180, reach:53, size:58,  alone:.62, door:'Elke',
+  {id:'a10', langs:['DE','EN'],t:'Community', title:'Repair Café',              venue:'Ironmonger Rooms',     at: 300, dur:180, reach:53, size:58,  alone:.62, door:'Elke',
    desc:'Bring the broken thing. Someone who knows how it works sits down with you until it works again, or until you both agree it will not.'},
-  {id:'a11',t:'Culture',   title:'Harbour Lantern Walk',     venue:'East Quay',            at: 345, dur:120, reach:22, size:96,  alone:.29, door:'Aiko',
+  {id:'a11', langs:['JA','EN'],t:'Culture',   title:'Harbour Lantern Walk',     venue:'East Quay',            at: 345, dur:120, reach:22, size:96,  alone:.29, door:'Aiko',
    desc:'A slow loop of the harbour after dark, carrying a paper lantern you fold yourself at the start.'},
-  {id:'a12',t:'Community', title:'The Overnight Bake',           venue:'Halsey Bakehouse',     at: 430, dur:120, reach:38, size:22,  alone:.68, door:'Sami',
+  {id:'a12', langs:['EN'],t:'Community', title:'The Overnight Bake',           venue:'Halsey Bakehouse',     at: 430, dur:120, reach:38, size:22,  alone:.68, door:'Sami',
    desc:'The overnight bake, with room for six people who want to see what happens to dough at two in the morning.'},
-  {id:'a13',t:'Business',  title:'Design Crit, Six Up',  venue:'Studio 4, Tanner Yard', at: 265, dur:120, reach:71, size:26, alone:.58, door:null,
+  {id:'a13', langs:['EN'],t:'Business',  title:'Design Crit, Six Up',  venue:'Studio 4, Tanner Yard', at: 265, dur:120, reach:71, size:26, alone:.58, door:null,
    desc:'Bring one thing you are stuck on. Thirty minutes each, no audience participation trophies.'},
-  {id:'a14',t:'Family',    title:'Harbour Loop Run',      venue:'East Quay steps',      at: 520, dur:75,  reach:22, size:46,  alone:.63, door:'Priya',
+  {id:'a14', langs:['EN'],t:'Family',    title:'Harbour Loop Run',      venue:'East Quay steps',      at: 520, dur:75,  reach:22, size:46,  alone:.63, door:'Priya',
    desc:'Five slow kilometres round the water before anything opens. Coffee after for whoever wants it.'},
-  {id:'a15',t:'Culture',   title:'Feria Cultural Bilingüe',  venue:'Plaza Norte',          at: 480, dur:360, reach:57, size:310, alone:.21, door:'Sofía',
+  {id:'a15', langs:['ES','EN'],t:'Culture',   title:'Feria Cultural Bilingüe',  venue:'Plaza Norte',          at: 480, dur:360, reach:57, size:310, alone:.21, door:'Sofía',
    desc:'A bilingual street fair that has outgrown its permit twice. Food from eleven, music from two.'},
-  {id:'a16',t:'Community', title:'Tool Library Open Hours',  venue:'Depot Annexe',         at: 400, dur:150, reach:44, size:38,  alone:.55, door:null,
+  {id:'a16', langs:['EN','DE'],t:'Community', title:'Tool Library Open Hours',  venue:'Depot Annexe',         at: 400, dur:150, reach:44, size:38,  alone:.55, door:null,
    desc:'Borrow anything on the wall for a week. Membership is free and the only form is your first name.'},
-  {id:'a17',t:'Business',  title:'Founders Long Table',venue:'Café Vista',           at: 560, dur:90,  reach:33, size:74,  alone:.58, door:'Tomás',
+  {id:'a17', langs:['PT','EN','ES'],t:'Business',  title:'Founders Long Table',venue:'Café Vista',           at: 560, dur:90,  reach:33, size:74,  alone:.58, door:'Tomás',
    desc:'One long table, and a rule that nobody talks about funding for the first half hour.'},
   /* already happened — the left of the field */
-  {id:'p1', t:'Community', title:'Kreuzberg Repair Café',    venue:'Oranien Rooms',        at: -85, dur:180, reach:53, size:58,
+  {id:'p1', langs:['NL','EN'], t:'Community', title:'Kreuzberg Repair Café',    venue:'Oranien Rooms',        at: -85, dur:180, reach:53, size:58,
    came:58,  aloneCame:34, stayed:39, desc:'Bring the broken thing, leave with the working thing and usually a new acquaintance.'},
-  {id:'p2', t:'Culture',   title:'Brass Band, No Permit',    venue:'Market Steps',         at:-130, dur:90,  reach:14, size:120,
+  {id:'p2', langs:['EN'], t:'Culture',   title:'Brass Band, No Permit',    venue:'Market Steps',         at:-130, dur:90,  reach:14, size:120,
    came:186, aloneCame:74, stayed:96, desc:'Nobody booked them. They played for an hour and a half and then packed up and left.'},
-  {id:'p3', t:'Family',    title:'Mercado de Barrio',        venue:'Calle Roma',           at: -40, dur:240, reach:47, size:400,
+  {id:'p3', langs:['ES','EN'], t:'Family',    title:'Mercado de Barrio',        venue:'Calle Roma',           at: -40, dur:240, reach:47, size:400,
    came:630, aloneCame:96, stayed:410,desc:'A street market that closed two roads and ran six hours past the time on the paperwork.'}
 ];
 
@@ -575,7 +651,18 @@ function clockOf(at){
 function nowMin(){ return (Date.now() - LOAD.getTime())/60000; }
 function byId(id){ for(var i=0;i<EVENTS.length;i++) if(EVENTS[i].id===id) return EVENTS[i]; return null; }
 function isPast(e){ return e.came != null; }
-function reachable(e){ return !isPast(e) && (e.at - e.reach) >= leaveAt; }
+
+/* Walking in late is still walking in. The old rule treated anything past its
+   start as gone, which is wrong for the long ones — a street market that runs
+   six hours is joinable four hours in. What matters is arriving with enough
+   left to be worth the journey. */
+var MIN_STAY = 25;                       // minutes worth turning up for
+function arrival(e){ return leaveAt + e.reach; }
+function endsAt(e){ return e.at + e.dur; }
+function joinable(e){ return !isPast(e) && arrival(e) <= endsAt(e) - MIN_STAY; }
+function running(e){ return joinable(e) && arrival(e) > e.at; }   // you'd walk in partway
+function reachable(e){ return joinable(e); }
+function leftOf(e){ return Math.max(0, Math.round(endsAt(e) - arrival(e))); }
 function x(at){ return (at - FIELD.tMin) * FIELD.pxPerMin; }
 function y(reach){ return FIELD.H - (reach / FIELD.reachMax) * FIELD.H; }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
@@ -679,19 +766,23 @@ function edgeMinutes(e){ return (e.at - e.reach) - leaveAt; }
 function updateNodes(){
   EVENTS.forEach(function(e){
     var el = nodeEls[e.id]; if(!el) return;
-    var past = isPast(e), live = reachable(e), edge = !past && live && edgeMinutes(e) <= 45;
+    var past = isPast(e), live = joinable(e), run = !past && running(e);
+    var edge = !past && live && !run && edgeMinutes(e) <= 45;
     el.classList.toggle('is-past', past);
     el.classList.toggle('is-gone', !past && !live);
+    el.classList.toggle('is-running', run);
     el.classList.toggle('is-edge', edge);
+    el.classList.toggle('is-off', !isPast(e) && !passes(e));
     el.classList.toggle('in-thread', thread.indexOf(e.id) !== -1);
     el.style.left = x(e.at) + 'px';
     el.style.top  = y(e.reach) + 'px';
     el.setAttribute('aria-label', past
       ? e.title + ', ' + clockOf(e.at) + ', already happened, ' + e.came + ' came'
       : e.title + ', starts ' + clockOf(e.at) + ', ' + e.reach + ' minutes away, '
-        + (live ? (edge ? 'leave within ' + Math.max(0,Math.round(edgeMinutes(e))) + ' minutes'
-                        : 'you can still make it')
-                : 'gone if you leave at ' + clockOf(leaveAt)));
+        + (run  ? 'already running, you would get ' + leftOf(e) + ' minutes of it'
+        : live ? (edge ? 'leave within ' + Math.max(0,Math.round(edgeMinutes(e))) + ' minutes'
+                       : 'you can still make it')
+               : 'gone if you leave at ' + clockOf(leaveAt)));
   });
 }
 
@@ -706,14 +797,18 @@ function setLeave(mins, live){
   var nb = document.getElementById('leave-now');
   nb.classList.toggle('on', leaveLive);
   nb.setAttribute('aria-pressed', String(leaveLive));
-  var open = EVENTS.filter(reachable).length;
-  var lost = EVENTS.filter(function(e){ return !isPast(e) && !reachable(e); }).length;
+  var open = EVENTS.filter(function(e){ return joinable(e) && !running(e); }).length;
+  var now  = EVENTS.filter(function(e){ return !isPast(e) && running(e); }).length;
+  var lost = EVENTS.filter(function(e){ return !isPast(e) && !joinable(e); }).length;
   var read = document.getElementById('leave-read');
   if(!read.dataset.built){
-    read.innerHTML = '<b class="count" id="lr-open">0</b> still reachable &nbsp;·&nbsp; <span class="count" id="lr-gone">0</span> gone';
+    read.innerHTML = '<b class="count" id="lr-open">0</b> still reachable'
+      + ' &nbsp;·&nbsp; <span class="count" id="lr-now">0</span> already running'
+      + ' &nbsp;·&nbsp; <span class="count" id="lr-gone">0</span> gone';
     read.dataset.built = '1';
   }
   tween(document.getElementById('lr-open'), open, 260);
+  tween(document.getElementById('lr-now'), now, 260);
   tween(document.getElementById('lr-gone'), lost, 260);
   renderField(); renderList(); renderThread(); renderClocks();
   followLine();
@@ -722,11 +817,14 @@ function nudgeLeave(){ if(leaveLive) setLeave(0, true); }
 
 /* ── list view: the same information, read rather than looked at ──────── */
 function rowHtml(e){
-  var cls = 'row' + (isPast(e) ? ' is-past' : (reachable(e) ? '' : ' is-gone'));
+  var cls = 'row' + (isPast(e) ? ' is-past' : (running(e) ? ' is-running' : (joinable(e) ? '' : ' is-gone')))
+    + (!isPast(e) && !passes(e) ? ' is-off' : '');
   var right = isPast(e)
     ? '<b>'+e.came.toLocaleString()+'</b> came<i>'+Math.round(e.aloneCame/e.came*100)+'% alone · '
       + Math.round(e.stayed/e.came*100)+'% stayed late</i>'
-    : '<b>'+e.reach+' min</b> away<i>'+(reachable(e) ? 'leave by ' + clockOf(e.at - e.reach) : 'gone')+'</i>';
+    : running(e)
+      ? '<b>running</b> now<i>' + leftOf(e) + ' min of it left</i>'
+      : '<b>'+e.reach+' min</b> away<i>'+(joinable(e) ? 'leave by ' + clockOf(e.at - e.reach) : 'gone')+'</i>';
   return '<button class="'+cls+'" onclick="openEvent(\''+e.id+'\')">'
     + '<span class="row-t">'+clockOf(e.at)+'</span>'
     + '<span class="row-m"><b>'+esc(e.title)+'</b><span>'+esc(e.venue)+' · '+e.t+'</span></span>'
@@ -850,8 +948,11 @@ function paintSheet(e){
     var t = thresholdOf(e);
     var leaveBy = clockOf(e.at - e.reach);
     meta = '<dl class="d-meta">'
-      + '<div><dt>Starts</dt><dd>'+clockOf(e.at)+', runs about '+Math.round(e.dur/60*10)/10+' h</dd></div>'
-      + '<div><dt>Travel</dt><dd>'+e.reach+' min door to door — leave by <b>'+leaveBy+'</b></dd></div>'
+      + '<div><dt>Starts</dt><dd>'+clockOf(e.at)+', ends '+clockOf(endsAt(e))+'</dd></div>'
+      + (running(e)
+          ? '<div><dt>Right now</dt><dd>Already running. Arrive at '+clockOf(arrival(e))+' and you get <b>'+leftOf(e)+' min</b> of it.</dd></div>'
+          : '<div><dt>Travel</dt><dd>'+e.reach+' min door to door — leave by <b>'+leaveBy+'</b></dd></div>')
+      + '<div><dt>Spoken</dt><dd>'+(e.langs||['EN']).join(' · ')+'</dd></div>'
       + '<div><dt>Cost</dt><dd>Free, and nobody takes your name at the door</dd></div>'
       + '</dl>'
       + '<div class="reading"><h3>Walking in</h3><div class="cells">'
@@ -1061,6 +1162,82 @@ function flyTo(el){
   ], { duration:420, easing:'cubic-bezier(.3,.7,.2,1)' }).onfinish = function(){ f.remove(); };
 }
 
+
+/* ══ filters ══════════════════════════════════════════════════════════════
+   The mockup's chip row, filtering on the two things that actually change
+   whether you would go: what kind of room it is, and whether anyone there
+   speaks a language you speak. */
+var filters = { tag:null, lang:null, runningOnly:false };
+
+function allTags(){
+  var seen = {}, out = [];
+  EVENTS.forEach(function(e){ if(!isPast(e) && !seen[e.t]){ seen[e.t]=1; out.push(e.t); } });
+  return out.sort();
+}
+function allLangs(){
+  var seen = {}, out = [];
+  EVENTS.forEach(function(e){ (e.langs||[]).forEach(function(l){ if(!seen[l]){ seen[l]=1; out.push(l); } }); });
+  return out.sort();
+}
+function passes(e){
+  if(filters.tag && e.t !== filters.tag) return false;
+  if(filters.lang && (e.langs||[]).indexOf(filters.lang) === -1) return false;
+  if(filters.runningOnly && !running(e)) return false;
+  return true;
+}
+function setFilter(kind, value){
+  if(kind === 'running') filters.runningOnly = !filters.runningOnly;
+  else filters[kind] = (filters[kind] === value) ? null : value;
+  renderFilters();
+  renderField(); renderList(); renderClocks();
+  var n = EVENTS.filter(function(e){ return !isPast(e) && passes(e); }).length;
+  say(n + ' gatherings match');
+}
+function renderFilters(){
+  var host = document.getElementById('filters');
+  host.innerHTML =
+      '<button class="chip" aria-pressed="' + filters.runningOnly + '" onclick="setFilter(\'running\')">Running now</button>'
+    + '<span class="sep" aria-hidden="true"></span>'
+    + allTags().map(function(t){
+        return '<button class="chip" aria-pressed="' + (filters.tag===t) + '" onclick="setFilter(\'tag\',\'' + t + '\')">' + t + '</button>';
+      }).join('')
+    + '<span class="sep" aria-hidden="true"></span>'
+    + '<span class="leave-lab">Spoken</span>'
+    + allLangs().map(function(l){
+        return '<button class="chip lang" aria-pressed="' + (filters.lang===l) + '" onclick="setFilter(\'lang\',\'' + l + '\')">' + l + '</button>';
+      }).join('');
+}
+
+/* ══ the wheel ════════════════════════════════════════════════════════════
+   Three reels spin through real rows and ease onto one of them. Nothing is
+   invented: every value that stops in the window is a gathering this build
+   actually holds. */
+var REEL_H = 42;
+function spinReel(el, items, landOn, dur){
+  var seq = [];
+  for(var k = 0; k < 3; k++) seq = seq.concat(items);
+  seq = seq.concat(items.slice(0, landOn + 1));
+  el.innerHTML = seq.map(function(t, i){
+    return '<div class="reel-i' + (i === seq.length - 1 ? ' hit' : '') + '">' + esc(t) + '</div>';
+  }).join('');
+  var target = (seq.length - 2) * REEL_H;      // land the last row in the middle band
+  if(!MOTION){ el.style.transform = 'translateY(' + (-target) + 'px)'; return; }
+  var t0 = performance.now();
+  (function step(now){
+    var k = Math.min(1, (now - t0) / dur);
+    var e = 1 - Math.pow(1 - k, 4);            // fast, then settling
+    el.style.transform = 'translateY(' + (-target * e) + 'px)';
+    if(k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+function runWheel(){
+  var live = EVENTS.filter(function(e){ return !isPast(e); });
+  var at = (Math.random() * live.length) | 0;
+  spinReel(document.getElementById('r1'), live.map(function(e){ return e.title; }), at, 1500);
+  spinReel(document.getElementById('r2'), live.map(function(e){ return e.venue; }), at, 1760);
+  spinReel(document.getElementById('r3'), live.map(function(e){ return (e.langs||['EN'])[0]; }), at, 1980);
+}
+
 /* ══ motion budget ════════════════════════════════════════════════════════ */
 var MOTION = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1081,8 +1258,11 @@ function tween(el, to, ms){
    minutes to decide". That is start − travel − now, and it is live. */
 function renderClocks(){
   var host = document.getElementById('clocks');
+  // Only things that have not started yet have a decide-by deadline; a gathering
+  // already running is marked as running instead.
   var soon = EVENTS.filter(function(e){
-      return !isPast(e) && reachable(e) && edgeMinutes(e) <= 45;
+      return !isPast(e) && joinable(e) && !running(e) && passes(e)
+             && edgeMinutes(e) >= 0 && edgeMinutes(e) <= 45;
     }).sort(function(a,b){ return edgeMinutes(a) - edgeMinutes(b); }).slice(0,3);
   if(!soon.length){ host.innerHTML = ''; return; }
   host.innerHTML = soon.map(function(e){
@@ -1181,8 +1361,9 @@ function boot(done){
     ['b4', String(EVENTS.filter(function(e){ return !isPast(e) && (e.at - e.reach) >= 0; }).length)]
   ];
   var i = 0, timers = [], finished = false;
+  runWheel();
   var bar = document.getElementById('bbar');
-  bar.animate([{width:'0%'},{width:'100%'}], {duration:1180, easing:'cubic-bezier(.4,0,.2,1)', fill:'forwards'});
+  bar.animate([{width:'0%'},{width:'100%'}], {duration:2050, easing:'cubic-bezier(.4,0,.2,1)', fill:'forwards'});
   function tick(){
     if(i >= lines.length){ timers.push(setTimeout(finish, 340)); return; }
     var row = document.getElementById(lines[i][0]);
@@ -1209,7 +1390,7 @@ function boot(done){
   }
   document.addEventListener('keydown', skip, true);
   el.addEventListener('click', skip);
-  timers.push(setTimeout(tick, 180));
+  timers.push(setTimeout(tick, 900));
 }
 
 /* ── wiring ───────────────────────────────────────────────────────────── */
@@ -1241,12 +1422,17 @@ window.toggleThread = toggleThread;
 window.setView = setView;
 window.toggleSweep = toggleSweep;
 window.solveRoute = solveRoute;
+window.setFilter = setFilter;
 
 /* A single named seam for the test suite, so verifying the reachability rule does
    not require exporting the whole module. Read-only apart from the actions above. */
 window.__convene = {
   events: EVENTS,
   legGap: legGap,
+  joinable: joinable,
+  running: running,
+  passes: passes,
+  filterState: function(){ return { tag:filters.tag, lang:filters.lang, runningOnly:filters.runningOnly }; },
   solveFrom: solveFrom,
   edgeMinutes: edgeMinutes,
   state: function(){ return { leaveAt:leaveAt, leaveLive:leaveLive, view:view, thread:thread.slice() }; },
@@ -1255,6 +1441,7 @@ window.__convene = {
 };
 
 load();
+renderFilters();
 sizeField();
 drawGrid();
 setLeave(0, true);

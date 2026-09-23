@@ -65,6 +65,9 @@ const AUDIT = () => {
     ['list',    async()=>{ await pg.evaluate(()=>setView('list')); }],
     ['route',   async()=>{ await pg.evaluate(()=>{ setView('field'); const r=__convene.events.filter(e=>e.came==null).sort((x,y)=>x.at-y.at); toggleThread(r[0].id); toggleThread(r[4].id); }); }],
     ['sheet',   async()=>{ await pg.evaluate(()=>openEvent(__convene.events.find(e=>e.came==null).id)); }],
+    ['running', async()=>{ await pg.evaluate(()=>{const r=document.getElementById('leave-range'); r.value=245; r.dispatchEvent(new Event('input',{bubbles:true}));}); }],
+    ['filtered',async()=>{ await pg.evaluate(()=>{ setFilter('lang','ES'); }); }],
+    ['unfiltered',async()=>{ await pg.evaluate(()=>{ setFilter('lang','ES'); }); }],
     ['solved',  async()=>{ await pg.evaluate(()=>{ closeSheet(); solveRoute(); }); }],
     ['sheet-past', async()=>{ await pg.evaluate(()=>{ closeSheet(); openEvent(__convene.events.find(e=>e.came!=null).id); }); }]
   ];

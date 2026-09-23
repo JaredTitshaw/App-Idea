@@ -93,7 +93,8 @@ const FILE='file://'+path.resolve('wrapped-new.html');
  // ── countdown
  const clocks = await pg.evaluate(()=>{
    const L=__convene.state().leaveAt;
-   const soon=__convene.events.filter(e=>e.came==null && (e.at-e.reach)>=L && __convene.edgeMinutes(e)<=45);
+   const soon=__convene.events.filter(e=>e.came==null && __convene.joinable(e) && !__convene.running(e)
+     && __convene.passes(e) && __convene.edgeMinutes(e)>=0 && __convene.edgeMinutes(e)<=45);
    return { soon:soon.length, shown:document.querySelectorAll('.clock').length };
  });
  ok(clocks.shown === Math.min(3, clocks.soon), `countdowns shown match what is close (${clocks.shown}/${clocks.soon})`);
