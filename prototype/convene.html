@@ -352,15 +352,48 @@ input[type=range]{
   .anim .node.is-edge .dot{ animation:none; }
 }
 
+/* ══ odometer ════════════════════════════════════════════════════════════
+   The departure clock is the one number that changes constantly, so it gets
+   mechanical digits: each column rolls to its figure instead of swapping. */
+.odo{ display:flex; align-items:baseline; gap:1px; }
+/* 1ch is exactly one digit in a monospace face. Anything less clips the glyph
+   sideways, which turned every 0 into a C. */
+.od{
+  display:block; overflow:hidden; height:1em; width:1ch;
+  position:relative;
+}
+.od i{ display:block; height:1em; line-height:1; font-style:normal; text-align:center; }
+.od-roll{ display:block; transition:transform .42s cubic-bezier(.22,.9,.25,1); will-change:transform; }
+/* sized by its own glyph — the colon is wider than a digit in some faces */
+.od-sep{ padding:0 .06em; text-align:center; opacity:.65; }
+
+/* ══ magnetism ══════════════════════════════════════════════════════════
+   Nodes lean toward the pointer. Small enough that it reads as attention,
+   not as the chart lying about where things are. */
+.node{ transform:translate(calc(-50% + var(--mx,0px)), calc(-50% + var(--my,0px))); }
+.fx .node{ transition:transform .28s cubic-bezier(.2,.8,.3,1), border-color .15s, background .15s; }
+.fx .node.pulled{ transition:transform .09s linear, border-color .15s, background .15s; }
+
+/* ══ scrub ══════════════════════════════════════════════════════════════ */
+.scroller{ cursor:grab; }
+.scroller.dragging{ cursor:grabbing; user-select:none; }
+.scroller.dragging .node{ pointer-events:none; }
+
+/* ══ node → sheet ═══════════════════════════════════════════════════════ */
+.flyer{
+  position:fixed; z-index:280; border-radius:999px; background:var(--signal);
+  pointer-events:none; box-shadow:0 0 0 6px rgba(255,90,43,.18);
+}
+
 </style>
 
 <div class="boot" id="boot" role="status" aria-label="Starting up">
   <div class="boot-in">
     <div class="boot-mark">Convene<i>FIELD</i></div>
-    <div class="boot-line" id="b1">Device store<b>—</b></div>
-    <div class="boot-line" id="b2">Gatherings<b>—</b></div>
-    <div class="boot-line" id="b3">Computing reach<b>—</b></div>
-    <div class="boot-line ok" id="b4">Reachable from now<b>—</b></div>
+    <div class="boot-line" id="b1">Device store<b aria-hidden="true">—</b><span class="vh"></span></div>
+    <div class="boot-line" id="b2">Gatherings<b aria-hidden="true">—</b><span class="vh"></span></div>
+    <div class="boot-line" id="b3">Computing reach<b aria-hidden="true">—</b><span class="vh"></span></div>
+    <div class="boot-line ok" id="b4">Reachable from now<b aria-hidden="true">—</b><span class="vh"></span></div>
     <div class="boot-bar"><i id="bbar"></i></div>
     <div class="boot-skip">Press any key to skip</div>
   </div>
@@ -379,7 +412,8 @@ input[type=range]{
 <section class="leave" aria-label="Departure time">
   <div>
     <div class="leave-lab">If I leave at</div>
-    <div class="leave-time" id="leave-time">—</div>
+    <div class="leave-time odo" id="leave-time" aria-hidden="true"></div>
+    <span class="vh" id="leave-time-text">—</span>
   </div>
   <div class="leave-slider">
     <label class="vh" for="leave-range">Departure time, in minutes from now</label>
@@ -603,6 +637,15 @@ function drawOverlay(){
   var parts = [];
   // everything left of the leave line has gone without you
   parts.push('<path d="M'+x1+',0 L'+FIELD.W+',0 L'+FIELD.W+','+fh+' L'+x0+','+fh+' Z" fill="rgba(255,90,43,.05)"/>');
+  // While sweeping, the line leaves a decaying wake of where it just was.
+  if(sweep.on && MOTION){
+    for(var g = 1; g <= 5; g++){
+      var back = leaveAt - g * 7;
+      if(back < 0) break;
+      parts.push('<line x1="'+x(back)+'" y1="'+fh+'" x2="'+x(back + FIELD.reachMax)+'" y2="0" '
+        + 'stroke="var(--signal)" stroke-width="1" opacity="'+(0.24 - g*0.04).toFixed(2)+'"/>');
+    }
+  }
   parts.push('<line x1="'+x0+'" y1="'+fh+'" x2="'+x1+'" y2="0" stroke="var(--signal)" stroke-width="1.5"/>');
   parts.push('<circle cx="'+x0+'" cy="'+fh+'" r="3.5" fill="var(--signal)"/>');
   // the thread, drawn through the evening you have assembled
@@ -658,7 +701,7 @@ function renderField(){ drawOverlay(); if(Object.keys(nodeEls).length) updateNod
 function setLeave(mins, live){
   leaveAt = Math.max(0, Math.min(600, mins));
   leaveLive = !!live;
-  document.getElementById('leave-time').textContent = clockOf(leaveAt);
+  setClock(clockOf(leaveAt));
   document.getElementById('leave-range').value = String(Math.round(leaveAt));
   var nb = document.getElementById('leave-now');
   nb.classList.toggle('on', leaveLive);
@@ -831,6 +874,7 @@ function openEvent(id){
   var e = byId(id); if(!e) return;
   openId = id;
   lastFocus = document.activeElement;
+  flyTo(nodeEls[id]);
   paintSheet(e);
   var sh = document.getElementById('sheet');
   sh.removeAttribute('inert'); sh.removeAttribute('aria-hidden');
@@ -875,6 +919,146 @@ function followLine(){
   else if(head > sc.scrollLeft + sc.clientWidth - pad) want = head - sc.clientWidth + pad;
   if(want === null) return;
   sc.scrollLeft = Math.max(0, Math.min(FIELD.W - sc.clientWidth, want));
+}
+
+
+/* ══ odometer ═════════════════════════════════════════════════════════════ */
+var odoBuilt = false;
+function buildOdo(str){
+  var host = document.getElementById('leave-time');
+  host.innerHTML = str.split('').map(function(ch){
+    if(ch < '0' || ch > '9') return '<span class="od-sep">' + ch + '</span>';
+    var col = '';
+    for(var d = 0; d < 10; d++) col += '<i>' + d + '</i>';
+    return '<span class="od"><span class="od-roll">' + col + '</span></span>';
+  }).join('');
+  odoBuilt = true;
+}
+function setClock(str){
+  document.getElementById('leave-time-text').textContent = str;
+  var host = document.getElementById('leave-time');
+  if(!odoBuilt || host.children.length !== str.length) buildOdo(str);
+  var cols = host.children;
+  for(var i = 0; i < str.length; i++){
+    var ch = str[i], el = cols[i];
+    if(ch < '0' || ch > '9'){ el.textContent = ch; continue; }
+    var roll = el.firstChild;
+    if(!roll || !roll.classList) continue;
+    if(!MOTION) roll.style.transition = 'none';
+    roll.style.transform = 'translateY(-' + (Number(ch) * 100 / 10) + '%)';
+  }
+}
+
+/* ══ decode ═══════════════════════════════════════════════════════════════
+   Values land the way a readout settles: scrambled for a moment, then right.
+   The final text is set first so anything reading the page never sees noise. */
+var GLYPH = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ/\\|<>*+=-';
+function decode(el, text, ms){
+  el.dataset.value = text;
+  var twin = el.parentElement && el.parentElement.querySelector('.vh');
+  if(twin) twin.textContent = text;     // the real value, never scrambled
+  el.textContent = text;
+  if(!MOTION) return;
+  var t0 = performance.now(), n = text.length;
+  (function step(now){
+    var k = Math.min(1, (now - t0) / ms), fixed = Math.floor(k * n);
+    var out = '';
+    for(var i = 0; i < n; i++){
+      var c = text[i];
+      out += (i < fixed || c === ' ' || c === ':' || c === '/')
+        ? c : GLYPH[(Math.random() * GLYPH.length) | 0];
+    }
+    el.textContent = out;
+    if(k < 1) requestAnimationFrame(step); else el.textContent = text;
+  })(t0);
+}
+
+/* ══ magnetism ════════════════════════════════════════════════════════════
+   Nodes lean toward the pointer within a short radius. Capped at 7px so the
+   plot never misrepresents where a gathering actually sits. */
+var MAG_R = 130, MAG_MAX = 7, magRaf = 0, magPt = null;
+function magnetise(){
+  magRaf = 0;
+  var host = document.getElementById('nodes');
+  if(!host) return;
+  var kids = host.children;
+  for(var i = 0; i < kids.length; i++){
+    var el = kids[i];
+    if(!magPt){ el.style.setProperty('--mx','0px'); el.style.setProperty('--my','0px'); el.classList.remove('pulled'); continue; }
+    var r = el.getBoundingClientRect();
+    var dx = magPt.x - (r.left + r.width/2), dy = magPt.y - (r.top + r.height/2);
+    var d = Math.hypot(dx, dy);
+    if(d > MAG_R){ el.style.setProperty('--mx','0px'); el.style.setProperty('--my','0px'); el.classList.remove('pulled'); continue; }
+    var f = (1 - d / MAG_R) * MAG_MAX;
+    el.classList.add('pulled');
+    el.style.setProperty('--mx', (dx / (d || 1) * f).toFixed(2) + 'px');
+    el.style.setProperty('--my', (dy / (d || 1) * f).toFixed(2) + 'px');
+  }
+}
+function onMagMove(ev){
+  if(!MOTION) return;
+  magPt = { x:ev.clientX, y:ev.clientY };
+  if(!magRaf) magRaf = requestAnimationFrame(magnetise);
+}
+function clearMag(){ magPt = null; if(!magRaf) magRaf = requestAnimationFrame(magnetise); }
+
+/* ══ grab and fling the field ═════════════════════════════════════════════
+   Scrubbing time by dragging the field itself, with momentum. A drag past a
+   few pixels suppresses the click, so flinging never opens a gathering. */
+function initScrub(){
+  var sc = document.getElementById('scroller');
+  var down = false, moved = 0, lastX = 0, lastT = 0, vel = 0, glide = 0;
+  sc.addEventListener('pointerdown', function(ev){
+    if(ev.button) return;
+    down = true; moved = 0; lastX = ev.clientX; lastT = performance.now(); vel = 0;
+    cancelAnimationFrame(glide);
+  });
+  sc.addEventListener('pointermove', function(ev){
+    if(!down) return;
+    var dx = ev.clientX - lastX, now = performance.now(), dt = now - lastT || 16;
+    moved += Math.abs(dx);
+    if(moved > 4){ sc.classList.add('dragging'); sc.setPointerCapture(ev.pointerId); }
+    sc.scrollLeft -= dx;
+    vel = dx / dt;                       // px per ms
+    lastX = ev.clientX; lastT = now;
+  });
+  function release(ev){
+    if(!down) return;
+    down = false;
+    sc.classList.remove('dragging');
+    if(moved > 4 && ev) { ev.preventDefault(); }
+    if(!MOTION || Math.abs(vel) < 0.08) return;
+    var v = vel * 16;
+    (function coast(){
+      v *= 0.94;
+      sc.scrollLeft -= v;
+      if(Math.abs(v) > 0.4) glide = requestAnimationFrame(coast);
+    })();
+  }
+  sc.addEventListener('pointerup', release);
+  sc.addEventListener('pointercancel', release);
+  // a drag must never count as a tap on a gathering
+  sc.addEventListener('click', function(ev){
+    if(moved > 4){ ev.stopPropagation(); ev.preventDefault(); moved = 0; }
+  }, true);
+}
+
+/* ══ the dot becomes the sheet ════════════════════════════════════════════ */
+function flyTo(el){
+  if(!MOTION || !el) return;
+  var dot = el.querySelector('.dot'); if(!dot) return;
+  var r = dot.getBoundingClientRect();
+  var f = document.createElement('div');
+  f.className = 'flyer';
+  f.style.left = r.left + 'px'; f.style.top = r.top + 'px';
+  f.style.width = r.width + 'px'; f.style.height = r.height + 'px';
+  document.body.appendChild(f);
+  var sheet = document.getElementById('sheet').getBoundingClientRect();
+  f.animate([
+    { transform:'translate(0,0) scale(1)', opacity:1, borderRadius:'999px' },
+    { transform:'translate(' + (sheet.left - r.left) + 'px,' + (sheet.top + 80 - r.top) + 'px) scale(14)',
+      opacity:0, borderRadius:'40px' }
+  ], { duration:420, easing:'cubic-bezier(.3,.7,.2,1)' }).onfinish = function(){ f.remove(); };
 }
 
 /* ══ motion budget ════════════════════════════════════════════════════════ */
@@ -930,6 +1114,7 @@ function stopSweep(){
   sweep.on = false; cancelAnimationFrame(sweep.raf);
   var btn = document.getElementById('sweep-btn');
   btn.textContent = 'Sweep the night'; btn.classList.remove('on');
+  drawOverlay();          // the wake is only drawn while sweeping; clear it
 }
 
 /* ══ solve ════════════════════════════════════════════════════════════════
@@ -1002,7 +1187,7 @@ function boot(done){
     if(i >= lines.length){ timers.push(setTimeout(finish, 340)); return; }
     var row = document.getElementById(lines[i][0]);
     row.classList.add('on');
-    row.querySelector('b').textContent = lines[i][1];
+    decode(row.querySelector('b'), lines[i][1], 320);
     i++;
     timers.push(setTimeout(tick, 230));
   }
@@ -1083,10 +1268,17 @@ function parkView(){
 }
 parkView();
 
+initScrub();
+(function(){
+  var f = document.getElementById('field');
+  f.addEventListener('pointermove', onMagMove);
+  f.addEventListener('pointerleave', clearMag);
+})();
+
 boot(function(){
   parkView();
   if(!MOTION) return;
-  document.body.classList.add('anim', 'revealing');
+  document.body.classList.add('anim', 'revealing', 'fx');
   // the settle is a one-time arrival, not a thing that re-fires on every render
   setTimeout(function(){ document.body.classList.remove('revealing'); }, 1100);
 });

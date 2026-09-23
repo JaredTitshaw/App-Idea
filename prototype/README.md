@@ -37,6 +37,7 @@ node tests/feattest.js       # time-zone region feature + reduced-motion handlin
 node tests/redesign.js       # dusk ride, Threshold, Echo, and the removals
 node tests/fieldtest.js      # convene.html: the reachability rule, route, list, sheet
 node tests/animtest.js       # boot self-test, solver optimality, sweep, countdowns
+node tests/fxtest.js         # odometer geometry, magnetism bounds, fling, sweep wake
 node tests/contrast_new.js   # convene.html measured in every state, boot included
 node tests/mobrepro.js       # phone layout: scrollable, timeline clear of the nav
 node tests/bandtest.js       # globe sizing across the width range

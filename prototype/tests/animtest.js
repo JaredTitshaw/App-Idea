@@ -10,15 +10,18 @@ const FILE='file://'+path.resolve('wrapped-new.html');
  const errs=[]; pg.on('pageerror',e=>errs.push(e.message));
  await pg.goto(FILE); await pg.waitForTimeout(120);
  ok(await pg.locator('#boot').isVisible(), 'the self-test shows on load');
+ // read the plain twin, not the decorative scramble
  const reported = await pg.waitForFunction(()=>{
-   const t=document.getElementById('b2').querySelector('b').textContent;
-   return t!=='—' ? t : null;
+   const t=document.getElementById('b2').querySelector('.vh').textContent;
+   return t ? t : null;
  }, {timeout:4000}).then(h=>h.jsonValue());
  const real = await pg.evaluate(()=>__convene.events.length);
  ok(Number(reported)===real, `the self-test reports the real count (${reported} vs ${real})`);
  await pg.waitForFunction(()=>document.getElementById('boot').hidden, {timeout:6000});
  ok(true, 'the self-test clears on its own');
  ok(await pg.evaluate(()=>document.body.classList.contains('anim')), 'motion is enabled after boot');
+ ok(await pg.evaluate(()=>[...document.querySelectorAll('.boot-line b')].every(b=>b.getAttribute('aria-hidden')==='true')),
+    'the scrambling text is hidden from assistive technology');
  await pg.waitForTimeout(1300);
  ok(await pg.evaluate(()=>!document.body.classList.contains('revealing')),
     'the settle is one-time, not re-fired on every render');
