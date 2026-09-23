@@ -25,8 +25,11 @@ const ok = (n,c)=>console.log((c?'PASS':'FAIL')+' — '+n);
 
   // wheel over the stage travels through time
   await p.mouse.move(box.x+box.width*0.5, box.y+box.height*0.5);
+  const wBefore = await p.evaluate(()=>windowIndex);
   await p.mouse.wheel(0,120); await p.waitForTimeout(420);
-  ok('wheel travels through time', await p.evaluate(()=>windowIndex===1));
+  const wAfter = await p.evaluate(()=>windowIndex);
+  // Relative, so adding or moving windows can't make this a false failure.
+  ok(`wheel travels through time (${wBefore} -> ${wAfter})`, wAfter === wBefore + 1);
 
   // timeline drag
   const tb = await (await p.$('#timeline-track')).boundingBox();
@@ -34,10 +37,13 @@ const ok = (n,c)=>console.log((c?'PASS':'FAIL')+' — '+n);
   const seen=[];
   for(let f=0; f<=1.001; f+=0.25){ await p.mouse.move(tb.x+tb.width*f, tb.y+5); await p.waitForTimeout(45); seen.push(await p.evaluate(()=>windowIndex)); }
   await p.mouse.up(); await p.waitForTimeout(200);
-  ok('timeline drag scrubs 0..4 ('+seen.join(',')+')', seen.join(',')==='0,1,2,3,4');
+  const last = await p.evaluate(()=>WINDOWS.length-1);
+  const rises = seen.every((v,i)=> i===0 || v>=seen[i-1]);
+  ok('timeline drag scrubs end to end ('+seen.join(',')+')',
+     seen[0]===0 && seen[seen.length-1]===last && rises);
 
   // tap a point on the globe opens the event
-  await p.evaluate(()=>{ setWindow(4,false); });
+  await p.evaluate(()=>{ setWindow(WINDOWS.length-1,false); });
   await p.waitForTimeout(400);
   const pt = await p.evaluate(()=>globe.screenPoints[0]||null);
   if(pt){
@@ -47,10 +53,10 @@ const ok = (n,c)=>console.log((c?'PASS':'FAIL')+' — '+n);
     await p.keyboard.press('Escape'); await p.waitForTimeout(250);
   } else ok('tapping a point opens the event', false);
 
-  // tour
-  await p.evaluate(()=>toggleTour()); await p.waitForTimeout(900);
-  ok('tour runs and shows a card', await p.evaluate(()=>tour.on && !document.getElementById('tour-card').hidden));
-  await p.evaluate(()=>toggleTour()); await p.waitForTimeout(200);
+  // riding the dusk (replaced the point-to-point tour)
+  await p.evaluate(()=>toggleDusk()); await p.waitForTimeout(1200);
+  ok('the dusk ride sweeps the sun westward', await p.evaluate(()=>dusk.on && sun.live===false));
+  await p.evaluate(()=>toggleDusk()); await p.waitForTimeout(200);
 
   // day & night
   await p.evaluate(()=>toggleDayNight()); await p.waitForTimeout(250);

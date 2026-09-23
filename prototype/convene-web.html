@@ -157,20 +157,7 @@
   .chip.on{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
   .chip:hover:not(.on){ border-color:var(--ink-faint); color:var(--ink); }
 
-  /* ---------- moments strip (replaces Live Now) ---------- */
   .section-label{ font-size:15px; font-weight:800; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between; }
-  .section-label a{ font-size:12px; font-weight:700; color:var(--accent); text-decoration:none; }
-  .moments-strip{ display:flex; gap:14px; overflow-x:auto; padding-bottom:4px; margin-bottom:34px; scrollbar-width:thin; }
-  .moment-card{
-    flex:0 0 220px; border-radius:14px; overflow:hidden; background:var(--surface);
-    border:1px solid var(--line); cursor:pointer; transition:transform .12s;
-  }
-  .moment-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg); }
-  .moment-thumb{ height:130px; position:relative; }
-  .moment-thumb .pill{ position:absolute; top:10px; left:10px; }
-  .moment-body{ padding:11px 13px 13px; }
-  .moment-body b{ font-size:12.5px; display:block; }
-  .moment-body span{ font-size:11px; color:var(--ink-faint); }
 
   /* ---------- event grid ---------- */
   .event-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px; }
@@ -305,7 +292,7 @@
   .sun-time{ font-size:11px; font-weight:700; color:var(--ink-dim); font-variant-numeric:tabular-nums; white-space:nowrap; }
   .sun-now{ background:none; border:none; color:var(--ink-faint); font-size:11px; font-weight:700; padding:2px 4px; }
   .sun-now.on{ color:var(--accent); }
-  .tour-btn{
+  .dusk-btn{
     display:inline-flex; align-items:center; gap:8px; background:var(--accent); color:var(--accent-ink);
     border:none; border-radius:999px; padding:10px 18px; font-size:11.5px; font-weight:700; flex-shrink:0;
   }
@@ -355,8 +342,8 @@
     .timeline-head{ margin-bottom:12px; }
     .mode-btn{ padding:8px 12px; font-size:10.5px; }
     #sun-range{ width:74px; }
-    .tour-btn span{ display:none; }
-    .tour-btn{ padding:10px 12px; }
+    .dusk-btn span{ display:none; }
+    .dusk-btn{ padding:10px 12px; }
     .kbd{ display:none; }
   }
 
@@ -384,21 +371,21 @@
     font-size:11px; font-weight:700; padding:7px 13px; border-radius:999px;
   }
   .mode-btn.on{ background:var(--ink); border-color:var(--ink); color:var(--bg); }
-  .tour-btn{
+  .dusk-btn{
     margin-left:auto; display:flex; align-items:center; gap:8px;
     background:var(--accent); color:var(--accent-ink); border:none; border-radius:999px;
     padding:9px 17px; font-size:12px; font-weight:700; flex-shrink:0;
   }
-  .tour-btn:hover{ opacity:.9; }
-  .tour-card{ z-index:3;
+  .dusk-btn:hover{ opacity:.9; }
+  .dusk-card{ z-index:3;
     position:absolute; left:18px; top:18px; width:216px; padding:13px 15px;
     background:var(--surface); border:1px solid var(--line); border-radius:12px;
   }
-  .tour-card[hidden]{ display:none; }
-  .tour-card-label{ font-size:9.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); }
-  .tour-card b{ display:block; font-size:14px; margin-top:5px; line-height:1.3; }
-  .tour-card span{ display:block; font-size:11.5px; color:var(--ink-dim); margin-top:3px; }
-  .tour-card-btn{
+  .dusk-card[hidden]{ display:none; }
+  .dusk-card-label{ font-size:9.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); }
+  .dusk-card b{ display:block; font-size:14px; margin-top:5px; line-height:1.3; }
+  .dusk-card span{ display:block; font-size:11.5px; color:var(--ink-dim); margin-top:3px; }
+  .dusk-card-btn{
     margin-top:10px; width:100%; background:none; border:1px solid var(--line); color:var(--ink);
     border-radius:8px; padding:7px; font-size:11.5px; font-weight:700;
   }
@@ -438,55 +425,6 @@
   .timeline-stop span{ font-size:10.5px; color:var(--ink-faint); opacity:.75; white-space:nowrap; }
   .timeline-stop.on b{ color:var(--accent); }
   .timeline-stop.on span{ color:var(--ink-dim); opacity:1; }
-
-  /* ---------- moments feed ---------- */
-  .moments-layout{ display:grid; grid-template-columns:minmax(0,600px) 280px; gap:28px; align-items:start; }
-  .composer{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:22px; }
-  .composer textarea{
-    width:100%; border:none; outline:none; resize:none; font-size:13.5px; font-family:inherit; color:var(--ink);
-    min-height:44px; background:none;
-  }
-  .composer textarea::placeholder{ color:var(--ink-faint); }
-  .composer-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
-  .composer-foot select{
-    border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:12px; color:var(--ink-dim); background:var(--bg);
-  }
-  .feed{ display:flex; flex-direction:column; gap:18px; }
-  .feed-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
-  .feed-head{ display:flex; align-items:center; gap:10px; padding:14px 16px 0; }
-  .feed-avatar{ width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--green); }
-  .feed-head b{ font-size:13px; display:block; }
-  .feed-head span{ font-size:11px; color:var(--ink-faint); }
-  .feed-img{ height:280px; margin-top:12px; }
-  .feed-caption{ padding:13px 16px 6px; font-size:13.5px; line-height:1.55; }
-  .feed-actions{ display:flex; gap:18px; padding:6px 16px 15px; }
-  .feed-action{ display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--ink-dim); font-size:12px; font-weight:700; }
-  .feed-action.liked{ color:var(--accent); }
-  .feed-action svg{ width:17px; height:17px; }
-  .moments-side{ display:flex; flex-direction:column; gap:16px; position:sticky; top:100px; }
-  .side-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; }
-  .side-card h4{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); margin:0 0 12px; }
-
-  /* ---------- companion ---------- */
-  .companion-layout{ max-width:680px; margin:0 auto; display:flex; flex-direction:column; height:calc(100vh - 160px); }
-  .chat-log{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding:6px 2px 20px; }
-  .bubble-row{ display:flex; gap:10px; }
-  .bubble-row.me{ flex-direction:row-reverse; }
-  .bubble-avatar{ width:28px; height:28px; border-radius:50%; flex-shrink:0; background:var(--green); }
-  .bubble{ max-width:72%; padding:11px 14px; border-radius:14px; font-size:13.5px; line-height:1.5; }
-  .bubble-row:not(.me) .bubble{ background:var(--surface); border:1px solid var(--line); border-bottom-left-radius:4px; }
-  .bubble-row.me .bubble{ background:var(--accent); color:var(--accent-ink); border-bottom-right-radius:4px; font-weight:600; }
-  .chat-suggestions{ display:flex; gap:8px; flex-wrap:wrap; padding-bottom:12px; }
-  .chat-input-row{ display:flex; gap:10px; border-top:1px solid var(--line); padding-top:14px; }
-  .chat-input-row input{
-    flex:1; border:1.5px solid var(--line); border-radius:12px; padding:12px 15px; font-size:13.5px;
-    outline:none; background:var(--surface); color:var(--ink);
-  }
-  .chat-input-row input:focus{ border-color:var(--accent); }
-  .send-btn{
-    width:44px; height:44px; border-radius:12px; background:var(--accent); color:var(--accent-ink);
-    border:none; display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  }
 
   /* ---------- profile ---------- */
   .profile-layout{ display:grid; grid-template-columns:280px 1fr; gap:28px; align-items:start; }
@@ -578,8 +516,6 @@
     .rail-label{ display:none; }
     .rail-create{ padding:12px; width:44px; }
     .rail-create span{ display:none; }
-    .moments-layout{ grid-template-columns:1fr; }
-    .moments-side{ position:static; flex-direction:row; overflow-x:auto; }
     .profile-layout{ grid-template-columns:1fr; }
     .profile-card{ position:static; }
     .stage{ display:block; }
@@ -601,8 +537,8 @@
     .sun-ctl{ padding:5px 8px; gap:6px; min-width:0; }
     #sun-range{ width:62px; }
     .sun-time{ font-size:10px; }
-    .tour-btn{ padding:9px 11px; }
-    .tour-btn span{ display:none; }
+    .dusk-btn{ padding:9px 11px; }
+    .dusk-btn span{ display:none; }
   }
   @media (max-width:700px){
     .app{ grid-template-columns:1fr; }
@@ -626,7 +562,7 @@
     .hero-title{ font-size:30px; }
     .hero-globe{ height:300px; }
     .hero-window-name{ font-size:20px; }
-    .tour-card{ width:170px; padding:11px 12px; }
+    .dusk-card{ width:170px; padding:11px 12px; }
     .timeline-stop span{ display:none; }
     .timeline-stop b{ font-size:11px; }
     .drawer{ width:100%; max-width:100%; top:auto; height:88vh; border-radius:20px 20px 0 0; transform:translateY(100%); }
@@ -684,6 +620,57 @@
     box-shadow:var(--shadow-lg);
   }
 
+  /* ---------- Threshold, Echo, and the dusk ride ----------
+     The whole product is lit by two sources: sunlight, which is cold, and the lamps
+     people gather under, which are warm. Anything that already happened has neither,
+     so it goes to ash. No traffic-light colours — a tight-knit room is a character,
+     not a warning. */
+  :root{ --warm:#95552B; --ash:#5F6773; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --warm:#E2A055; --ash:#9AA3AE; }
+  }
+  :root[data-theme="dark"]{ --warm:#E2A055; --ash:#9AA3AE; }
+  :root[data-theme="light"]{ --warm:#95552B; --ash:#5F6773; }
+  body.planet-mode{ --warm:#E9B44C; --ash:#8E9AA6; }
+
+  .thr{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:auto; padding-top:9px; font-size:11px; }
+  .thr-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; background:var(--ash); }
+  .thr-open .thr-dot{ background:var(--warm); box-shadow:0 0 0 3px color-mix(in srgb, var(--warm) 22%, transparent); }
+  .thr-steady .thr-dot{ background:var(--warm); opacity:.55; }
+  .thr-label{ font-weight:800; color:var(--ink); }
+  .thr-meta{ color:var(--ink-dim); font-variant-numeric:tabular-nums; }
+  .thr-door{ color:var(--warm); font-weight:700; }
+
+  .echo-foot{ display:flex; gap:12px; flex-wrap:wrap; margin-top:auto; padding-top:9px; font-size:11px; color:var(--ink-dim); }
+  .echo-foot b{ color:var(--ink); font-variant-numeric:tabular-nums; }
+
+  .reading{ margin-top:20px; padding-top:18px; border-top:1px solid var(--line); }
+  .reading-h{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 14px; }
+  .reading-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .reading-cell{ background:var(--surface-2); border-radius:11px; padding:12px 10px; text-align:center; }
+  .reading-cell b{ display:block; font-size:19px; font-variant-numeric:tabular-nums; line-height:1.1; }
+  .reading-cell span{ display:block; font-size:10.5px; color:var(--ink-dim); margin-top:4px; line-height:1.3; }
+  .reading-note{ font-size:12.5px; line-height:1.6; color:var(--ink-dim); margin:12px 0 0; }
+  .reading-note b{ color:var(--warm); }
+
+  /* A gathering that already happened cannot be joined. */
+  .drawer.is-past .drawer-foot{ display:none; }
+
+  /* The timeline runs through now rather than up to it. */
+  .timeline-stop.is-past b{ color:var(--ash); }
+  .timeline-stop.is-past span{ color:var(--ash); opacity:.7; }
+  .timeline-stop.is-now b{ letter-spacing:.01em; }
+  .timeline-stop.is-now::before{ height:14px; top:-14px; background:var(--accent); width:2px; }
+  body.echo-mode .timeline-fill, body.echo-mode .timeline-dot{ background:var(--ash); }
+  body.echo-mode .stage-now-name{ color:var(--ash); }
+
+  /* While riding the dusk the chrome gets out of the way. */
+  body.riding-dusk .stage-copy{ opacity:.25; transition:opacity .4s ease; pointer-events:none; }
+  body.riding-dusk .dusk-btn{ background:var(--ink); color:#0B0C0E; }
+  @media (prefers-reduced-motion: reduce){
+    body.riding-dusk .stage-copy{ transition:none; }
+  }
+
 </style>
 
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -732,8 +719,8 @@
 
         <div class="stage-copy">
           <div class="stage-eyebrow">Free to walk into &middot; No account needed</div>
-          <h1 class="stage-title">See where the<br>world is gathering.</h1>
-          <p class="stage-sub">Every point of light is a real gathering &mdash; a street festival, a morning run club, a lecture, a family picnic. Spin the planet, travel through the week.</p>
+          <h1 class="stage-title">Somewhere it is<br>six in the evening.</h1>
+          <p class="stage-sub">Gatherings begin when the light goes, so follow the light. Ride the dusk line west and watch each place switch on as its own evening arrives &mdash; or scrub back and see what came of last night.</p>
           <div class="stage-search">
             <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
             <label class="vh" for="hero-search">Search gatherings by city, name or tag</label>
@@ -752,11 +739,11 @@
           <button class="stage-now-link" onclick="go('gatherings')">See the list &rarr;</button>
         </div>
 
-        <div class="tour-card" id="tour-card" hidden>
-          <div class="tour-card-label">On the tour</div>
-          <b id="tour-title"></b>
-          <span id="tour-meta"></span>
-          <button class="tour-card-btn" id="tour-open" onclick="openEvent(tour.currentId)">See event</button>
+        <div class="dusk-card" id="dusk-card" hidden>
+          <div class="dusk-card-label">Evening is reaching</div>
+          <b id="dusk-title"></b>
+          <span id="dusk-meta"></span>
+          <button class="dusk-card-btn" id="dusk-open" onclick="openEvent(dusk.currentId)">See event</button>
         </div>
 
         <div class="stage-controls">
@@ -768,9 +755,9 @@
             <button class="sun-now on" id="sun-now" onclick="setSunLive()">Now</button>
           </div>
           <button class="mode-btn" id="region-btn" onclick="goToMyRegion()" title="Spin the planet to your part of the world">My region</button>
-          <button class="tour-btn" id="tour-btn" onclick="toggleTour()">
+          <button class="dusk-btn" id="dusk-btn" aria-pressed="false" onclick="toggleDusk()">
             <svg aria-hidden="true" focusable="false" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>
-            <span id="tour-btn-label">Play the tour</span>
+            <span id="dusk-btn-label">Ride the dusk</span>
           </button>
         </div>
 
@@ -796,54 +783,6 @@
       </div>
       <div class="section-label mt-md" id="discover-count">Happening tonight</div>
       <div class="event-grid" id="discover-grid"></div>
-      <div class="section-label mt-xl">Latest Moments<button class="linkbtn" onclick="go('moments')">See all &rarr;</button></div>
-      <div class="moments-strip" id="moments-strip"></div>
-    </section>
-
-    <!-- MOMENTS -->
-    <section class="view" id="view-moments" hidden>
-      <div class="view-head"><div><div class="eyebrow">Recaps &amp; highlights</div><h1 class="serif">Moments</h1></div></div>
-      <p class="view-sub">What people shared after real events — no live video, no streaming, just what actually happened. Posted after the fact, browsed whenever.</p>
-      <div class="moments-layout mt-lg">
-        <div>
-          <div class="composer">
-            <label class="vh" for="moment-text">Share something from an event you went to</label>
-            <textarea id="moment-text" placeholder="Share something from an event you went to…"></textarea>
-            <div class="composer-foot">
-              <label class="vh" for="moment-event">Which event is this about?</label>
-              <select id="moment-event"></select>
-              <button class="btn-primary" onclick="postMoment()">Post</button>
-            </div>
-          </div>
-          <div class="feed" id="moments-feed"></div>
-        </div>
-        <aside class="moments-side">
-          <div class="side-card">
-            <h4>Why not live?</h4>
-            <p class="prose-xs">Streaming needs bandwidth, moderation and a crowd watching at the same minute. Moments works for everyone, on any connection, at any hour — you don't have to be there at 8&nbsp;PM sharp to see what happened.</p>
-          </div>
-          <div class="side-card">
-            <h4>Trending tags</h4>
-            <div class="m0 chip-row" id="side-tags"></div>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <!-- COMPANION -->
-    <section class="view" id="view-companion" hidden>
-      <div class="companion-layout">
-        <div class="view-head view-head-tight"><div><div class="eyebrow">Your guide</div><h1 class="serif">Companion</h1></div></div>
-        <div class="chat-log" id="chat-log"></div>
-        <div class="chat-suggestions" id="chat-suggestions"></div>
-        <div class="chat-input-row">
-          <label class="vh" for="chat-input">Ask the Companion a question</label>
-          <input id="chat-input" placeholder="Ask about events, places, anything…" onkeydown="if(event.key==='Enter')sendChat()">
-          <button class="send-btn" onclick="sendChat()" aria-label="Send">
-            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-        </div>
-      </div>
     </section>
 
     <!-- PROFILE -->
@@ -883,7 +822,6 @@
   <div class="drawer-body">
     <div id="ed-cover" class="moment-cover"><span class="badge-corner pill" id="ed-tag"></span></div>
     <h2 class="stat-lg serif" id="ed-title"></h2>
-    <div id="ed-rating" class="list-sub"></div>
     <div class="list-row">
       <svg aria-hidden="true" focusable="false" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
       <span id="ed-date" class="list-title"></span>
@@ -897,10 +835,7 @@
       <span id="ed-host" class="list-title"></span>
     </div>
     <p id="ed-desc" class="prose-sm"></p>
-    <div class="rule-top">
-      <div class="card-h">Rate this event</div>
-      <div id="ed-stars" class="row gap-6"></div>
-    </div>
+    <div id="ed-reading" class="reading"></div>
   </div>
   <div class="row gap-10 drawer-foot">
     <button class="avatar-md icon-btn" id="ed-save" onclick="toggleSave()" aria-label="Save">
@@ -967,24 +902,18 @@
 <script>
   /* win: which horizon an event first appears in — 0 tonight, 1 tomorrow, 2 weekend, 3 next week, 4 this month */
   var events = [
-    {id:'e1', title:'Riverside Founders Mixer', tag:'Business', win:0, date:'Tonight · 6:00 PM', location:'Austin, TX', host:'Austin Founders Collective', going:142, rating:4.6, lat:30.27, lon:-97.74, desc:'A relaxed evening mixer for founders, operators, and anyone building something new along the river.'},
-    {id:'e4', title:'Outdoor Movie Night', tag:'Family', win:0, date:'Tonight · 7:30 PM', location:'Brandon, FL', host:'Brandon Parks & Rec', going:112, rating:4.4, lat:27.94, lon:-82.29, desc:'Bring a blanket for a free outdoor screening under the stars.'},
-    {id:'e9', title:'Tokyo Night Market', tag:'Community', win:0, date:'Tonight · 7:00 PM JST', location:'Tokyo, Japan', host:'Shimokitazawa Collective', going:203, rating:4.9, lat:35.68, lon:139.69, desc:'Street food, small-batch crafts, and live music through a neighborhood night market. Already underway on the other side of the planet.'},
-    {id:'e5', title:'Sunset Yoga in the Park', tag:'Community', win:1, date:'Tomorrow · 7:00 PM', location:'Miami, FL', host:'Miami Wellness Collective', going:38, rating:4.9, lat:25.76, lon:-80.19, desc:'A free, all-levels yoga session as the sun goes down — mats provided, just bring water.'},
-    {id:'e6', title:'Startup Demo Night', tag:'Business', win:1, date:'Tomorrow · 6:30 PM', location:'Seattle, WA', host:'Seattle Founders Guild', going:410, rating:4.5, lat:47.61, lon:-122.33, desc:'Ten early-stage startups pitch live, straight from the demo floor — jump in and cheer them on.'},
-    {id:'e3', title:'Zoo Adventure Day', tag:'Family', win:2, date:'Saturday · 10:00 AM', location:'Tampa, FL', host:'Tampa Family Network', going:63, rating:4.7, lat:27.95, lon:-82.46, desc:'A guided morning at the zoo for families, with a scavenger hunt for the kids.'},
-    {id:'e2', title:'Community Culture Fair', tag:'Family', win:2, date:'Sunday · 11:00 AM', location:'Portland, OR', host:'Culture Fair Collective', going:86, rating:4.9, lat:45.52, lon:-122.68, desc:"A free, family-friendly celebration of the neighborhood's cultures — live music, food trucks, craft stalls, and bilingual storytelling for kids."},
-    {id:'e7', title:'Neighborhood Potluck', tag:'Community', win:2, date:'Saturday · 5:00 PM', location:'Denver, CO', host:'Five Points Neighbors', going:57, rating:4.8, lat:39.74, lon:-104.99, desc:'Bring a dish, meet your neighbors — a low-key evening of food and conversation on the block.'},
-    {id:'e8', title:'Lisbon Founders Breakfast', tag:'Business', win:3, date:'Next Tuesday · 8:30 AM', location:'Lisbon, Portugal', host:'Lisboa Builders', going:74, rating:4.8, lat:38.72, lon:-9.14, desc:'Coffee, pastéis de nata, and a room full of people building companies across three time zones.'},
-    {id:'e10', title:'Rooftop Cine Club', tag:'Family', win:3, date:'Next Thursday · 8:00 PM', location:'Mexico City, Mexico', host:'Colonia Roma Vecinos', going:128, rating:4.7, lat:19.43, lon:-99.13, desc:'A free open-air screening on a rooftop in Roma Norte, with blankets and elote from the corner stand.'},
-    {id:'e11', title:'Harbour Lantern Walk', tag:'Community', win:4, date:'In three weeks', location:'Sydney, Australia', host:'Glebe Foreshore Group', going:96, rating:4.8, lat:-33.87, lon:151.21, desc:'A slow evening walk along the foreshore, lanterns provided, ending with tea at the boatshed.'},
-    {id:'e12', title:'Nairobi Makers Fair', tag:'Business', win:4, date:'End of the month', location:'Nairobi, Kenya', host:'Ngong Road Makers', going:154, rating:4.9, lat:-1.29, lon:36.82, desc:'Hardware tinkerers, textile studios and small manufacturers showing what they built this year.'}
-  ];
-  var moments = [
-    {id:'m1', eventId:'e1', name:'Sofia Marín', time:'2 days ago', caption:"Great turnout at the Riverside Mixer — met three people building things I actually want to use.", likes:24, tag:'Business'},
-    {id:'m2', eventId:'e2', name:'Carlos Reyes', time:'3 days ago', caption:"The bilingual storytelling tent at the Culture Fair was the highlight for my kids. Already circled next year.", likes:41, tag:'Family'},
-    {id:'m3', eventId:'e5', name:'Giulia Conti', time:'5 days ago', caption:"Sunset yoga on the sand, mats provided. Simple and exactly what the week needed.", likes:33, tag:'Community'},
-    {id:'m4', eventId:'e6', name:'Amara Ellis', time:'1 week ago', caption:"Ten startups, ten minutes each — the fastest hour of feedback I've watched all year.", likes:52, tag:'Business'}
+    {id:'e1', title:'Riverside Founders Mixer', tag:'Business', win:0, date:'Tonight · 6:00 PM', location:'Austin, TX', host:'Austin Founders Collective', going:142, rating:4.6, lat:30.27, lon:-97.74, desc:'A relaxed evening mixer for founders, operators, and anyone building something new along the river.', alone:0.48, door:'Mia', startLocal:18.0},
+    {id:'e4', title:'Outdoor Movie Night', tag:'Family', win:0, date:'Tonight · 7:30 PM', location:'Brandon, FL', host:'Brandon Parks & Rec', going:112, rating:4.4, lat:27.94, lon:-82.29, desc:'Bring a blanket for a free outdoor screening under the stars.', alone:0.12, door:null, startLocal:19.5},
+    {id:'e9', title:'Tokyo Night Market', tag:'Community', win:0, date:'Tonight · 7:00 PM JST', location:'Tokyo, Japan', host:'Shimokitazawa Collective', going:203, rating:4.9, lat:35.68, lon:139.69, desc:'Street food, small-batch crafts, and live music through a neighborhood night market. Already underway on the other side of the planet.', alone:0.31, door:null, startLocal:19.0},
+    {id:'e5', title:'Sunset Yoga in the Park', tag:'Community', win:1, date:'Tomorrow · 7:00 PM', location:'Miami, FL', host:'Miami Wellness Collective', going:38, rating:4.9, lat:25.76, lon:-80.19, desc:'A free, all-levels yoga session as the sun goes down — mats provided, just bring water.', alone:0.62, door:'Priya', startLocal:18.5},
+    {id:'e6', title:'Startup Demo Night', tag:'Business', win:1, date:'Tomorrow · 6:30 PM', location:'Seattle, WA', host:'Seattle Founders Guild', going:410, rating:4.5, lat:47.61, lon:-122.33, desc:'Ten early-stage startups pitch live, straight from the demo floor — jump in and cheer them on.', alone:0.55, door:null, startLocal:18.0},
+    {id:'e3', title:'Zoo Adventure Day', tag:'Family', win:2, date:'Saturday · 10:00 AM', location:'Tampa, FL', host:'Tampa Family Network', going:63, rating:4.7, lat:27.95, lon:-82.46, desc:'A guided morning at the zoo for families, with a scavenger hunt for the kids.', alone:0.07, door:null, startLocal:10.0},
+    {id:'e2', title:'Community Culture Fair', tag:'Family', win:2, date:'Sunday · 11:00 AM', location:'Portland, OR', host:'Culture Fair Collective', going:86, rating:4.9, lat:45.52, lon:-122.68, desc:"A free, family-friendly celebration of the neighborhood's cultures — live music, food trucks, craft stalls, and bilingual storytelling for kids.", alone:0.22, door:'Sofia', startLocal:11.0},
+    {id:'e7', title:'Neighborhood Potluck', tag:'Community', win:2, date:'Saturday · 5:00 PM', location:'Denver, CO', host:'Five Points Neighbors', going:57, rating:4.8, lat:39.74, lon:-104.99, desc:'Bring a dish, meet your neighbors — a low-key evening of food and conversation on the block.', alone:0.34, door:'Ben', startLocal:17.0},
+    {id:'e8', title:'Lisbon Founders Breakfast', tag:'Business', win:3, date:'Next Tuesday · 8:30 AM', location:'Lisbon, Portugal', host:'Lisboa Builders', going:74, rating:4.8, lat:38.72, lon:-9.14, desc:'Coffee, pastéis de nata, and a room full of people building companies across three time zones.', alone:0.58, door:'Tomás', startLocal:8.0},
+    {id:'e10', title:'Rooftop Cine Club', tag:'Family', win:3, date:'Next Thursday · 8:00 PM', location:'Mexico City, Mexico', host:'Colonia Roma Vecinos', going:128, rating:4.7, lat:19.43, lon:-99.13, desc:'A free open-air screening on a rooftop in Roma Norte, with blankets and elote from the corner stand.', alone:0.25, door:null, startLocal:20.0},
+    {id:'e11', title:'Harbour Lantern Walk', tag:'Community', win:4, date:'In three weeks', location:'Sydney, Australia', host:'Glebe Foreshore Group', going:96, rating:4.8, lat:-33.87, lon:151.21, desc:'A slow evening walk along the foreshore, lanterns provided, ending with tea at the boatshed.', alone:0.29, door:'Aiko', startLocal:19.0},
+    {id:'e12', title:'Nairobi Makers Fair', tag:'Business', win:4, date:'End of the month', location:'Nairobi, Kenya', host:'Ngong Road Makers', going:154, rating:4.9, lat:-1.29, lon:36.82, desc:'Hardware tinkerers, textile studios and small manufacturers showing what they built this year.', alone:0.41, door:'Wanjiru', startLocal:9.0}
   ];
   var contacts = [
     {name:'Sofia Marín', loc:'Tampa, FL'},
@@ -1012,16 +941,26 @@
   }
 
   var STORAGE_KEY = 'convene_web_state';
-  var rsvps = new Set(), saved = new Set(), liked = new Set(), userInterests = [];
-  var hostedBase = 0, activeEventId = null, pendingStars = 0, myRatings = {};
+  var rsvps = new Set(), saved = new Set(), userInterests = [];
+  var hostedBase = 0, activeEventId = null;
   var currentView = 'discover', profileTab = 'upcoming';
+
+
+  /* What already happened. The planet keeps a week of memory: scrub left of Right now
+     and the points cool from amber to ash, carrying their outcome instead of an RSVP. */
+  var pastEvents = [
+    {id:'p1', title:'Dockside Swap Meet', tag:'Community', past:'lastnight', date:'Last night · 6:00 PM', location:'Rotterdam, NL', host:'Havenbuurt Collectief', lat:51.92, lon:4.48, came:84,  cameAlone:29, stayedLate:51,  rating:4.5, desc:'Neighbours traded tools, books and plants along the dock until the light went.'},
+    {id:'p2', title:'Bairro Sound Night', tag:'Community', past:'lastnight', date:'Last night · 9:00 PM', location:'Lisbon, PT', host:'Bairro Coletivo', lat:38.72, lon:-9.14, came:212, cameAlone:77, stayedLate:140, rating:4.8, desc:'Three streets, four sound systems, and a queue that never really formed.'},
+    {id:'p3', title:'Sunrise Harbour Run', tag:'Community', past:'lastnight', date:'Yesterday · 6:00 AM', location:'Sydney, AU', host:'Harbour Pace', lat:-33.87, lon:151.21, came:46, cameAlone:31, stayedLate:12, rating:4.4, desc:'A slow five kilometres around the water, coffee afterwards for anyone who wanted it.'},
+    {id:'p4', title:'Mercado de Barrio', tag:'Family', past:'lastweek', date:'Last Saturday', location:'Mexico City, MX', host:'Vecinos de la Roma', lat:19.43, lon:-99.13, came:630, cameAlone:96, stayedLate:410, rating:4.9, desc:'A street market that closed two roads and ran six hours past its permit.'},
+    {id:'p5', title:'Kreuzberg Repair Café', tag:'Community', past:'lastweek', date:'Last Thursday', location:'Berlin, DE', host:'Reparatur Kollektiv', lat:52.50, lon:13.40, came:58, cameAlone:34, stayedLate:39, rating:4.7, desc:'Bring the broken thing, leave with the working thing and usually a new acquaintance.'},
+    {id:'p6', title:'Cape Town Night Market', tag:'Community', past:'lastweek', date:'Last Friday', location:'Cape Town, ZA', host:'Bo-Kaap Traders', lat:-33.92, lon:18.42, came:340, cameAlone:120, stayedLate:205, rating:4.6, desc:'Food stalls under strung lights, and a brass band nobody had booked.'}
+  ];
 
   var NAV = [
     {id:'discover', label:'The planet', svg:'<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M4.5 7.5h15M4.5 16.5h15"/>'},
     {id:'gatherings', label:'Gatherings', svg:'<rect x="3" y="4" width="7" height="7" rx="1.6"/><rect x="14" y="4" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/>'},
-    {id:'moments', label:'Moments', svg:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/>'},
-    {id:'companion', label:'Companion', svg:'<path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/>'},
-    {id:'profile', label:'Profile', svg:'<circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.6-3.6 4.6-5.4 7-5.4S18.4 16.4 20 20"/>'}
+    {id:'profile', label:'Yours', svg:'<path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/>'}
   ];
 
   function buildNav(){
@@ -1047,12 +986,10 @@
     });
     var nav = NAV.filter(function(n){ return n.id===view; })[0];
     document.getElementById('topbar-crumb').textContent = nav ? nav.label : '';
-    if(view!=='discover') stopTour(true);
+    if(view!=='discover') stopDusk(true);
     document.body.classList.toggle('planet-mode', view === 'discover');
     if(view==='discover') renderDiscover();
     if(view==='gatherings') renderGatherings();
-    if(view==='moments') renderMoments();
-    if(view==='companion') renderChat();
     if(view==='profile') renderProfile();
     window.scrollTo(0,0);
     // Announce the change and put the caret at the top of the new view. Without this a
@@ -1103,37 +1040,56 @@
   /* ---------- time horizons ---------- */
   /* The timeline widens the horizon rather than jumping to a date: each stop
      includes everything before it, so scrubbing right reveals more of the planet. */
+  /* The scrubber runs through now, not up to it. Everything left of Right now already
+     happened and carries its outcome; everything right of it is still an invitation. */
   var WINDOWS = [
-    {id:'tonight',  label:'Tonight',      short:'Tonight', sub:'next few hours'},
-    {id:'tomorrow', label:'Tomorrow',     short:'Tmrw',    sub:'through the day'},
-    {id:'weekend',  label:'This weekend', short:'Wknd',    sub:'Fri – Sun'},
-    {id:'week',     label:'Next week',    short:'Week',    sub:'seven days out'},
-    {id:'month',    label:'This month',   short:'Month',   sub:'everything ahead'}
+    {id:'lastweek',  label:'Last week',    short:'Last wk', sub:'what happened', past:true},
+    {id:'lastnight', label:'Last night',   short:'Last ngt',sub:'what happened', past:true},
+    {id:'tonight',   label:'Right now',    short:'Now',     sub:'next few hours'},
+    {id:'tomorrow',  label:'Tomorrow',     short:'Tmrw',    sub:'through the day'},
+    {id:'weekend',   label:'This weekend', short:'Wknd',    sub:'Fri – Sun'},
+    {id:'week',      label:'Next week',    short:'Week',    sub:'seven days out'},
+    {id:'month',     label:'This month',   short:'Month',   sub:'everything ahead'}
   ];
-  var windowIndex = 0;
+  var NOW_INDEX = 2;
+  function isPast(){ return !!WINDOWS[windowIndex].past; }
+  function allEvents(){ return events.concat(pastEvents); }
+  var windowIndex = 2;
 
   function heroQuery(){ var el = document.getElementById('hero-search'); return el ? (el.value||'').toLowerCase().trim() : ''; }
+  function matchesQuery(e, q){
+    return !q || (e.title+e.location+e.tag+e.date).toLowerCase().indexOf(q) !== -1;
+  }
   function visibleEvents(){
     var q = heroQuery();
+    if(isPast()){
+      // A past window shows only that window — memory is not cumulative.
+      var id = WINDOWS[windowIndex].id;
+      return pastEvents.filter(function(e){ return e.past === id && matchesQuery(e, q); });
+    }
+    var reach = windowIndex - NOW_INDEX;
     return events.filter(function(e){
-      if((e.win === undefined ? 4 : e.win) > windowIndex) return false;
-      if(q && (e.title+e.location+e.tag+e.date).toLowerCase().indexOf(q) === -1) return false;
-      return true;
+      return (e.win === undefined ? 4 : e.win) <= reach && matchesQuery(e, q);
     });
   }
   function setWindow(i, announce){
     windowIndex = Math.max(0, Math.min(WINDOWS.length-1, i));
-    stopTour(true);
+    stopDusk(true);
     renderTimeline();
     renderDiscover();
     saveState();
-    if(announce) showToast(visibleEvents().length + ' gatherings ' + WINDOWS[windowIndex].label.toLowerCase());
+    if(announce){
+      var n = visibleEvents().length;
+      showToast(isPast()
+        ? n + ' gatherings happened ' + WINDOWS[windowIndex].label.toLowerCase()
+        : n + ' gatherings ' + WINDOWS[windowIndex].label.toLowerCase());
+    }
   }
   function renderTimeline(){
     var track = document.getElementById('timeline-stops');
     if(track.childElementCount !== WINDOWS.length){
       track.innerHTML = WINDOWS.map(function(w,i){
-        return '<button class="timeline-stop" tabindex="-1" onclick="setWindow('+i+',true)">'
+        return '<button class="timeline-stop'+(w.past?' is-past':'')+(i===NOW_INDEX?' is-now':'')+'" tabindex="-1" onclick="setWindow('+i+',true)">'
           + '<b><i class="tl-l">'+w.label+'</i><i class="tl-s">'+w.short+'</i></b><span>'+w.sub+'</span></button>';
       }).join('');
     }
@@ -1146,7 +1102,10 @@
     document.getElementById('timeline-track').setAttribute('aria-valuetext', WINDOWS[windowIndex].label);
     document.getElementById('window-name').textContent = WINDOWS[windowIndex].label;
     var n = visibleEvents().length;
-    document.getElementById('window-count').textContent = n + (n===1?' gathering':' gatherings') + ' on the planet';
+    document.getElementById('window-count').textContent = isPast()
+      ? n + (n===1?' gathering':' gatherings') + ' — ' + echoTotal() + ' people came'
+      : n + (n===1?' gathering':' gatherings') + ' on the planet';
+    document.body.classList.toggle('echo-mode', isPast());
   }
   var wheelLock = 0;
   function initTimeline(){
@@ -1208,7 +1167,7 @@
   }
 
   /* ---------- the tour ---------- */
-  var tour = { on:false, i:0, timer:null, currentId:null };
+  var dusk = { on:false, raf:null, currentId:null, minutes:0, lon:0 };
   /* Where the viewer is, roughly, without asking for anything. The browser's UTC
      offset gives a longitude directly (15 degrees per hour); the IANA zone name gives
      a usable latitude. No permission prompt, no location access, no account — which is
@@ -1240,7 +1199,7 @@
 
   function goToMyRegion(){
     var r = myRegion();
-    stopTour(true);
+    stopDusk(true);
     globe.autoRotate = false;
     // Bring that longitude to the centre of the disc and tilt to its latitude.
     globe.targetRotY = -r.lon * Math.PI / 180;
@@ -1253,47 +1212,114 @@
     if(live) live.textContent = 'The planet turned to ' + r.place;
   }
 
-  function toggleTour(){ tour.on ? stopTour() : startTour(); }
-  function startTour(){
-    var list = visibleEvents();
-    if(!list.length){ showToast('Nothing to tour in this window yet'); return; }
-    tour.on = true; tour.i = -1;
-    document.getElementById('tour-btn-label').textContent = 'Stop the tour';
-    tourStep();
+  /* ---------- Ride the dusk ----------
+     Everywhere on Earth the thing that starts a gathering is the same: the light
+     going. That line is already real here, so it becomes the control. Riding it
+     walks the evening westward around the planet and lights each place as its own
+     six o'clock arrives — one continuous sweep, not a slideshow of pins. */
+  var DUSK_HOUR = 18.5;          // the middle of the evening band
+  var DUSK_BAND = 2.6;           // hours either side that still count as evening
+
+  function solarHourAt(lon, sunLon){
+    var h = 12 + (((lon - sunLon + 540) % 360) - 180) / 15;
+    return (h + 24) % 24;
   }
-  function stopTour(quiet){
-    if(!tour.on && quiet) return;
-    tour.on = false;
-    clearTimeout(tour.timer);
-    var card = document.getElementById('tour-card');
-    if(card) card.hidden = true;
-    var label = document.getElementById('tour-btn-label');
-    if(label) label.textContent = 'Play the tour';
+  function inEveningBand(lon, sunLon){
+    var d = Math.abs(solarHourAt(lon, sunLon) - DUSK_HOUR);
+    return Math.min(d, 24 - d) <= DUSK_BAND;
   }
-  function tourStep(){
-    if(!tour.on) return;
-    var list = visibleEvents();
-    if(!list.length){ stopTour(); return; }
-    tour.i = (tour.i + 1) % list.length;
-    var ev = list[tour.i];
-    tour.currentId = ev.id;
-    focusGlobeOn(ev.lon, ev.lat);
-    var card = document.getElementById('tour-card');
-    card.hidden = false;
-    document.getElementById('tour-title').textContent = ev.title;
-    document.getElementById('tour-meta').textContent = ev.location + ' · ' + ev.date;
-    tour.timer = setTimeout(tourStep, 3200);
+  function duskLongitude(sunLon){
+    return ((sunLon + (DUSK_HOUR - 12) * 15 + 540) % 360) - 180;
+  }
+
+  function toggleDusk(){ dusk.on ? stopDusk() : startDusk(); }
+
+  function startDusk(){
+    dusk.on = true;
+    sun.on = true; sun.live = false;
+    dusk.minutes = sun.minutes;
+    document.getElementById('dusk-btn-label').textContent = 'Stop';
+    document.getElementById('dusk-btn').setAttribute('aria-pressed','true');
+    document.body.classList.add('riding-dusk');
+    globe.autoRotate = false;
+    syncSunUI();
+    startGlobeLoop();
+    var live = document.getElementById('view-live');
+    if(live) live.textContent = 'Riding the dusk line westward around the planet.';
+  }
+
+  function stopDusk(quiet){
+    if(!dusk.on && quiet) return;
+    dusk.on = false;
+    document.body.classList.remove('riding-dusk');
+    var card = document.getElementById('dusk-card');
+    if(card){ card.hidden = true; card.dataset.at = ''; }
+    var label = document.getElementById('dusk-btn-label');
+    if(label) label.textContent = 'Ride the dusk';
+    var btn = document.getElementById('dusk-btn');
+    if(btn) btn.setAttribute('aria-pressed','false');
+    setTimeout(function(){ if(!dusk.on) globe.autoRotate = true; }, 800);
+  }
+
+  /* Advanced once per frame from the render loop, so the sweep is as smooth as the
+     planet it moves over. A full turn of the Earth takes about twenty seconds. */
+  function duskAdvance(){
+    if(!dusk.on) return;
+    dusk.minutes = (dusk.minutes + (motionOK ? 1.2 : 0)) % 1440;
+    sun.minutes = Math.round(dusk.minutes);
+    var sv = currentSun();
+    if(!sv) return;
+    dusk.lon = duskLongitude(sv.lon);
+    globe.rotY = -dusk.lon * Math.PI / 180;
+    globe.rotX += (0.26 - globe.rotX) * 0.05;
+
+    var list = visibleEvents().filter(function(e){ return e.lat != null; });
+    var best = null, bestD = 999;
+    list.forEach(function(e){
+      var d = Math.abs(((e.lon - dusk.lon + 540) % 360) - 180);
+      if(d < bestD){ bestD = d; best = e; }
+    });
+    var card = document.getElementById('dusk-card');
+    if(!card) return;
+    if(best && bestD < 46){
+      dusk.currentId = best.id;
+      if(card.hidden || card.dataset.at !== best.id){
+        card.hidden = false; card.dataset.at = best.id;
+        document.getElementById('dusk-title').textContent = best.title;
+        document.getElementById('dusk-meta').textContent = best.location + ' · ' + best.date;
+      }
+    } else if(!card.hidden){
+      card.hidden = true; card.dataset.at = '';
+    }
+    syncSunUI();
   }
 
   /* ---------- discover ---------- */
-  function onHeroSearch(){ stopTour(true); renderTimeline(); renderDiscover(); }
+  function onHeroSearch(){ stopDusk(true); renderTimeline(); renderDiscover(); }
+  function cardFootHtml(ev){
+    if(ev.past){
+      var e = echoOf(ev);
+      return '<div class="echo-foot">'
+        + '<span><b>'+e.came.toLocaleString()+'</b> came</span>'
+        + '<span><b>'+e.alonePct+'%</b> alone</span>'
+        + '<span><b>'+e.stayedPct+'%</b> stayed past the end</span></div>';
+    }
+    var t = thresholdOf(ev);
+    return '<div class="thr thr-'+t.level+'">'
+      + '<span class="thr-dot" aria-hidden="true"></span>'
+      + '<span class="thr-label">'+t.label+'</span>'
+      + '<span class="thr-meta">'+t.pct+'% arrive alone</span>'
+      + (t.door ? '<span class="thr-door">'+t.door+' is on the door</span>' : '')
+      + '</div>';
+  }
+
   function eventCardHtml(ev){
     return '<div class="event-card" onclick="openEvent(\''+ev.id+'\')">'
       + '<div class="event-thumb" style="background:'+thumbFor(ev.id, ev.tag)+';">'
       + '<span class="chip-green pill">'+ev.tag+'</span>'
-      + '<button class="event-save" onclick="event.stopPropagation();quickSave(\''+ev.id+'\')" aria-label="Save"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="'+(saved.has(ev.id)?'var(--accent)':'none')+'" stroke="var(--accent)" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg></button>'
+      + (ev.past ? '' : '<button class="event-save" onclick="event.stopPropagation();quickSave(\''+ev.id+'\')" aria-label="Save"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="'+(saved.has(ev.id)?'var(--accent)':'none')+'" stroke="var(--accent)" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg></button>')
       + '</div>'
-      + '<div class="event-body"><b><button class="card-open" onclick="event.stopPropagation();openEvent(\''+ev.id+'\')">'+ev.title+'</button></b><div class="event-meta">'+ev.date+'</div><div class="event-meta">'+ev.location+'</div><div class="event-foot">'+ev.going+' going · Free</div></div>'
+      + '<div class="event-body"><b><button class="card-open" onclick="event.stopPropagation();openEvent(\''+ev.id+'\')">'+ev.title+'</button></b><div class="event-meta">'+ev.date+'</div><div class="event-meta">'+ev.location+'</div>'+cardFootHtml(ev)+'</div>'
       + '</div>';
   }
   function renderDiscover(){
@@ -1312,19 +1338,58 @@
     var q = heroQuery();
     var head = document.getElementById('discover-count');
     if(head) head.firstChild.textContent =
-      q ? ('Results for "'+q+'"') : ('Happening ' + WINDOWS[windowIndex].label.toLowerCase());
+      q ? ('Results for "'+q+'"')
+        : (isPast() ? ('What happened ' + WINDOWS[windowIndex].label.toLowerCase())
+                    : ('Happening ' + WINDOWS[windowIndex].label.toLowerCase()));
     var grid = document.getElementById('discover-grid');
     if(grid) grid.innerHTML = list.length ? list.map(eventCardHtml).join('')
       : '<div class="span-all empty-note">Nothing in this window yet — widen the timeline to see more.</div>';
 
-    var strip = document.getElementById('moments-strip');
-    if(strip) strip.innerHTML = moments.slice(0,4).map(function(m){
-      var ev = events.filter(function(e){return e.id===m.eventId;})[0];
-      return '<div class="moment-card" onclick="go(\'moments\')">'
-        + '<div class="moment-thumb" style="background:'+thumbFor(m.id, m.tag)+';"><span class="chip-plain pill">'+m.tag+'</span></div>'
-        + '<div class="moment-body"><b><button class="card-open" onclick="event.stopPropagation();go(\'moments\')">'+(ev?ev.title:'Moment')+'</button></b><span>'+m.name+' · '+m.time+'</span></div>'
-        + '</div>';
-    }).join('');
+  }
+
+
+  /* ---------- Threshold ----------
+     The real barrier to walking into a room alone is nerve, not distance, and no
+     listing anywhere tells you about it. Three facts a host already knows: how many
+     are coming, how many of them are coming on their own, and whether anyone is on
+     the door. Everything here is stated, never scored behind the scenes. */
+  function thresholdOf(ev){
+    var alone = ev.alone == null ? 0.3 : ev.alone;
+    var crowd = ev.going || 0;
+    var score = 0;
+    if(alone >= 0.45) score += 2; else if(alone >= 0.25) score += 1;
+    if(crowd >= 150) score += 1; else if(crowd < 45) score -= 1;
+    if(ev.door) score += 2;
+    var level = score >= 4 ? 'open' : (score >= 2 ? 'steady' : 'tight');
+    var pct = Math.round(alone * 100);
+    var note = level === 'open'
+        ? 'Easy to walk into on your own.'
+        : level === 'steady'
+          ? 'Fine to arrive alone, most people do at some point.'
+          : 'A small group who mostly know each other.';
+    return { level:level, pct:pct, crowd:crowd, door:ev.door || null, note:note,
+             label: level==='open' ? 'Open door' : (level==='steady' ? 'Easy enough' : 'Tight-knit') };
+  }
+
+  /* ---------- Echo ----------
+     What a gathering left behind. Not photographs — the three numbers that tell you
+     whether it was worth the walk: who came, how many came by themselves, and how
+     many were still there after it was supposed to end. */
+  function echoTotal(){
+    return visibleEvents().reduce(function(t,e){ return t + (e.came||0); }, 0).toLocaleString();
+  }
+  function echoOf(ev){
+    var came = ev.came || 0;
+    return {
+      came: came,
+      alonePct: came ? Math.round((ev.cameAlone||0) / came * 100) : 0,
+      stayedPct: came ? Math.round((ev.stayedLate||0) / came * 100) : 0
+    };
+  }
+  function findEvent(id){
+    var all = allEvents();
+    for(var i=0;i<all.length;i++) if(all[i].id===id) return all[i];
+    return null;
   }
 
   function quickSave(id){
@@ -2140,7 +2205,7 @@
        steal the drag from the timeline and the controls sitting on top of it. */
     function onChrome(e){
       return !!(e.target && e.target.closest &&
-        e.target.closest('.timeline, .stage-controls, .stage-copy, .stage-now, .tour-card'));
+        e.target.closest('.timeline, .stage-controls, .stage-copy, .stage-now, .dusk-card'));
     }
     var chromeHit = false;
     el.addEventListener('pointerdown', function(e){ chromeHit = onChrome(e); }, true);
@@ -2165,7 +2230,7 @@
       globe.dragging = false;
       wrap.classList.remove('grabbing');
       if(globe.moved < 6 && e.clientX != null){ handleGlobeClick(e.clientX, e.clientY); }
-      else if(globe.moved >= 6){ stopTour(true); }
+      else if(globe.moved >= 6){ stopDusk(true); }
       setTimeout(function(){ globe.autoRotate = true; }, 1400);
     }
     el.addEventListener('pointerup', endDrag);
@@ -2187,7 +2252,7 @@
       }
       if(!used) return;
       e.preventDefault();
-      stopTour(true);
+      stopDusk(true);
       globe.autoRotate = false;
       globe.targetRotY = null; globe.targetRotX = null;
       clearTimeout(globe.keyIdle);
@@ -2334,6 +2399,7 @@
     // Events beyond the current time window sit on the planet as faint marks,
     // so scrubbing the timeline visibly fills it in.
     var shown = visibleEvents();
+    if(isPast()){ pointColor = '#8E9AA6'; coreColor = '#121820'; }
     var shownIds = {}; shown.forEach(function(e){ shownIds[e.id] = true; });
     ctx.fillStyle = 'rgba(250,244,234,.42)';
     events.forEach(function(ev){
@@ -2344,13 +2410,16 @@
     });
 
     var now = performance.now() / 1000;
+    var sunNow = currentSun();
     shown.forEach(function(ev){
+      // While riding, the evening band is the subject and the rest of the planet recedes.
+      var evening = dusk.on && sunNow ? inEveningBand(ev.lon, sunNow.lon) : false;
       var p = projectPoint(ev.lat, ev.lon);
       var sx = cx+p.x*R, sy = cy-p.y*R;
       var front = p.z > -0.12;
       var scale = 0.55 + 0.45 * Math.max(0,(p.z+1)/2);
       var alpha = front ? Math.min(1, 0.5 + (p.z+0.12)*1.4) : 0.16;
-      var isTourPoint = tour.on && tour.currentId === ev.id;
+      var isDuskPoint = dusk.on && dusk.currentId === ev.id;
       var base = Math.max(4.5, R*0.021);
 
       // ease in when this event enters the window
@@ -2359,7 +2428,8 @@
       v = markerVis[ev.id] = motionOK ? v + (1 - v) * 0.10 : 1;
 
       var pulse = motionOK ? 1 + 0.07 * Math.sin(now * 1.5 + markerPhase(ev.id)) : 1;
-      var r = (isTourPoint ? base*1.45 : base) * scale * pulse * (0.4 + 0.6*v);
+      var r = (isDuskPoint ? base*1.45 : base) * scale * pulse * (0.4 + 0.6*v);
+      if(dusk.on){ r *= evening ? 1.5 : 0.8; alpha *= evening ? 1 : 0.32; }
 
       if(front && motionOK){
         // a slow ring breathing outward, so a point reads as something happening
@@ -2374,7 +2444,7 @@
       ctx.globalAlpha = 1;
       if(front){
         ctx.beginPath(); ctx.arc(sx,sy,r*0.4,0,Math.PI*2); ctx.fillStyle = coreColor; ctx.fill();
-        if(isTourPoint){
+        if(isDuskPoint){
           ctx.beginPath(); ctx.arc(sx,sy,r+base*1.5,0,Math.PI*2);
           ctx.strokeStyle = pointColor; ctx.lineWidth = 1.5; ctx.stroke();
         }
@@ -2398,9 +2468,8 @@
     } else if(globe.autoRotate && !globe.dragging && motionOK){
       globe.rotY += 0.0016;
     }
-    if(sun.on && sun.live){
-      syncSunUI();
-    }
+    if(dusk.on) duskAdvance();
+    else if(sun.on && sun.live) syncSunUI();
     drawGlobe();
     watchFrame();
     globe.raf = requestAnimationFrame(globeLoop);
@@ -2427,53 +2496,47 @@
   }
 
 
-  /* ---------- moments feed ---------- */
-  function renderMoments(){
-    document.getElementById('moment-event').innerHTML = events.map(function(e){ return '<option value="'+e.id+'">'+e.title+'</option>'; }).join('');
-    document.getElementById('side-tags').innerHTML = ALL_TAGS.map(function(t){ return '<span class="chip-static chip">'+t+'</span>'; }).join('');
-    document.getElementById('moments-feed').innerHTML = moments.slice().reverse().map(function(m){
-      var ev = events.filter(function(e){return e.id===m.eventId;})[0];
-      var isLiked = liked.has(m.id);
-      return '<article class="feed-card">'
-        + '<div class="feed-head"><div class="feed-avatar"></div><div><b>'+m.name+'</b><span>'+m.time+' · '+(ev?ev.title:'')+'</span></div></div>'
-        + '<div class="feed-img" style="background:'+thumbFor(m.id, m.tag)+';"></div>'
-        + '<p class="feed-caption">'+m.caption+'</p>'
-        + '<div class="feed-actions">'
-        + '<button class="feed-action'+(isLiked?' liked':'')+'" onclick="toggleLike(\''+m.id+'\')"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="'+(isLiked?'var(--accent)':'none')+'" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg><span id="likes-'+m.id+'">'+(m.likes+(isLiked?1:0))+'</span></button>'
-        + '<button class="feed-action"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 01-4 4H8l-5 3V6a4 4 0 014-4h10a4 4 0 014 4z"/></svg>Reply</button>'
-        + '</div></article>';
-    }).join('');
-  }
-  function toggleLike(id){
-    if(liked.has(id)) liked.delete(id); else liked.add(id);
-    renderMoments(); saveState();
-  }
-  function postMoment(){
-    var text = document.getElementById('moment-text').value.trim();
-    if(!text){ showToast('Write something first'); return; }
-    var eventId = document.getElementById('moment-event').value;
-    moments.push({id:'m'+Date.now(), eventId:eventId, name: document.getElementById('profile-name').textContent, time:'Just now', caption:text, likes:0, tag: events.filter(function(e){return e.id===eventId;})[0].tag});
-    document.getElementById('moment-text').value = '';
-    renderMoments();
-    showToast('Moment posted');
-    saveState();
-  }
-
   /* ---------- event drawer ---------- */
   function openEvent(id){
     activeEventId = id;
-    var ev = events.filter(function(e){ return e.id===id; })[0];
+    var ev = findEvent(id);
+    if(!ev) return;
     document.getElementById('ed-cover').style.background = thumbFor(id);
     document.getElementById('ed-tag').textContent = ev.tag;
     document.getElementById('ed-title').textContent = ev.title;
-    document.getElementById('ed-rating').textContent = '★ '+ev.rating.toFixed(1)+' average rating';
     document.getElementById('ed-date').textContent = ev.date;
     document.getElementById('ed-loc').textContent = ev.location;
     document.getElementById('ed-host').textContent = 'Hosted by '+ev.host;
     document.getElementById('ed-desc').textContent = ev.desc;
-    updateRsvpBtn(); updateSaveBtn(); renderStars();
+    document.getElementById('ed-reading').innerHTML = readingHtml(ev);
+    // A gathering that already happened cannot be joined, so the drawer stops offering.
+    document.getElementById('drawer-event').classList.toggle('is-past', !!ev.past);
+    if(!ev.past){ updateRsvpBtn(); updateSaveBtn(); }
     openDrawer('drawer-event');
   }
+  function readingHtml(ev){
+    if(ev.past){
+      var e = echoOf(ev);
+      return '<h3 class="reading-h">What came of it</h3>'
+        + '<div class="reading-grid">'
+        + '<div class="reading-cell"><b>'+e.came.toLocaleString()+'</b><span>came</span></div>'
+        + '<div class="reading-cell"><b>'+e.alonePct+'%</b><span>arrived alone</span></div>'
+        + '<div class="reading-cell"><b>'+e.stayedPct+'%</b><span>stayed past the end</span></div>'
+        + '</div>'
+        + '<p class="reading-note">Nobody rated this out of five. These are the only numbers that tell you whether it was worth the walk.</p>';
+    }
+    var t = thresholdOf(ev);
+    return '<h3 class="reading-h">Walking in</h3>'
+      + '<div class="reading-grid">'
+      + '<div class="reading-cell"><b>'+t.crowd+'</b><span>expected</span></div>'
+      + '<div class="reading-cell"><b>'+t.pct+'%</b><span>arrive alone</span></div>'
+      + '<div class="reading-cell"><b>'+(t.door ? 'Yes' : 'No')+'</b><span>someone on the door</span></div>'
+      + '</div>'
+      + '<p class="reading-note thr-'+t.level+'">'+t.note
+      + (t.door ? ' Ask for <b>'+t.door+'</b> — they meet anyone arriving for the first time.' : '')
+      + '</p>';
+  }
+
   function updateRsvpBtn(){
     var btn = document.getElementById('ed-rsvp');
     btn.textContent = rsvps.has(activeEventId) ? "You're going ✓" : "I'm going";
@@ -2496,52 +2559,6 @@
     else { saved.add(activeEventId); showToast('Saved'); }
     updateSaveBtn(); saveState();
   }
-  function renderStars(){
-    var existing = myRatings[activeEventId];
-    pendingStars = existing ? existing.stars : 0;
-    paintStars();
-  }
-  function paintStars(){
-    document.getElementById('ed-stars').innerHTML = [1,2,3,4,5].map(function(i){
-      return '<button type="button" onclick="setStar('+i+')" class="icon-bare" aria-label="'+i+' stars"><svg aria-hidden="true" focusable="false" width="22" height="22" viewBox="0 0 24 24" fill="'+(i<=pendingStars?'var(--accent)':'none')+'" stroke="var(--accent)" stroke-width="1.6"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.6l-5.9 3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button>';
-    }).join('');
-  }
-  function setStar(n){
-    pendingStars = n; paintStars();
-    myRatings[activeEventId] = {stars:n};
-    showToast('Thanks for rating!');
-    saveState();
-  }
-
-  /* ---------- companion ---------- */
-  var chatLog = [
-    {from:'ai', text:"Hi! I'm your Convene guide. Tell me what kind of experience you're looking for this weekend, and I'll line it up — in any language."}
-  ];
-  var suggestions = ['Something free this weekend','Family-friendly nearby','Business networking'];
-  function renderChat(){
-    document.getElementById('chat-log').innerHTML = chatLog.map(function(m){
-      if(m.from==='ai') return '<div class="bubble-row"><div class="bubble-avatar"></div><div class="bubble">'+m.text+'</div></div>';
-      return '<div class="bubble-row me"><div class="bubble">'+m.text+'</div></div>';
-    }).join('');
-    document.getElementById('chat-suggestions').innerHTML = suggestions.map(function(s){
-      return '<button class="chip" onclick="askSuggestion(\''+s.replace(/'/g,"\\'")+'\')">'+s+'</button>';
-    }).join('');
-    var log = document.getElementById('chat-log'); log.scrollTop = log.scrollHeight;
-  }
-  function askSuggestion(s){ document.getElementById('chat-input').value = s; sendChat(); }
-  function sendChat(){
-    var input = document.getElementById('chat-input');
-    var text = input.value.trim();
-    if(!text) return;
-    chatLog.push({from:'me', text:text});
-    input.value = '';
-    renderChat();
-    setTimeout(function(){
-      chatLog.push({from:'ai', text:"Here's what I'd point you to: the Community Culture Fair in Portland is free, family-friendly, and has great reviews. Want directions or more options?"});
-      renderChat();
-    }, 500);
-  }
-
   /* ---------- profile ---------- */
   function setProfileTab(tab){
     profileTab = tab;
@@ -2674,13 +2691,12 @@
       var state = {
         profileName: document.getElementById('profile-name').textContent,
         profileLoc: document.getElementById('profile-loc').textContent,
-        rsvps: Array.from(rsvps), saved: Array.from(saved), liked: Array.from(liked),
-        userInterests: userInterests, myRatings: myRatings,
+        rsvps: Array.from(rsvps), saved: Array.from(saved),
+        userInterests: userInterests,
         theme: document.documentElement.getAttribute('data-theme'),
         notif: document.getElementById('sw-notif').classList.contains('on'),
         loc: document.getElementById('sw-loc').classList.contains('on'),
         customEvents: events.filter(function(e){return e.host==='You';}),
-        customMoments: moments.filter(function(m){return m.time==='Just now';}),
         windowIndex: windowIndex, sunOn: sun.on, sunLive: sun.live, sunMinutes: sun.minutes
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -2694,15 +2710,12 @@
       var s = JSON.parse(raw);
       if(s.rsvps) rsvps = new Set(s.rsvps);
       if(s.saved) saved = new Set(s.saved);
-      if(s.liked) liked = new Set(s.liked);
       if(s.userInterests) userInterests = s.userInterests;
-      if(s.myRatings) myRatings = s.myRatings;
       if(typeof s.windowIndex === 'number') windowIndex = Math.max(0, Math.min(WINDOWS.length-1, s.windowIndex));
       if(typeof s.sunOn === 'boolean') sun.on = s.sunOn;
       if(typeof s.sunLive === 'boolean') sun.live = s.sunLive;
       if(typeof s.sunMinutes === 'number') sun.minutes = Math.max(0, Math.min(1435, s.sunMinutes));
       if(s.customEvents && s.customEvents.length) s.customEvents.forEach(function(ce){ if(!events.some(function(e){return e.id===ce.id;})) events.unshift(ce); });
-      if(s.customMoments) s.customMoments.forEach(function(cm){ if(!moments.some(function(m){return m.id===cm.id;})) moments.push(cm); });
       if(s.profileName){ document.getElementById('profile-name').textContent = s.profileName; document.getElementById('topbar-name').textContent = s.profileName; var l=s.profileName.charAt(0).toUpperCase(); document.getElementById('profile-avatar').textContent=l; document.getElementById('topbar-avatar').textContent=l; }
       if(s.profileLoc) document.getElementById('profile-loc').textContent = s.profileLoc;
       if(s.theme) document.documentElement.setAttribute('data-theme', s.theme);

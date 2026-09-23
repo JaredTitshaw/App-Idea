@@ -48,7 +48,7 @@ const AUDIT = () => {
     const pg=await b.newPage({viewport:{width:1280,height:900}, colorScheme:theme});
     await pg.goto('file://'+path.resolve('wrapped-web.html'));
     await pg.waitForTimeout(1600);
-    for(const view of ['discover','gatherings','moments','companion','profile']){
+    for(const view of ['discover','gatherings','profile']){
       await pg.evaluate(v=>go(v), view); await pg.waitForTimeout(350);
       const res=await pg.evaluate(AUDIT);
       if(res.length){ bad+=res.length; console.log(`${theme}/${view}:`); res.forEach(r=>console.log('   ',JSON.stringify(r))); }

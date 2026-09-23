@@ -22,12 +22,33 @@ A revamp of the original app concept: a single app for discovering events, watch
 
 ## Core features
 
-1. **Discover** — A personalized home feed of nearby and global events, curated by interest, language, and community.
-2. **Live** — Real-time streaming of events and moments, with live chat and translation so a global audience can follow along.
-3. **The Planet** — The centrepiece, and on the web its own full-screen page. A photoreal Earth you drag to orbit, drawn by a WebGL shader: coastlines verified against 183 known coordinates, continental shelves, climate regions (Sahara, Amazon, Gobi, Andes), sea ice, sun glint, city lights and a drifting cloud layer. Every point on it is a free gathering. Drag the time scrubber (*Right now → Saturday → Sunday → Next week → This month*) and the planet repopulates as you travel forward; "Play the tour" flies you point to point. Tap any point to open the event.
-4. **Day & night** — The terminator is real, not decorative: it is computed from the sun's actual position, so the lit half of the planet matches the clock. It tracks live by default, city lights come up on the night side, sun glints off the sea, and dragging the sun slider walks the daylight round the world hour by hour.
-5. **Companion** — An AI assistant that recommends events, answers questions, translates in real time, and helps hosts set up an event.
-6. **Create** — Simple tools for anyone — an individual, a community group, or a business — to host and promote an event.
+1. **The Planet** — the product's front door. A photoreal Earth you drag to orbit, drawn
+   by a WebGL shader: coastlines verified against 183 known coordinates, climate regions,
+   sea ice, city lights, a drifting cloud layer, and a star field behind it. Every point of
+   light is a free gathering.
+2. **Ride the dusk** — the terminator is the control, not decoration. Riding it walks the
+   evening westward around the planet and lights each place as its own six o'clock arrives.
+   Gatherings begin when the light goes, so the product follows the light.
+3. **Threshold** — every gathering states how hard it is to walk into alone: how many are
+   coming, what share of them arrive on their own, and whether anyone is on the door. The
+   real barrier to a room full of strangers is nerve, and nothing else surfaces it.
+4. **Echo** — the timeline runs *through* now rather than up to it. Scrub left and the
+   points cool from lamplight to ash, each carrying what actually came of it: who came, how
+   many came by themselves, how many were still there after it was supposed to end.
+5. **My region** — the planet turns to the viewer's own part of the world, derived from
+   their time zone. No permission prompt, no location access, no account.
+6. **Create** — simple tools for anyone to host and promote a gathering.
+
+### What was removed, and why
+
+- **The AI Companion.** A chat box bolted to an events app is a tired trend that answered
+  questions the globe answers better.
+- **Moments.** A photo recap feed was an imitation of something people already have. Echo
+  replaces it with the three numbers that actually say whether a gathering was worth the walk.
+- **Star ratings.** A five-star average is a popularity score. It contradicts Echo, which
+  reports what happened instead of how people felt about it afterwards.
+
+Five destinations became three: **The Planet**, **Gatherings**, **Yours**.
 
 ## Business model
 
