@@ -35,6 +35,9 @@ node tests/contrast.js       # every visible string measured against WCAG AA (we
 node tests/contrast_app.js   # the same for the phone prototype
 node tests/feattest.js       # time-zone region feature + reduced-motion handling
 node tests/redesign.js       # dusk ride, Threshold, Echo, and the removals
+node tests/fieldtest.js      # convene.html: the reachability rule, route, list, sheet
+node tests/animtest.js       # boot self-test, solver optimality, sweep, countdowns
+node tests/contrast_new.js   # convene.html measured in every state, boot included
 node tests/mobrepro.js       # phone layout: scrollable, timeline clear of the nav
 node tests/bandtest.js       # globe sizing across the width range
 ```

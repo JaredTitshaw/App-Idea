@@ -51,13 +51,21 @@ const AUDIT = () => {
   let bad=0;
   const pg=await b.newPage({viewport:{width:1280,height:900}});
   await pg.goto('file://'+path.resolve('wrapped-new.html'));
-  await pg.waitForTimeout(1000);
+  await pg.waitForTimeout(450);
+  // measure the self-test while it is still on screen
+  {
+    const res = await pg.evaluate(AUDIT);
+    if(res.length){ bad+=res.length; console.log('boot:'); res.forEach(r=>console.log('   ',JSON.stringify(r))); }
+  }
+  await pg.keyboard.press('Space');
+  await pg.waitForTimeout(900);
   const steps = [
     ['field',   async()=>{}],
     ['later',   async()=>{ await pg.evaluate(()=>{const r=document.getElementById('leave-range'); r.value=240; r.dispatchEvent(new Event('input',{bubbles:true}));}); }],
     ['list',    async()=>{ await pg.evaluate(()=>setView('list')); }],
     ['route',   async()=>{ await pg.evaluate(()=>{ setView('field'); const r=__convene.events.filter(e=>e.came==null).sort((x,y)=>x.at-y.at); toggleThread(r[0].id); toggleThread(r[4].id); }); }],
     ['sheet',   async()=>{ await pg.evaluate(()=>openEvent(__convene.events.find(e=>e.came==null).id)); }],
+    ['solved',  async()=>{ await pg.evaluate(()=>{ closeSheet(); solveRoute(); }); }],
     ['sheet-past', async()=>{ await pg.evaluate(()=>{ closeSheet(); openEvent(__convene.events.find(e=>e.came!=null).id); }); }]
   ];
   for(const [name, act] of steps){

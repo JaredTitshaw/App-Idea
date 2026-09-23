@@ -134,7 +134,6 @@ input[type=range]{
   position:absolute; z-index:4; display:flex; align-items:center; gap:7px;
   transform:translate(-50%,-50%); padding:4px 8px 4px 4px; border-radius:999px;
   border:1px solid transparent; max-width:210px;
-  transition:border-color .15s, background .15s, opacity .3s;
 }
 .node .dot{
   width:11px; height:11px; border-radius:50%; flex-shrink:0;
@@ -260,6 +259,20 @@ input[type=range]{
   .guest-long{ display:none; }
   .yaxis{ font-size:8.5px; }
   .yaxis span{ right:6px; }
+  /* The field is the point; on a short screen the explanation must not push it
+     below the fold. Two lines of it, then the instrument. */
+  .field-head{ padding:12px clamp(14px,3vw,26px) 8px; gap:8px; }
+  .field-head h1{ font-size:18px; }
+  .field-head p{
+    font-size:11.5px; line-height:1.45;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .acts, .views{ margin-left:0; }
+  .acts{ order:3; }
+  .views{ order:4; }
+  .leave{ padding:12px clamp(14px,3vw,26px); gap:10px; }
+  .clocks{ padding-bottom:2px; }
+  .clock em{ max-width:14ch; }
 }
 @media (max-width:560px){
   .leave-time{ font-size:30px; }
@@ -269,7 +282,89 @@ input[type=range]{
 @media (prefers-reduced-motion: reduce){
   *{ transition:none !important; animation:none !important; }
 }
+/* ══ boot ═══════════════════════════════════════════════════════════════
+   An instrument runs a self-test before it shows you a reading. Everything
+   this one prints is a real number it has just worked out. */
+.boot{
+  position:fixed; inset:0; z-index:300; background:var(--void);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono);
+}
+.boot[hidden]{ display:none; }
+.boot.out{ opacity:0; transition:opacity .45s ease; pointer-events:none; }
+.boot-in{ width:min(420px,86vw); }
+.boot-mark{
+  font-family:var(--sans); font-size:34px; font-weight:900; letter-spacing:-.045em;
+  display:flex; align-items:baseline; gap:10px; margin-bottom:26px;
+}
+.boot-mark i{ font-family:var(--mono); font-style:normal; font-size:10px; font-weight:500;
+  letter-spacing:.26em; color:var(--signal); }
+.boot-line{
+  display:flex; gap:10px; font-size:11px; letter-spacing:.08em; color:var(--spent);
+  padding:5px 0; opacity:0;
+}
+.boot-line.on{ opacity:1; }
+.boot-line b{ margin-left:auto; color:var(--bone); font-weight:500; font-variant-numeric:tabular-nums; }
+.boot-line.ok b{ color:var(--signal); }
+.boot-bar{ height:2px; background:var(--line); margin-top:22px; overflow:hidden; }
+.boot-bar i{ display:block; height:100%; width:0; background:var(--signal); }
+.boot-skip{
+  margin-top:18px; font-family:var(--mono); font-size:9.5px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--spent);
+}
+
+/* ══ motion ══════════════════════════════════════════════════════════════ */
+@keyframes settle{ from{ opacity:0; transform:translate(-50%,-50%) scale(.6); } }
+@keyframes rowin{ from{ opacity:0; transform:translateY(6px); } }
+.revealing .node{ animation:settle .34s cubic-bezier(.2,.8,.3,1) backwards; }
+.revealing .row{ animation:rowin .3s ease backwards; }
+.grid line{ transition:opacity .3s ease; }
+.node{ transition:border-color .15s, background .15s, left .35s cubic-bezier(.3,.8,.3,1), top .35s cubic-bezier(.3,.8,.3,1); }
+.node .dot{ transition:background .35s ease, box-shadow .35s ease, border-color .35s; }
+.node .nlab{ transition:color .35s ease; }
+
+/* something about to slip away asks for attention, once */
+@keyframes edge{ 0%,100%{ box-shadow:0 0 0 4px rgba(255,90,43,.16); } 50%{ box-shadow:0 0 0 7px rgba(255,90,43,.30); } }
+.anim .node.is-edge .dot{ animation:edge 1.9s ease-in-out infinite; }
+.node.is-edge .dot{ background:var(--signal); }
+
+.ghost{ pointer-events:none; }
+.count{ font-variant-numeric:tabular-nums; }
+
+/* ══ decision countdown ═════════════════════════════════════════════════ */
+.clocks{ display:flex; gap:8px; flex-wrap:wrap; padding:0 clamp(14px,3vw,26px) 4px; }
+.clock{
+  display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:999px;
+  border:1px solid var(--line); background:var(--panel); font-family:var(--mono); font-size:10.5px;
+  color:var(--dim); letter-spacing:.06em;
+}
+.clock b{ color:var(--signal); font-variant-numeric:tabular-nums; font-weight:600; }
+.clock em{ font-style:normal; color:var(--bone); font-family:var(--sans); font-weight:700;
+  font-size:11.5px; letter-spacing:-.01em; max-width:20ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ══ solve ══════════════════════════════════════════════════════════════ */
+.acts{ display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
+.solved{ border-color:var(--signal) !important; }
+@keyframes drawline{ from{ stroke-dashoffset:var(--len); } to{ stroke-dashoffset:0; } }
+
+@media (prefers-reduced-motion: reduce){
+  .anim .node, .anim .row{ animation:none; }
+  .anim .node.is-edge .dot{ animation:none; }
+}
+
 </style>
+
+<div class="boot" id="boot" role="status" aria-label="Starting up">
+  <div class="boot-in">
+    <div class="boot-mark">Convene<i>FIELD</i></div>
+    <div class="boot-line" id="b1">Device store<b>—</b></div>
+    <div class="boot-line" id="b2">Gatherings<b>—</b></div>
+    <div class="boot-line" id="b3">Computing reach<b>—</b></div>
+    <div class="boot-line ok" id="b4">Reachable from now<b>—</b></div>
+    <div class="boot-bar"><i id="bbar"></i></div>
+    <div class="boot-skip">Press any key to skip</div>
+  </div>
+</div>
 
 <a class="skip" href="#main">Skip to the field</a>
 <p class="vh" id="live" role="status" aria-live="polite"></p>
@@ -294,12 +389,18 @@ input[type=range]{
   <div class="leave-read" id="leave-read"></div>
 </section>
 
+<div class="clocks" id="clocks" aria-live="off"></div>
+
 <main id="main" tabindex="-1">
   <div class="stage">
     <div class="field-head">
       <div>
         <h1>What you can still get to</h1>
         <p id="field-sub">Across is the clock. Up is how long it takes you to get there. The angled line is the moment you leave &mdash; anything left of it has already gone without you.</p>
+      </div>
+      <div class="acts">
+        <button class="pill" id="sweep-btn" onclick="toggleSweep()">Sweep the night</button>
+        <button class="pill" id="solve-btn" onclick="solveRoute()">Build me a route</button>
       </div>
       <div class="views" role="group" aria-label="View">
         <button class="pill on" id="v-field" aria-pressed="true" onclick="setView('field')">Field</button>
@@ -512,25 +613,46 @@ function drawOverlay(){
   document.getElementById('overlay').innerHTML = parts.join('');
 }
 
-function drawNodes(){
-  var html = EVENTS.map(function(e){
-    var cls = 'node';
-    if(isPast(e)) cls += ' is-past';
-    else if(!reachable(e)) cls += ' is-gone';
-    if(thread.indexOf(e.id) !== -1) cls += ' in-thread';
-    var label = isPast(e)
-      ? e.title + ', ' + clockOf(e.at) + ', already happened, ' + e.came + ' came'
-      : e.title + ', starts ' + clockOf(e.at) + ', ' + e.reach + ' minutes away, '
-        + (reachable(e) ? 'you can still make it' : 'gone if you leave at ' + clockOf(leaveAt));
-    return '<button class="'+cls+'" style="left:'+x(e.at)+'px;top:'+y(e.reach)+'px" '
-      + 'data-id="'+e.id+'" aria-label="'+esc(label)+'" onclick="openEvent(\'' + e.id + '\')">'
+var nodeEls = {};
+
+/* Built once. Re-rendering the whole set on every slider tick threw away CSS
+   transitions and any focus that happened to be on a node. */
+function buildNodes(){
+  var host = document.getElementById('nodes');
+  host.innerHTML = EVENTS.map(function(e, i){
+    return '<button class="node" style="left:'+x(e.at)+'px;top:'+y(e.reach)+'px;'
+      + 'animation-delay:'+(i*26)+'ms" data-id="'+e.id+'" onclick="openEvent(\''+e.id+'\')">'
       + '<span class="dot" aria-hidden="true"></span>'
       + (isPast(e) ? '' : '<span class="nlab">'+esc(e.title)+'</span>') + '</button>';
   }).join('');
-  document.getElementById('nodes').innerHTML = html;
+  nodeEls = {};
+  Array.prototype.forEach.call(host.children, function(el){ nodeEls[el.dataset.id] = el; });
+  updateNodes();
 }
 
-function renderField(){ drawOverlay(); drawNodes(); }
+/* A gathering is on the edge when the last moment to leave for it is close. */
+function edgeMinutes(e){ return (e.at - e.reach) - leaveAt; }
+
+function updateNodes(){
+  EVENTS.forEach(function(e){
+    var el = nodeEls[e.id]; if(!el) return;
+    var past = isPast(e), live = reachable(e), edge = !past && live && edgeMinutes(e) <= 45;
+    el.classList.toggle('is-past', past);
+    el.classList.toggle('is-gone', !past && !live);
+    el.classList.toggle('is-edge', edge);
+    el.classList.toggle('in-thread', thread.indexOf(e.id) !== -1);
+    el.style.left = x(e.at) + 'px';
+    el.style.top  = y(e.reach) + 'px';
+    el.setAttribute('aria-label', past
+      ? e.title + ', ' + clockOf(e.at) + ', already happened, ' + e.came + ' came'
+      : e.title + ', starts ' + clockOf(e.at) + ', ' + e.reach + ' minutes away, '
+        + (live ? (edge ? 'leave within ' + Math.max(0,Math.round(edgeMinutes(e))) + ' minutes'
+                        : 'you can still make it')
+                : 'gone if you leave at ' + clockOf(leaveAt)));
+  });
+}
+
+function renderField(){ drawOverlay(); if(Object.keys(nodeEls).length) updateNodes(); else buildNodes(); }
 
 /* ── the leave control ────────────────────────────────────────────────── */
 function setLeave(mins, live){
@@ -543,9 +665,15 @@ function setLeave(mins, live){
   nb.setAttribute('aria-pressed', String(leaveLive));
   var open = EVENTS.filter(reachable).length;
   var lost = EVENTS.filter(function(e){ return !isPast(e) && !reachable(e); }).length;
-  document.getElementById('leave-read').innerHTML =
-    '<b>' + open + '</b> still reachable &nbsp;·&nbsp; ' + lost + ' gone';
-  renderField(); renderList(); renderThread();
+  var read = document.getElementById('leave-read');
+  if(!read.dataset.built){
+    read.innerHTML = '<b class="count" id="lr-open">0</b> still reachable &nbsp;·&nbsp; <span class="count" id="lr-gone">0</span> gone';
+    read.dataset.built = '1';
+  }
+  tween(document.getElementById('lr-open'), open, 260);
+  tween(document.getElementById('lr-gone'), lost, 260);
+  renderField(); renderList(); renderThread(); renderClocks();
+  followLine();
 }
 function nudgeLeave(){ if(leaveLive) setLeave(0, true); }
 
@@ -733,11 +861,179 @@ function load(){
   }catch(err){}
 }
 
+
+/* Keep the leave line on screen. Dragging the departure a long way used to walk
+   the line out of the viewport and leave you looking at empty field. Only nudges
+   when the line is actually about to leave, so it does not fight your scrolling. */
+function followLine(){
+  var sc = document.getElementById('scroller');
+  if(!sc || !sc.clientWidth) return;
+  var foot = x(leaveAt), head = x(leaveAt + FIELD.reachMax);
+  var pad = Math.min(90, sc.clientWidth * 0.12);
+  var want = null;
+  if(foot < sc.scrollLeft + pad) want = foot - pad;
+  else if(head > sc.scrollLeft + sc.clientWidth - pad) want = head - sc.clientWidth + pad;
+  if(want === null) return;
+  sc.scrollLeft = Math.max(0, Math.min(FIELD.W - sc.clientWidth, want));
+}
+
+/* ══ motion budget ════════════════════════════════════════════════════════ */
+var MOTION = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Numbers that change while you drag should move, not jump. */
+function tween(el, to, ms){
+  var from = parseInt(el.textContent, 10); if(isNaN(from)) from = 0;
+  if(!MOTION || from === to){ el.textContent = to; return; }
+  var t0 = performance.now();
+  (function step(now){
+    var k = Math.min(1, (now - t0) / ms);
+    el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1-k, 3)));
+    if(k < 1) requestAnimationFrame(step);
+  })(performance.now());
+}
+
+/* ══ decision countdown ═══════════════════════════════════════════════════
+   The useful pressure is not "starts in 40 minutes", it is "you have 12
+   minutes to decide". That is start − travel − now, and it is live. */
+function renderClocks(){
+  var host = document.getElementById('clocks');
+  var soon = EVENTS.filter(function(e){
+      return !isPast(e) && reachable(e) && edgeMinutes(e) <= 45;
+    }).sort(function(a,b){ return edgeMinutes(a) - edgeMinutes(b); }).slice(0,3);
+  if(!soon.length){ host.innerHTML = ''; return; }
+  host.innerHTML = soon.map(function(e){
+    var m = Math.max(0, Math.round(edgeMinutes(e)));
+    return '<span class="clock"><b>' + m + ' min</b> to decide on <em>' + esc(e.title) + '</em></span>';
+  }).join('');
+}
+
+/* ══ sweep ════════════════════════════════════════════════════════════════
+   Run the departure forward across the whole range and watch the evening
+   close. It is the slider moving on its own — nothing is faked. */
+var sweep = { on:false, raf:0, from:0 };
+function toggleSweep(){ sweep.on ? stopSweep() : startSweep(); }
+function startSweep(){
+  if(!MOTION){ setLeave(600, false); say('Departure moved to the end of the range'); return; }
+  sweep.on = true; sweep.from = leaveAt;
+  var btn = document.getElementById('sweep-btn');
+  btn.textContent = 'Stop'; btn.classList.add('on');
+  say('Sweeping the departure time forward');
+  var t0 = performance.now(), span = 600 - sweep.from, dur = 5200;
+  (function step(now){
+    if(!sweep.on) return;
+    var k = Math.min(1, (now - t0) / dur);
+    setLeave(sweep.from + span * k, false);
+    if(k < 1) sweep.raf = requestAnimationFrame(step); else stopSweep();
+  })(t0);
+}
+function stopSweep(){
+  sweep.on = false; cancelAnimationFrame(sweep.raf);
+  var btn = document.getElementById('sweep-btn');
+  btn.textContent = 'Sweep the night'; btn.classList.remove('on');
+}
+
+/* ══ solve ════════════════════════════════════════════════════════════════
+   Given when you are leaving, find the longest chain of gatherings that
+   actually joins up: each one reachable in turn, and enough time between
+   each pair to cross the city. Depth-first over starts, memoised on index;
+   with a couple of dozen gatherings this is instant and exact, so there is
+   no need to dress a guess up as a recommendation. */
+function solveFrom(leave){
+  var pool = EVENTS.filter(function(e){ return !isPast(e) && (e.at - e.reach) >= leave; })
+                   .sort(function(a,b){ return a.at - b.at; });
+  var memo = {};
+  function best(i){
+    if(memo[i]) return memo[i];
+    var a = pool[i], out = { n:1, mins:a.dur, path:[a.id] };
+    for(var j = i + 1; j < pool.length; j++){
+      var b = pool[j];
+      if(!legGap(a, b).ok) continue;
+      var sub = best(j);
+      // more stops first, then more time actually spent in rooms
+      if(sub.n + 1 > out.n || (sub.n + 1 === out.n && sub.mins + a.dur > out.mins)){
+        out = { n:sub.n + 1, mins:sub.mins + a.dur, path:[a.id].concat(sub.path) };
+      }
+    }
+    return (memo[i] = out);
+  }
+  var win = null;
+  for(var i = 0; i < pool.length; i++){
+    var r = best(i);
+    if(!win || r.n > win.n || (r.n === win.n && r.mins > win.mins)) win = r;
+  }
+  return win;
+}
+
+function solveRoute(){
+  var r = solveFrom(leaveAt);
+  if(!r || r.n < 2){
+    toast('Nothing joins up from ' + clockOf(leaveAt));
+    say('No route joins up from that departure time.');
+    return;
+  }
+  thread = r.path.slice();
+  save(); renderThread(); renderField();
+  var first = byId(thread[0]);
+  toast(r.n + ' stops, leave by ' + clockOf(first.at - first.reach));
+  say('Built a route of ' + r.n + ' stops. Leave home by ' + clockOf(first.at - first.reach) + '.');
+  var panel = document.getElementById('thread-b');
+  if(panel && MOTION){
+    panel.animate([{opacity:.3},{opacity:1}], {duration:320, easing:'ease-out'});
+  }
+}
+
+/* ══ boot ═════════════════════════════════════════════════════════════════
+   A self-test that reports what it actually found. */
+function boot(done){
+  var el = document.getElementById('boot');
+  if(!MOTION){ el.hidden = true; done(); return; }
+  var stored = 0;
+  try{ var raw = localStorage.getItem(KEY); stored = raw ? (JSON.parse(raw).thread||[]).length : 0; }catch(err){}
+  var lines = [
+    ['b1', stored ? stored + ' stops saved' : 'empty'],
+    ['b2', String(EVENTS.length)],
+    ['b3', EVENTS.length + '/' + EVENTS.length],
+    ['b4', String(EVENTS.filter(function(e){ return !isPast(e) && (e.at - e.reach) >= 0; }).length)]
+  ];
+  var i = 0, timers = [], finished = false;
+  var bar = document.getElementById('bbar');
+  bar.animate([{width:'0%'},{width:'100%'}], {duration:1180, easing:'cubic-bezier(.4,0,.2,1)', fill:'forwards'});
+  function tick(){
+    if(i >= lines.length){ timers.push(setTimeout(finish, 340)); return; }
+    var row = document.getElementById(lines[i][0]);
+    row.classList.add('on');
+    row.querySelector('b').textContent = lines[i][1];
+    i++;
+    timers.push(setTimeout(tick, 230));
+  }
+  function finish(){
+    if(finished) return; finished = true;
+    timers.forEach(clearTimeout);
+    document.removeEventListener('keydown', skip, true);
+    el.removeEventListener('click', skip);
+    el.classList.add('out');
+    setTimeout(function(){ el.hidden = true; }, 460);
+    done();
+  }
+  function skip(ev){
+    if(ev && ev.type === 'keydown'){
+      if(ev.key === 'Tab') return;            // let someone tab straight into the page
+      ev.preventDefault();                    // Space would otherwise page down
+    }
+    finish();
+  }
+  document.addEventListener('keydown', skip, true);
+  el.addEventListener('click', skip);
+  timers.push(setTimeout(tick, 180));
+}
+
 /* ── wiring ───────────────────────────────────────────────────────────── */
 document.getElementById('leave-range').addEventListener('input', function(){
+  if(sweep.on) stopSweep();          // your hand wins over the animation
   setLeave(Number(this.value), false);
 });
 document.getElementById('leave-now').addEventListener('click', function(){
+  if(sweep.on) stopSweep();
   setLeave(0, true); say('Departure set to now');
 });
 document.addEventListener('keydown', function(ev){
@@ -752,18 +1048,22 @@ window.addEventListener('resize', function(){ sizeField(); drawGrid(); renderFie
 
 /* The leave line follows the clock while it is live, so the field quietly
    loses options as the evening goes on. */
-setInterval(function(){ if(leaveLive) setLeave(0, true); }, 30000);
+setInterval(function(){ if(leaveLive) setLeave(0, true); else renderClocks(); }, 20000);
 
 window.openEvent = openEvent;
 window.closeSheet = closeSheet;
 window.toggleThread = toggleThread;
 window.setView = setView;
+window.toggleSweep = toggleSweep;
+window.solveRoute = solveRoute;
 
 /* A single named seam for the test suite, so verifying the reachability rule does
    not require exporting the whole module. Read-only apart from the actions above. */
 window.__convene = {
   events: EVENTS,
   legGap: legGap,
+  solveFrom: solveFrom,
+  edgeMinutes: edgeMinutes,
   state: function(){ return { leaveAt:leaveAt, leaveLive:leaveLive, view:view, thread:thread.slice() }; },
   reachable: reachable,
   isPast: isPast
@@ -774,8 +1074,21 @@ sizeField();
 drawGrid();
 setLeave(0, true);
 setView('field');
-// open the field on the first reachable thing rather than at the far left
-var firstOpen = EVENTS.filter(reachable).sort(function(a,b){ return a.at - b.at; })[0];
-if(firstOpen) document.getElementById('scroller').scrollLeft = Math.max(0, x(firstOpen.at) - 220);
+function parkView(){
+  var sc = document.getElementById('scroller');
+  // The leave line leans right as travel time rises, so park on its middle rather
+  // than its foot — otherwise a narrow screen shows only the spent side.
+  var mid = x(leaveAt + FIELD.reachMax * 0.5);
+  sc.scrollLeft = Math.max(0, mid - sc.clientWidth * 0.34);
+}
+parkView();
+
+boot(function(){
+  parkView();
+  if(!MOTION) return;
+  document.body.classList.add('anim', 'revealing');
+  // the settle is a one-time arrival, not a thing that re-fires on every render
+  setTimeout(function(){ document.body.classList.remove('revealing'); }, 1100);
+});
 })();
 </script>

@@ -44,6 +44,7 @@ const FILE='file://'+path.resolve('wrapped-new.html');
  ok(counts[0]>counts[counts.length-1], 'and it does remove some: '+counts.join(','));
 
  // the readout agrees with the field
+ await pg.waitForTimeout(450);   // the counters tween; read them once they settle
  const shown = await pg.evaluate(()=>document.getElementById('leave-read').textContent);
  const live = await pg.evaluate(()=>{const L=__convene.state().leaveAt; return __convene.events.filter(e=>e.came==null && (e.at-e.reach)>=L).length;});
  ok(shown.includes(String(live)), `readout matches (${shown.trim()} vs ${live})`);
@@ -120,6 +121,21 @@ const FILE='file://'+path.resolve('wrapped-new.html');
    await pg.setViewportSize({width:w,height:840}); await pg.waitForTimeout(250);
    const over = await pg.evaluate(()=>document.documentElement.scrollWidth - document.documentElement.clientWidth);
    ok(over<=0, `no page-level horizontal overflow at ${w}px (${over})`);
+ }
+
+ // ── the leave line must stay on screen as the departure moves
+ await pg.setViewportSize({width:390,height:760}); await pg.waitForTimeout(300);
+ for(const v of [0,180,360,600]){
+   await pg.evaluate(x=>{ const r=document.getElementById('leave-range'); r.value=x; r.dispatchEvent(new Event('input',{bubbles:true})); }, v);
+   await pg.waitForTimeout(220);
+   const vis = await pg.evaluate(()=>{
+     const sc=document.getElementById('scroller');
+     const line=document.querySelector('#overlay line');
+     const x1=parseFloat(line.getAttribute('x1')), x2=parseFloat(line.getAttribute('x2'));
+     const lo=Math.min(x1,x2), hi=Math.max(x1,x2);
+     return hi>=sc.scrollLeft && lo<=sc.scrollLeft+sc.clientWidth;
+   });
+   ok(vis, `the leave line stays in view at departure ${v}`);
  }
 
  ok(errs.length===0, 'errors: '+errs.join(' | '));
