@@ -11,6 +11,12 @@ session.
 Each is a single self-contained file — no build step, no dependencies. Open it in
 a browser, or publish it as an artifact.
 
+## Deep link
+
+`convene.html#field` opens straight on the instrument, skipping the first-visit
+feature wheel. The suites use it so they test the field, and `wheeltest.js`
+covers the wheel separately.
+
 ## Tests
 
 `tests/` holds the Playwright checks used on every change. They need Playwright and
@@ -39,6 +45,7 @@ node tests/fieldtest.js      # convene.html: the reachability rule, route, list,
 node tests/animtest.js       # boot self-test, solver optimality, sweep, countdowns
 node tests/fxtest.js         # odometer geometry, magnetism bounds, fling, sweep wake
 node tests/pulsetest.js      # wheel loader, running-now model, language filters
+node tests/wheeltest.js      # the feature wheel: input, snapping, Show me, first-visit rules
 node tests/contrast_new.js   # convene.html measured in every state, boot included
 node tests/mobrepro.js       # phone layout: scrollable, timeline clear of the nav
 node tests/bandtest.js       # globe sizing across the width range

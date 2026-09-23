@@ -20,8 +20,11 @@ const AUDIT = () => {
   document.querySelectorAll('body *').forEach(el=>{
     if(el.closest('[hidden],[inert],.vh,.skip-link')) return;
     // text sitting on the planet canvas is measured separately; skip generated shapes
-    if(!el.firstChild || el.firstChild.nodeType!==3) return;
-    const t=el.textContent.trim(); if(!t) return;
+    // Measure any element that owns visible text directly, not only ones whose
+    // first child is text — <div><span>04</span>Threshold</div> used to slip by.
+    const own=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
+    if(!own) return;
+    const t=own;
     const r=el.getBoundingClientRect(); if(r.width<2||r.height<2) return;
     const cs=getComputedStyle(el);
     if(cs.visibility==='hidden'||cs.opacity==='0') return;
@@ -50,7 +53,7 @@ const AUDIT = () => {
   const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
   let bad=0;
   const pg=await b.newPage({viewport:{width:1280,height:900}});
-  await pg.goto('file://'+path.resolve('wrapped-new.html'));
+  await pg.goto('file://'+path.resolve('wrapped-new.html')+'#field');
   await pg.waitForTimeout(450);
   // measure the self-test while it is still on screen
   {
@@ -69,6 +72,8 @@ const AUDIT = () => {
     ['filtered',async()=>{ await pg.evaluate(()=>{ setFilter('lang','ES'); }); }],
     ['unfiltered',async()=>{ await pg.evaluate(()=>{ setFilter('lang','ES'); }); }],
     ['solved',  async()=>{ await pg.evaluate(()=>{ closeSheet(); solveRoute(); }); }],
+    ['explore', async()=>{ await pg.evaluate(()=>{ closeSheet(); openExplore(3); }); await pg.waitForTimeout(500); }],
+    ['explore-closed', async()=>{ await pg.evaluate(()=>closeExplore()); await pg.waitForTimeout(400); }],
     ['sheet-past', async()=>{ await pg.evaluate(()=>{ closeSheet(); openEvent(__convene.events.find(e=>e.came!=null).id); }); }]
   ];
   for(const [name, act] of steps){

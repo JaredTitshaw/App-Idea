@@ -1,7 +1,7 @@
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
 const path=require('path');
 let pass=0,fail=0; const ok=(c,m)=>c?pass++:(fail++,console.log('  FAIL: '+m));
-const FILE='file://'+path.resolve('wrapped-new.html');
+const FILE='file://'+path.resolve('wrapped-new.html')+'#field';
 (async()=>{
  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
  const pg=await b.newPage({viewport:{width:1440,height:900}});

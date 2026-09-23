@@ -20,8 +20,11 @@ const AUDIT = () => {
   document.querySelectorAll('body *').forEach(el=>{
     if(el.closest('[hidden],[inert],.vh,.skip-link')) return;
     // text sitting on the planet canvas is measured separately; skip generated shapes
-    if(!el.firstChild || el.firstChild.nodeType!==3) return;
-    const t=el.textContent.trim(); if(!t) return;
+    // Measure any element that owns visible text directly, not only ones whose
+    // first child is text — <div><span>04</span>Threshold</div> used to slip by.
+    const own=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
+    if(!own) return;
+    const t=own;
     const r=el.getBoundingClientRect(); if(r.width<2||r.height<2) return;
     const cs=getComputedStyle(el);
     if(cs.visibility==='hidden'||cs.opacity==='0') return;

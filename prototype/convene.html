@@ -439,9 +439,92 @@ input[type=range]{
 .reel:last-child .reel-i{ justify-content:flex-end; color:var(--signal); }
 .reel-i.hit{ color:var(--bone); }
 
+/* ══ explore: the feature wheel ═════════════════════════════════════════
+   A drum you turn to see what the instrument does. Each face is one feature;
+   the one in the lit band is described beside it, and "Show me" closes the
+   drum and performs that feature on the live field. */
+.explore{
+  position:fixed; inset:0; z-index:250; background:rgba(8,8,10,.97);
+  display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+  align-items:center; gap:clamp(20px,4vw,64px);
+  padding:clamp(18px,4vw,56px);
+}
+.explore[hidden]{ display:none; }
+.explore.out{ opacity:0; transition:opacity .3s ease; }
+.ex-top{
+  position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:14px;
+  padding:16px clamp(14px,3vw,26px); border-bottom:1px solid var(--line);
+}
+.ex-top h2{ font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.24em;
+  text-transform:uppercase; color:var(--spent); }
+.ex-hint{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--spent); }
+
+.ex-wheel{
+  --h:66px; position:relative; height:calc(var(--h) * 7); perspective:900px;
+  outline:none; cursor:ns-resize; touch-action:none; user-select:none;
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 22%, #000 78%, transparent 100%);
+          mask-image:linear-gradient(180deg, transparent 0, #000 22%, #000 78%, transparent 100%);
+}
+/* Keyboard focus thickens the band rather than drawing a second outline beside
+   the band's own border, which read as a rendering fault. */
+.ex-wheel:focus-visible .ex-band{ border-width:2px; border-color:var(--signal-soft);
+  background:linear-gradient(90deg, rgba(255,90,43,.16), rgba(255,90,43,.04) 70%); }
+.ex-band{
+  position:absolute; left:0; right:0; top:50%; height:var(--h); margin-top:calc(var(--h) / -2);
+  border-top:1px solid var(--signal); border-bottom:1px solid var(--signal);
+  background:linear-gradient(90deg, rgba(255,90,43,.10), rgba(255,90,43,.02) 70%);
+  pointer-events:none; z-index:2; border-radius:4px;
+}
+.ex-drum{ position:absolute; inset:0; transform-style:preserve-3d; }
+.ex-item{
+  position:absolute; left:0; right:0; top:50%; height:var(--h); margin-top:calc(var(--h) / -2);
+  display:flex; align-items:center; gap:16px; padding:0 18px;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  font-size:clamp(20px,2.6vw,30px); font-weight:800; letter-spacing:-.035em; color:var(--dim);
+  white-space:nowrap; cursor:pointer;
+}
+.ex-item .ex-n{ font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.08em;
+  color:var(--spent); width:3ch; flex-shrink:0; }
+.ex-item[aria-selected="true"]{ color:var(--bone); }
+.ex-item[aria-selected="true"] .ex-n{ color:var(--signal); }
+.ex-item[aria-selected="false"] .ex-n{ visibility:hidden; }
+
+.ex-detail{ max-width:46ch; }
+.ex-kick{ font-family:var(--mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--signal); }
+.ex-title{ font-size:clamp(28px,4vw,46px); font-weight:900; letter-spacing:-.045em; line-height:1.02; margin-top:12px; }
+.ex-body{ font-size:14.5px; line-height:1.65; color:var(--dim); margin-top:16px; }
+.ex-how{ font-family:var(--mono); font-size:11px; color:var(--spent); margin-top:14px; letter-spacing:.04em; }
+.ex-acts{ display:flex; gap:10px; margin-top:26px; flex-wrap:wrap; }
+.ex-acts .btn{ flex:0 0 auto; padding:13px 22px; }
+.ex-meter{ display:flex; gap:5px; margin-top:28px; }
+.ex-meter i{ display:block; width:22px; height:3px; background:var(--line); border-radius:2px; transition:background .25s; }
+.ex-meter i.on{ background:var(--signal); }
+.fx .ex-detail > *{ animation:rowin .32s ease backwards; }
+.fx .ex-detail > *:nth-child(2){ animation-delay:.04s; }
+.fx .ex-detail > *:nth-child(3){ animation-delay:.08s; }
+.fx .ex-detail > *:nth-child(4){ animation-delay:.12s; }
+
+.top .explore-btn{ margin-right:6px; }
+
+@media (max-width:820px){
+  .explore{ grid-template-columns:1fr; align-content:center; gap:14px; padding-top:70px; }
+  .ex-wheel{ --h:52px; height:calc(var(--h) * 5); }
+  .ex-item{ font-size:20px; }
+  .ex-detail{ max-width:none; }
+  .ex-title{ font-size:26px; margin-top:8px; }
+  .ex-body{ font-size:13px; margin-top:10px; }
+  .ex-acts{ margin-top:16px; }
+  .ex-meter{ margin-top:16px; }
+  .ex-hint{ display:none; }
+}
+
 /* Declared last, after .filters and .clocks define themselves — a media query
    adds no specificity, so an earlier block loses to a later base rule. */
 @media (max-width:700px){
+  /* the header has three things in it on a 360px screen; the button keeps one word */
+  .ex-long{ display:none; }
+  .top{ gap:10px; }
+  .explore-btn{ padding:6px 10px; }
   /* One scrolling strip rather than three wrapped rows, so the instrument is
      not pushed off the bottom of a phone. */
   .filters, .clocks{
@@ -475,11 +558,26 @@ input[type=range]{
 </div>
 
 <a class="skip" href="#main">Skip to the field</a>
+
+<div class="explore" id="explore" role="dialog" aria-modal="true" aria-labelledby="ex-h" hidden inert>
+  <div class="ex-top">
+    <h2 id="ex-h">Explore Convene</h2>
+    <span class="top-sp"></span>
+    <span class="ex-hint">Scroll, drag or use the arrow keys</span>
+    <button class="pill" onclick="closeExplore()">Go to the field</button>
+  </div>
+  <div class="ex-wheel" id="ex-wheel" role="listbox" tabindex="0" aria-label="Features">
+    <div class="ex-band" aria-hidden="true"></div>
+    <div class="ex-drum" id="ex-drum"></div>
+  </div>
+  <div class="ex-detail" id="ex-detail" aria-live="polite"></div>
+</div>
 <p class="vh" id="live" role="status" aria-live="polite"></p>
 
 <header class="top">
   <div class="mark"><b>Convene</b><i>Field</i></div>
   <div class="top-sp"></div>
+  <button class="pill explore-btn" id="explore-btn" onclick="openExplore()">Explore<span class="ex-long"> features</span></button>
   <span class="guest">Guest<span class="guest-long"> &middot; nothing saved to any server</span></span>
 </header>
 
@@ -1238,6 +1336,223 @@ function runWheel(){
   spinReel(document.getElementById('r3'), live.map(function(e){ return (e.langs||['EN'])[0]; }), at, 1980);
 }
 
+
+/* ══ explore: the feature wheel ═══════════════════════════════════════════
+   Turn the drum to a feature and "Show me" performs it on the live field —
+   the tour is the product doing the thing, not a slideshow about it. */
+var FEATURES = [
+  { k:'The field', t:'Everything, on two axes',
+    b:'Every gathering plotted against when it starts and how long it takes you to get there. Where a dot sits tells you whether you can go, before you read a word.',
+    how:'Across: the clock. Up: door-to-door travel.',
+    go:function(){ parkView(); pulseEl(document.getElementById('field')); } },
+  { k:'Leave line', t:'Watch the evening close',
+    b:'The angled line is the moment you leave. Drag it later and options fall behind it one by one. Sweep runs it across the whole night for you.',
+    how:'Reachable when start − travel ≥ departure.',
+    go:function(){ startSweep(); } },
+  { k:'Running now', t:'Late is still in',
+    b:'A six-hour market is worth walking into four hours in. Anything you would arrive at partway is drawn as a ring, with how much of it you would actually get.',
+    how:'Joinable while you arrive 25 min before it ends.',
+    go:function(){ setLeave(245, false); if(!filters.runningOnly) setFilter('running'); } },
+  { k:'Threshold', t:'How hard is it to walk in alone',
+    b:'Headcount, the share who arrive on their own, and whether a named person is on the door. The real barrier to a room of strangers is nerve, and nothing else tells you about it.',
+    how:'Stated plainly, never scored behind the scenes.',
+    go:function(){ var e = EVENTS.filter(function(x){ return joinable(x) && x.door; })[0]; if(e) openEvent(e.id); } },
+  { k:'Route', t:'An evening that joins up',
+    b:'Pick a departure and Convene finds the longest chain of gatherings where every hop leaves time to cross the city — then tells you when to leave home.',
+    how:'Exact search, not a recommendation.',
+    go:function(){ solveRoute(); scrollIntoPanel('thread-b'); } },
+  { k:'Decide by', t:'Minutes to decide, not to start',
+    b:'"Starts in 40 minutes" is the wrong number. What matters is how long before you have to be out of the door, so that is what counts down.',
+    how:'start − travel − now, live.',
+    go:function(){ setLeave(0, true); pulseEl(document.getElementById('clocks')); } },
+  { k:'Spoken here', t:'Rooms where you can talk',
+    b:'Every gathering says what is spoken in the room. Filter to a language and the field keeps only the places you could hold a conversation.',
+    how:'Pairs with Threshold: can you walk in, can you talk.',
+    go:function(){ if(filters.lang !== 'ES') setFilter('lang','ES'); } },
+  { k:'Echo', t:'What came of it',
+    b:'Things that already happened keep three numbers instead of a star rating: who came, how many came alone, and how many were still there after it ended.',
+    how:'No five stars. Evidence.',
+    go:function(){ var e = EVENTS.filter(isPast)[0]; if(e) openEvent(e.id); } },
+  { k:'List', t:'The same evening, read',
+    b:'Everything the field shows, as rows in start order, each one saying the time you would have to leave. Press L to flip between them.',
+    how:'A full equivalent, not a fallback.',
+    go:function(){ setView('list'); } }
+];
+
+var ex = { pos:0, target:0, raf:0, open:false, lastFocus:null, snapT:0, drag:null };
+var EX_STEP = 22;                                  // degrees between faces
+
+function exRadius(){
+  var h = parseFloat(getComputedStyle(document.getElementById('ex-wheel')).getPropertyValue('--h')) || 66;
+  return (h / 2) / Math.tan((EX_STEP / 2) * Math.PI / 180);
+}
+function buildExplore(){
+  document.getElementById('ex-drum').innerHTML = FEATURES.map(function(f, i){
+    return '<div class="ex-item" role="option" id="ex-o' + i + '" aria-selected="false" data-i="' + i + '">'
+      + '<span class="ex-n">' + String(i + 1).padStart(2, '0') + '</span>' + esc(f.k) + '</div>';
+  }).join('');
+}
+function exIndex(){ return Math.max(0, Math.min(FEATURES.length - 1, Math.round(ex.target))); }
+
+function paintDrum(){
+  var r = exRadius();
+  var drum = document.getElementById('ex-drum');
+  drum.style.transform = 'translateZ(' + (-r) + 'px) rotateX(' + (ex.pos * EX_STEP) + 'deg)';
+  var items = drum.children;
+  for(var i = 0; i < items.length; i++){
+    var d = Math.abs(i - ex.pos);
+    items[i].style.transform = 'rotateX(' + (-i * EX_STEP) + 'deg) translateZ(' + r + 'px)';
+    // Solved against the backdrop: 0.82 at one face out, 0.62 at two, both above
+    // 3:1 for large text. Past two faces it is hidden outright rather than left as
+    // unreadable grey — the mask fades that region anyway.
+    items[i].style.opacity = d >= 2.6 ? 0 : (d <= 1 ? 1 - d * 0.18 : 0.82 - (d - 1) * 0.2).toFixed(3);
+  }
+}
+function paintDetail(){
+  var i = exIndex(), f = FEATURES[i];
+  var wheel = document.getElementById('ex-wheel');
+  wheel.setAttribute('aria-activedescendant', 'ex-o' + i);
+  Array.prototype.forEach.call(document.getElementById('ex-drum').children, function(el, j){
+    el.setAttribute('aria-selected', String(j === i));
+  });
+  var host = document.getElementById('ex-detail');
+  if(host.dataset.i === String(i)) return;
+  host.dataset.i = String(i);
+  host.innerHTML =
+      '<div class="ex-kick">' + String(i + 1).padStart(2,'0') + ' / ' + String(FEATURES.length).padStart(2,'0') + ' · ' + esc(f.k) + '</div>'
+    + '<h3 class="ex-title">' + esc(f.t) + '</h3>'
+    + '<p class="ex-body">' + esc(f.b) + '</p>'
+    + '<p class="ex-how">' + esc(f.how) + '</p>'
+    + '<div class="ex-acts"><button class="btn" id="ex-show" onclick="showFeature(' + i + ')">Show me</button>'
+    + '<button class="btn ghost" onclick="closeExplore()">Go to the field</button></div>'
+    + '<div class="ex-meter" aria-hidden="true">' + FEATURES.map(function(_, j){ return '<i' + (j === i ? ' class="on"' : '') + '></i>'; }).join('') + '</div>';
+}
+
+/* The drum eases toward its target; a released drag or a scroll that stops
+   settles on the nearest face. */
+function exAnimate(){
+  cancelAnimationFrame(ex.raf);
+  if(!MOTION){ ex.pos = ex.target; paintDrum(); paintDetail(); return; }
+  (function step(){
+    ex.pos += (ex.target - ex.pos) * 0.2;
+    if(Math.abs(ex.target - ex.pos) < 0.002) ex.pos = ex.target;
+    paintDrum(); paintDetail();
+    if(ex.pos !== ex.target) ex.raf = requestAnimationFrame(step);
+  })();
+}
+function exGo(t, snap){
+  var max = FEATURES.length - 1;
+  ex.target = Math.max(-0.35, Math.min(max + 0.35, t));      // a little give at the ends
+  if(snap) ex.target = Math.max(0, Math.min(max, Math.round(ex.target)));
+  exAnimate();
+}
+function exSnapSoon(){
+  clearTimeout(ex.snapT);
+  ex.snapT = setTimeout(function(){ exGo(ex.target, true); }, 110);
+}
+
+function initExplore(){
+  buildExplore();
+  var w = document.getElementById('ex-wheel');
+  w.addEventListener('wheel', function(ev){
+    ev.preventDefault();
+    exGo(ex.target + ev.deltaY / 110, false);
+    exSnapSoon();
+  }, { passive:false });
+  w.addEventListener('pointerdown', function(ev){
+    ex.drag = { y:ev.clientY, start:ex.target, moved:0, id:ev.pointerId };
+    w.setPointerCapture(ev.pointerId);
+  });
+  w.addEventListener('pointermove', function(ev){
+    if(!ex.drag) return;
+    var dy = ev.clientY - ex.drag.y;
+    ex.drag.moved = Math.max(ex.drag.moved, Math.abs(dy));
+    var h = parseFloat(getComputedStyle(w).getPropertyValue('--h')) || 66;
+    exGo(ex.drag.start - dy / h, false);
+  });
+  function end(ev){
+    if(!ex.drag) return;
+    var d = ex.drag; ex.drag = null;
+    if(d.moved < 5){
+      // a tap: jump to the face that was tapped
+      var hit = document.elementsFromPoint(ev.clientX, ev.clientY).filter(function(n){ return n.classList && n.classList.contains('ex-item'); })[0];
+      if(hit) exGo(Number(hit.dataset.i), true); else exGo(ex.target, true);
+      return;
+    }
+    exGo(ex.target, true);
+  }
+  w.addEventListener('pointerup', end);
+  w.addEventListener('pointercancel', end);
+  w.addEventListener('keydown', function(ev){
+    var i = exIndex(), used = true;
+    if(ev.key === 'ArrowDown' || ev.key === 'ArrowRight') exGo(i + 1, true);
+    else if(ev.key === 'ArrowUp' || ev.key === 'ArrowLeft') exGo(i - 1, true);
+    else if(ev.key === 'Home') exGo(0, true);
+    else if(ev.key === 'End') exGo(FEATURES.length - 1, true);
+    else if(ev.key === 'Enter' || ev.key === ' ') showFeature(i);
+    else used = false;
+    if(used) ev.preventDefault();
+  });
+  window.addEventListener('resize', function(){ if(ex.open) paintDrum(); });
+}
+
+function openExplore(at){
+  if(sweep.on) stopSweep();
+  closeSheet();
+  var el = document.getElementById('explore');
+  ex.lastFocus = document.activeElement;
+  ex.open = true;
+  el.hidden = false; el.removeAttribute('inert'); el.classList.remove('out');
+  document.getElementById('main').setAttribute('inert','');
+  if(typeof at === 'number'){ ex.pos = ex.target = at; }
+  paintDrum(); paintDetail();
+  document.getElementById('ex-wheel').focus({ preventScroll:true });
+  say('Explore Convene. ' + FEATURES[exIndex()].k + '. Use the arrow keys to turn the wheel.');
+}
+function closeExplore(then){
+  if(!ex.open){ if(then) then(); return; }
+  ex.open = false;
+  var el = document.getElementById('explore');
+  document.getElementById('main').removeAttribute('inert');
+  function done(){
+    el.hidden = true; el.setAttribute('inert','');
+    try{ localStorage.setItem('convene.explored','1'); }catch(err){}
+    if(then) then();
+    else if(ex.lastFocus && document.body.contains(ex.lastFocus)) ex.lastFocus.focus({ preventScroll:true });
+  }
+  if(MOTION){ el.classList.add('out'); setTimeout(done, 300); } else done();
+}
+
+/* Performing a feature starts from a clean instrument, so demos never stack. */
+function resetForDemo(){
+  if(sweep.on) stopSweep();
+  closeSheet();
+  if(filters.tag || filters.lang || filters.runningOnly){
+    filters.tag = null; filters.lang = null; filters.runningOnly = false;
+    renderFilters(); renderField(); renderList(); renderClocks();
+  }
+  if(view !== 'field') setView('field');
+}
+function showFeature(i){
+  var f = FEATURES[i];
+  closeExplore(function(){
+    resetForDemo();
+    document.getElementById('main').focus({ preventScroll:true });
+    window.scrollTo({ top:0, behavior: MOTION ? 'smooth' : 'auto' });
+    setTimeout(function(){ f.go(); say('Showing: ' + f.t); }, MOTION ? 260 : 0);
+  });
+}
+function pulseEl(el){
+  if(!el || !MOTION) return;
+  el.animate([{ boxShadow:'inset 0 0 0 1px rgba(255,90,43,0)' },
+              { boxShadow:'inset 0 0 0 1px rgba(255,90,43,.9)' },
+              { boxShadow:'inset 0 0 0 1px rgba(255,90,43,0)' }], { duration:900, easing:'ease-out' });
+}
+function scrollIntoPanel(id){
+  var el = document.getElementById(id);
+  if(el) setTimeout(function(){ el.scrollIntoView({ block:'center', behavior: MOTION ? 'smooth' : 'auto' }); }, 350);
+}
+
 /* ══ motion budget ════════════════════════════════════════════════════════ */
 var MOTION = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1351,16 +1666,16 @@ function solveRoute(){
    A self-test that reports what it actually found. */
 function boot(done){
   var el = document.getElementById('boot');
-  if(!MOTION){ el.hidden = true; done(); return; }
+  if(!MOTION){ el.hidden = true; done(false); return; }
   var stored = 0;
   try{ var raw = localStorage.getItem(KEY); stored = raw ? (JSON.parse(raw).thread||[]).length : 0; }catch(err){}
   var lines = [
     ['b1', stored ? stored + ' stops saved' : 'empty'],
     ['b2', String(EVENTS.length)],
     ['b3', EVENTS.length + '/' + EVENTS.length],
-    ['b4', String(EVENTS.filter(function(e){ return !isPast(e) && (e.at - e.reach) >= 0; }).length)]
+    ['b4', String(EVENTS.filter(joinable).length)]
   ];
-  var i = 0, timers = [], finished = false;
+  var i = 0, timers = [], finished = false, skipped = false;
   runWheel();
   var bar = document.getElementById('bbar');
   bar.animate([{width:'0%'},{width:'100%'}], {duration:2050, easing:'cubic-bezier(.4,0,.2,1)', fill:'forwards'});
@@ -1379,13 +1694,14 @@ function boot(done){
     el.removeEventListener('click', skip);
     el.classList.add('out');
     setTimeout(function(){ el.hidden = true; }, 460);
-    done();
+    done(skipped);
   }
   function skip(ev){
     if(ev && ev.type === 'keydown'){
       if(ev.key === 'Tab') return;            // let someone tab straight into the page
       ev.preventDefault();                    // Space would otherwise page down
     }
+    skipped = true;
     finish();
   }
   document.addEventListener('keydown', skip, true);
@@ -1404,8 +1720,10 @@ document.getElementById('leave-now').addEventListener('click', function(){
 });
 document.addEventListener('keydown', function(ev){
   if(ev.key === 'Escape'){
+    if(ex.open){ closeExplore(); return; }
     if(document.getElementById('sheet').classList.contains('open')){ closeSheet(); return; }
   }
+  if(ex.open) return;                  // the drum owns the keyboard while it is open
   if(ev.key === 'l' && !/^(INPUT|TEXTAREA)$/.test(ev.target.tagName)){
     setView(view === 'field' ? 'list' : 'field');
   }
@@ -1423,6 +1741,9 @@ window.setView = setView;
 window.toggleSweep = toggleSweep;
 window.solveRoute = solveRoute;
 window.setFilter = setFilter;
+window.openExplore = openExplore;
+window.closeExplore = closeExplore;
+window.showFeature = showFeature;
 
 /* A single named seam for the test suite, so verifying the reachability rule does
    not require exporting the whole module. Read-only apart from the actions above. */
@@ -1432,6 +1753,7 @@ window.__convene = {
   joinable: joinable,
   running: running,
   passes: passes,
+  explore: function(){ return { open:ex.open, index:exIndex(), count:FEATURES.length }; },
   filterState: function(){ return { tag:filters.tag, lang:filters.lang, runningOnly:filters.runningOnly }; },
   solveFrom: solveFrom,
   edgeMinutes: edgeMinutes,
@@ -1462,12 +1784,18 @@ initScrub();
   f.addEventListener('pointerleave', clearMag);
 })();
 
-boot(function(){
+initExplore();
+
+boot(function(skipped){
   parkView();
-  if(!MOTION) return;
-  document.body.classList.add('anim', 'revealing', 'fx');
-  // the settle is a one-time arrival, not a thing that re-fires on every render
-  setTimeout(function(){ document.body.classList.remove('revealing'); }, 1100);
+  if(MOTION){
+    document.body.classList.add('anim', 'revealing', 'fx');
+    // the settle is a one-time arrival, not a thing that re-fires on every render
+    setTimeout(function(){ document.body.classList.remove('revealing'); }, 1100);
+  }
+  var seen = false;
+  try{ seen = localStorage.getItem('convene.explored') === '1'; }catch(err){}
+  if(!skipped && !seen && location.hash !== '#field') setTimeout(function(){ openExplore(0); }, MOTION ? 420 : 0);
 });
 })();
 </script>
