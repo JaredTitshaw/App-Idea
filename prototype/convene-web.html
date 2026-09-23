@@ -422,9 +422,10 @@
   .timeline-stop b{ font-size:12px; font-weight:700; color:var(--ink-faint); white-space:nowrap; }
   .timeline-stop i{ font-style:normal; }
   .tl-s{ display:none; }
-  .timeline-stop span{ font-size:10.5px; color:var(--ink-faint); opacity:.75; white-space:nowrap; }
+  /* Fading this text put it below AA; the colour token is already the quiet one. */
+  .timeline-stop span{ font-size:10.5px; color:var(--ink-faint); white-space:nowrap; }
   .timeline-stop.on b{ color:var(--accent); }
-  .timeline-stop.on span{ color:var(--ink-dim); opacity:1; }
+  .timeline-stop.on span{ color:var(--ink-dim); }
 
   /* ---------- profile ---------- */
   .profile-layout{ display:grid; grid-template-columns:280px 1fr; gap:28px; align-items:start; }
@@ -658,7 +659,7 @@
 
   /* The timeline runs through now rather than up to it. */
   .timeline-stop.is-past b{ color:var(--ash); }
-  .timeline-stop.is-past span{ color:var(--ash); opacity:.7; }
+  .timeline-stop.is-past span{ color:var(--ash); }
   .timeline-stop.is-now b{ letter-spacing:.01em; }
   .timeline-stop.is-now::before{ height:14px; top:-14px; background:var(--accent); width:2px; }
   body.echo-mode .timeline-fill, body.echo-mode .timeline-dot{ background:var(--ash); }

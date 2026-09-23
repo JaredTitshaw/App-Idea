@@ -26,9 +26,12 @@ const AUDIT = () => {
     const cs=getComputedStyle(el);
     if(cs.visibility==='hidden'||cs.opacity==='0') return;
     // An ancestor can hide it just as effectively (closed sheets are opacity:0).
+    let fade = parseFloat(cs.opacity);
     for(let a=el.parentElement; a; a=a.parentElement){
       const ac=getComputedStyle(a);
       if(ac.opacity==='0'||ac.visibility==='hidden'||ac.display==='none') return;
+      // Fractional opacity on an ancestor really does lower contrast, so carry it.
+      fade *= parseFloat(ac.opacity);
     }
     const fg=rgb(cs.color); if(!fg) return;
     const size=parseFloat(cs.fontSize), weight=parseInt(cs.fontWeight)||400;
@@ -36,7 +39,9 @@ const AUDIT = () => {
     const need = large?3:4.5;
     const bg=bgOf(el);
     if(!bg) return;  // painted over a gradient or image; not measurable this way
-    const cr=ratio(fg,bg);
+    // Composite the text over its background at the inherited opacity.
+    const eff = fade>=1 ? fg : fg.map((v,i)=> v*fade + bg[i]*(1-fade));
+    const cr=ratio(eff,bg);
     if(cr<need) out.push({t:t.slice(0,32), cr:+cr.toFixed(2), need, size, sel:el.className.toString().slice(0,28)});
   });
   return out;

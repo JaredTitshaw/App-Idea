@@ -1,0 +1,781 @@
+<title>Convene</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800;900&family=Chivo+Mono:wght@300;400;500;600&display=swap">
+<style>
+/* ──────────────────────────────────────────────────────────────────────────
+   Convene — an instrument for spending an evening.
+   One committed look: an instrument face. Near-black ground, bone type, a
+   single vermilion signal, and one cold grey for everything already spent.
+   No second accent anywhere — if something needs emphasis it gets weight,
+   size or the signal, never a new hue.
+   ────────────────────────────────────────────────────────────────────────── */
+:root{
+  color-scheme: dark;
+  --void:#0B0B0D;
+  --panel:#111216;
+  --panel-2:#171921;
+  --line:#23262E;
+  --line-soft:#191C22;
+  --bone:#ECE8E1;
+  --dim:#A6ADB6;
+  --spent:#7C8490;
+  --signal:#FF5A2B;
+  --signal-soft:#FF8A5F;
+  --signal-ink:#180500;
+  --r:10px;
+  --mono:"Chivo Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans:"Archivo", system-ui, -apple-system, sans-serif;
+}
+*{ box-sizing:border-box; }
+html{ scroll-padding-top:80px; }
+html,body{ margin:0; }
+body{
+  overflow-x:clip;                 /* the closed sheet is parked off to the right */
+  background:var(--void); color:var(--bone);
+  font-family:var(--sans); -webkit-font-smoothing:antialiased;
+  font-size:15px; line-height:1.5;
+}
+button,input,select,textarea{ font:inherit; color:inherit; }
+button{ cursor:pointer; background:none; border:none; padding:0; }
+svg{ display:block; }
+h1,h2,h3{ margin:0; text-wrap:balance; }
+p{ margin:0; }
+
+/* one focus ring for the whole instrument */
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{
+  outline:2px solid var(--signal-soft); outline-offset:3px; border-radius:6px;
+}
+.vh{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden;
+     clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
+.skip{ position:fixed; top:10px; left:10px; z-index:200; transform:translateY(-200%);
+  background:var(--signal); color:var(--signal-ink); padding:10px 16px; border-radius:8px;
+  font-weight:700; font-size:13px; text-decoration:none; transition:transform .15s ease; }
+.skip:focus-visible{ transform:translateY(0); }
+
+/* ── shell ─────────────────────────────────────────────────────────────── */
+.top{
+  position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:18px;
+  padding:14px clamp(14px,3vw,26px); background:rgba(11,11,13,.92);
+  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.mark{ display:flex; align-items:baseline; gap:9px; flex-shrink:0; }
+.mark b{ font-size:17px; font-weight:900; letter-spacing:-.035em; }
+.mark i{ font-style:normal; font-family:var(--mono); font-size:9.5px; font-weight:500;
+  letter-spacing:.22em; text-transform:uppercase; color:var(--spent); }
+.top-sp{ flex:1; }
+.guest{ display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--dim); white-space:nowrap; }
+.guest::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--signal); }
+
+/* ── the leave control: the one thing that decides everything else ─────── */
+.leave{
+  display:flex; align-items:center; gap:clamp(10px,2vw,20px); flex-wrap:wrap;
+  padding:16px clamp(14px,3vw,26px); border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, var(--panel) 0%, var(--void) 100%);
+}
+.leave-lab{ font-family:var(--mono); font-size:10px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--spent); }
+.leave-time{
+  font-family:var(--mono); font-size:clamp(28px,5vw,40px); font-weight:600;
+  letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums;
+  color:var(--bone); min-width:4.2ch;
+}
+.leave-slider{ flex:1; min-width:180px; display:flex; align-items:center; gap:12px; }
+input[type=range]{
+  flex:1; min-width:0; height:22px; accent-color:var(--signal); cursor:pointer; background:none;
+}
+.pill{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  padding:7px 13px; border:1px solid var(--line); border-radius:999px; color:var(--dim);
+  white-space:nowrap; transition:border-color .15s, color .15s;
+}
+.pill:hover{ border-color:var(--spent); color:var(--bone); }
+.pill[aria-pressed="true"], .pill.on{ background:var(--signal); border-color:var(--signal); color:var(--signal-ink); font-weight:600; }
+.leave-read{ font-family:var(--mono); font-size:11.5px; color:var(--dim); font-variant-numeric:tabular-nums; }
+.leave-read b{ color:var(--signal); font-weight:600; }
+
+/* ── the field ─────────────────────────────────────────────────────────── */
+.stage{ padding:0 0 4px; }
+.field-head{
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  padding:18px clamp(14px,3vw,26px) 10px;
+}
+.field-head h1{ font-size:clamp(19px,2.6vw,24px); font-weight:800; letter-spacing:-.03em; }
+.field-head p{ font-size:12.5px; color:var(--dim); max-width:56ch; }
+.views{ margin-left:auto; display:flex; gap:6px; }
+
+.field-wrap{ position:relative; padding-left:64px; }
+.yaxis{
+  position:absolute; left:0; top:0; width:64px; height:var(--fh);
+  font-family:var(--mono); font-size:9.5px; color:var(--spent);
+  letter-spacing:.06em; pointer-events:none;
+}
+.yaxis span{ position:absolute; right:10px; transform:translateY(-50%); white-space:nowrap; }
+.yaxis span:first-child{ transform:translateY(-10%); }
+.yaxis-cap{
+  position:absolute; left:0; bottom:-26px; width:64px; text-align:right; padding-right:10px;
+  font-family:var(--mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--spent);
+}
+.scroller{ overflow-x:auto; overflow-y:hidden; scrollbar-width:thin; }
+.field{
+  position:relative; height:var(--fh);
+  border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line);
+}
+.grid{ position:absolute; inset:0; pointer-events:none; }
+.xaxis{ position:relative; height:26px; font-family:var(--mono); font-size:9.5px; color:var(--spent); }
+.xaxis span{ position:absolute; top:6px; transform:translateX(-50%); white-space:nowrap; letter-spacing:.06em; }
+
+/* the leave line: everything to its left has already gone without you */
+.overlay{ position:absolute; inset:0; pointer-events:none; z-index:3; }
+
+/* ── nodes ─────────────────────────────────────────────────────────────── */
+.node{
+  position:absolute; z-index:4; display:flex; align-items:center; gap:7px;
+  transform:translate(-50%,-50%); padding:4px 8px 4px 4px; border-radius:999px;
+  border:1px solid transparent; max-width:210px;
+  transition:border-color .15s, background .15s, opacity .3s;
+}
+.node .dot{
+  width:11px; height:11px; border-radius:50%; flex-shrink:0;
+  background:var(--signal); box-shadow:0 0 0 4px rgba(255,90,43,.16);
+}
+.node .nlab{
+  font-size:11.5px; font-weight:600; letter-spacing:-.01em; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; color:var(--bone);
+}
+.node:hover, .node:focus-visible{ background:var(--panel-2); border-color:var(--line); z-index:7; }
+.node:hover .nlab, .node:focus-visible .nlab{ overflow:visible; }
+.node.is-gone .dot{ background:var(--spent); box-shadow:none; }
+.node.is-gone .nlab{ color:var(--spent); }
+.node.is-past .dot{ background:none; border:1px solid var(--spent); box-shadow:none; }
+.node.is-past .nlab{ color:var(--spent); }
+.node.in-thread .dot{ background:var(--bone); box-shadow:0 0 0 4px rgba(236,232,225,.18); }
+.node.in-thread{ background:var(--panel-2); border-color:var(--spent); }
+
+/* ── thread ────────────────────────────────────────────────────────────── */
+.below{
+  display:grid; grid-template-columns:1fr 330px; gap:clamp(16px,2.4vw,30px);
+  padding:26px clamp(14px,3vw,26px) 70px; align-items:start;
+}
+.below > *{ min-width:0; }
+.row-m{ min-width:0; }
+.row-m b, .row-m span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.leg-m{ min-width:0; }
+.leg-m b, .leg-m span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.panel{ background:var(--panel); border:1px solid var(--line); border-radius:14px; }
+.panel-h{
+  display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--line);
+  font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--spent);
+}
+.panel-h b{ margin-left:auto; color:var(--bone); font-family:var(--sans); font-size:12px; letter-spacing:0; text-transform:none; font-weight:700; }
+.panel-b{ padding:14px 16px 16px; }
+.empty{ font-size:12.5px; color:var(--spent); line-height:1.65; }
+
+.leg{ display:flex; gap:12px; align-items:flex-start; padding:12px 0; }
+.leg + .leg{ border-top:1px solid var(--line-soft); }
+.leg-t{ font-family:var(--mono); font-size:12px; font-variant-numeric:tabular-nums; color:var(--signal); flex-shrink:0; width:5ch; }
+.leg-m b{ display:block; font-size:13px; font-weight:700; letter-spacing:-.01em; }
+.leg-m span{ display:block; font-size:11.5px; color:var(--dim); margin-top:2px; }
+.leg-x{ margin-left:auto; color:var(--spent); font-size:16px; line-height:1; padding:2px 4px; }
+.leg-x:hover{ color:var(--signal); }
+.gap{ display:flex; align-items:center; gap:8px; padding:7px 0 7px 6px;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--dim); }
+.gap::before{ content:""; width:1px; height:16px; background:var(--line); margin-left:2ch; }
+.gap.tight{ color:var(--signal); }
+.gap.bad{ color:var(--signal); font-weight:600; }
+
+/* ── list view ─────────────────────────────────────────────────────────── */
+.list{ display:flex; flex-direction:column; }
+.row{
+  display:grid; grid-template-columns:5.5ch 1fr auto; gap:14px; align-items:center;
+  padding:13px 4px; border-bottom:1px solid var(--line-soft); text-align:left; width:100%;
+}
+.row:hover{ background:var(--panel); }
+.row-t{ font-family:var(--mono); font-size:12.5px; font-variant-numeric:tabular-nums; color:var(--signal); }
+.row.is-gone .row-t, .row.is-past .row-t{ color:var(--spent); }
+.row-m b{ display:block; font-size:13.5px; font-weight:700; letter-spacing:-.01em; }
+.row-m span{ display:block; font-size:11.5px; color:var(--dim); margin-top:2px; }
+.row-r{ font-family:var(--mono); font-size:11px; color:var(--dim); text-align:right; white-space:nowrap; }
+.row-r i{ display:block; font-style:normal; color:var(--spent); font-size:10px; margin-top:2px; }
+
+/* ── detail ────────────────────────────────────────────────────────────── */
+.scrim{ position:fixed; inset:0; background:rgba(5,5,6,.72); opacity:0; pointer-events:none;
+  transition:opacity .2s; z-index:60; }
+.scrim.open{ opacity:1; pointer-events:auto; }
+.sheet{
+  position:fixed; top:0; right:0; bottom:0; width:440px; max-width:94vw; z-index:70;
+  background:var(--panel); border-left:1px solid var(--line);
+  transform:translateX(102%); transition:transform .26s cubic-bezier(.4,0,.2,1);
+  display:flex; flex-direction:column;
+}
+.sheet.open{ transform:translateX(0); }
+.sheet-h{ display:flex; align-items:center; gap:12px; padding:18px 20px; border-bottom:1px solid var(--line); }
+.sheet-h h2{ font-size:11px; font-family:var(--mono); letter-spacing:.2em; text-transform:uppercase; color:var(--spent); font-weight:500; }
+.sheet-b{ flex:1; overflow-y:auto; padding:22px 20px 26px; }
+.sheet-f{ padding:14px 20px 20px; border-top:1px solid var(--line); display:flex; gap:10px; }
+.icon{ width:34px; height:34px; border:1px solid var(--line); border-radius:9px;
+  display:flex; align-items:center; justify-content:center; color:var(--dim); }
+.icon:hover{ color:var(--bone); border-color:var(--spent); }
+.d-title{ font-size:22px; font-weight:800; letter-spacing:-.03em; line-height:1.15; }
+.d-sub{ font-family:var(--mono); font-size:11.5px; color:var(--signal); margin-top:8px; letter-spacing:.04em; }
+.d-meta{ display:flex; flex-direction:column; gap:1px; margin-top:18px; }
+.d-meta div{ display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--line-soft); font-size:13px; }
+.d-meta dt{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--spent); width:9ch; flex-shrink:0; padding-top:2px; }
+.d-desc{ font-size:13.5px; line-height:1.65; color:var(--dim); margin-top:18px; }
+.reading{ margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+.reading h3{ font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--spent); font-weight:500; margin-bottom:12px; }
+.cells{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.cell{ background:var(--panel-2); border-radius:10px; padding:12px 8px; text-align:center; }
+.cell b{ display:block; font-family:var(--mono); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; }
+.cell span{ display:block; font-size:10px; color:var(--spent); margin-top:5px; line-height:1.3; }
+.note{ font-size:12.5px; color:var(--dim); line-height:1.6; margin-top:12px; }
+.note b{ color:var(--signal); }
+.btn{
+  flex:1; padding:13px; border-radius:10px; background:var(--signal); color:var(--signal-ink);
+  font-weight:700; font-size:13.5px; letter-spacing:-.01em;
+}
+.btn:hover{ background:var(--signal-soft); }
+.btn.ghost{ background:none; border:1px solid var(--line); color:var(--bone); }
+.btn.ghost:hover{ border-color:var(--spent); background:var(--panel-2); }
+.btn[disabled]{ opacity:.4; cursor:not-allowed; }
+
+.toast{
+  position:fixed; left:50%; bottom:24px; transform:translate(-50%,10px); z-index:90;
+  background:var(--bone); color:var(--void); padding:11px 18px; border-radius:9px;
+  font-size:12.5px; font-weight:700; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+}
+.toast.show{ opacity:1; transform:translate(-50%,0); }
+
+@media (max-width:900px){
+  .below{ grid-template-columns:1fr; }
+  .field-wrap{ padding-left:52px; }
+  .yaxis, .yaxis-cap{ width:52px; }
+  .node{ max-width:150px; }
+}
+@media (max-width:700px){
+  /* the reassurance is worth saying once, not at the cost of a sideways page */
+  .guest-long{ display:none; }
+  .yaxis{ font-size:8.5px; }
+  .yaxis span{ right:6px; }
+}
+@media (max-width:560px){
+  .leave-time{ font-size:30px; }
+  .node .nlab{ display:none; }
+  .node{ padding:5px; }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ transition:none !important; animation:none !important; }
+}
+</style>
+
+<a class="skip" href="#main">Skip to the field</a>
+<p class="vh" id="live" role="status" aria-live="polite"></p>
+
+<header class="top">
+  <div class="mark"><b>Convene</b><i>Field</i></div>
+  <div class="top-sp"></div>
+  <span class="guest">Guest<span class="guest-long"> &middot; nothing saved to any server</span></span>
+</header>
+
+<!-- The one control everything else answers to. -->
+<section class="leave" aria-label="Departure time">
+  <div>
+    <div class="leave-lab">If I leave at</div>
+    <div class="leave-time" id="leave-time">—</div>
+  </div>
+  <div class="leave-slider">
+    <label class="vh" for="leave-range">Departure time, in minutes from now</label>
+    <input type="range" id="leave-range" min="0" max="600" step="5" value="0">
+    <button class="pill on" id="leave-now" aria-pressed="true">Now</button>
+  </div>
+  <div class="leave-read" id="leave-read"></div>
+</section>
+
+<main id="main" tabindex="-1">
+  <div class="stage">
+    <div class="field-head">
+      <div>
+        <h1>What you can still get to</h1>
+        <p id="field-sub">Across is the clock. Up is how long it takes you to get there. The angled line is the moment you leave &mdash; anything left of it has already gone without you.</p>
+      </div>
+      <div class="views" role="group" aria-label="View">
+        <button class="pill on" id="v-field" aria-pressed="true" onclick="setView('field')">Field</button>
+        <button class="pill" id="v-list" aria-pressed="false" onclick="setView('list')">List</button>
+      </div>
+    </div>
+
+    <div id="field-view">
+      <div class="field-wrap">
+        <div class="yaxis" id="yaxis" aria-hidden="true"></div>
+        <div class="yaxis-cap" aria-hidden="true">Away</div>
+        <div class="scroller" id="scroller">
+          <div class="field" id="field">
+            <svg class="grid" id="grid" aria-hidden="true"></svg>
+            <svg class="overlay" id="overlay" aria-hidden="true"></svg>
+            <div id="nodes"></div>
+          </div>
+          <div class="xaxis" id="xaxis" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="list-view" hidden>
+      <div style="padding:0 clamp(14px,3vw,26px);">
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="below">
+    <section class="panel" aria-labelledby="echo-h">
+      <div class="panel-h"><span id="echo-h">Already happened</span><b id="echo-count"></b></div>
+      <div class="panel-b"><div class="list" id="echo-list"></div></div>
+    </section>
+
+    <section class="panel" aria-labelledby="thread-h">
+      <div class="panel-h"><span id="thread-h">Your route</span><b id="thread-count">Empty</b></div>
+      <div class="panel-b" id="thread-b"></div>
+    </section>
+  </div>
+</main>
+
+<div class="scrim" id="scrim" onclick="closeSheet()"></div>
+
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h" inert aria-hidden="true">
+  <div class="sheet-h">
+    <h2 id="sheet-h">Gathering</h2>
+    <div class="top-sp"></div>
+    <button class="icon" onclick="closeSheet()" aria-label="Close">
+      <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-b" id="sheet-b"></div>
+  <div class="sheet-f" id="sheet-f"></div>
+</aside>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Convene — the field.
+
+   Two numbers decide whether you go out: when a thing starts, and how long it
+   takes you to get there. Plot those against each other and the answer to
+   "what can I still make?" becomes a line you can see. Leave later and the
+   line sweeps right, taking options with it.
+
+   Reachable  ⟺  start − travel ≥ departure
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+var LOAD = new Date();
+var BASE = new Date(LOAD.getTime());          // clock anchor for labels
+
+/* `at`    minutes from load — negative means it already happened
+   `reach` door-to-door travel minutes from where the viewer is
+   `alone` share of people who turn up on their own
+   `door`  who meets a first-timer, if anyone   */
+var EVENTS = [
+  {id:'a1', t:'Community', title:'Dockside Swap Meet',       venue:'Pier 7 Warehouse',    at:  35, dur:180, reach:12, size:84,  alone:.36, door:'Nadia',
+   desc:'Bring something you have stopped using, leave with something you have not. Tools, books, plants, bicycle parts.'},
+  {id:'a2', t:'Business',  title:'Riverside Founders Mixer', venue:'The Boathouse',        at:  55, dur:150, reach:26, size:142, alone:.48, door:'Mia',
+   desc:'A slow room of founders and operators. No pitches from a stage, no badge scanning, no one taking names at the door.'},
+  {id:'a3', t:'Family',    title:'Outdoor Screening',      venue:'Kestrel Common',       at:  95, dur:135, reach:34, size:112, alone:.12, door:null,
+   desc:'A sheet, a projector and whatever the neighbourhood voted for. Blankets welcome, chairs at the back please.'},
+  {id:'a4', t:'Community', title:'Kitchen Table Language Swap', venue:'Alba Community Hall', at: 70, dur:120, reach:48, size:31, alone:.71, door:'Yusuf',
+   desc:'Ninety minutes, two languages, one table. You teach yours badly, someone teaches you theirs badly, everyone eats.'},
+  {id:'a5', t:'Culture',   title:'Open Print Room',          venue:'Foundry Studios',      at: 150, dur:180, reach:19, size:44,  alone:.52, door:'Rae',
+   desc:'The screen-printing floor stays open after hours. Pull one print, clean your own screen, that is the whole deal.'},
+  {id:'a6', t:'Community', title:'Neighbourhood Potluck',    venue:'Shepherd Street',      at: 120, dur:210, reach:62, size:57,  alone:.34, door:'Ben',
+   desc:'Three streets close, trestle tables come out, and the rule is you bring enough of one thing for eight people.'},
+  {id:'a7', t:'Business',  title:'Demos, Four Minutes Each',       venue:'Warehouse 12',         at: 185, dur:165, reach:29, size:410, alone:.55, door:null,
+   desc:'Twelve demos at four minutes each, then two hours of nobody watching the demos any more.'},
+  {id:'a8', t:'Culture',   title:'Bairro Sound Systems',       venue:'Rua da Fábrica',       at: 240, dur:300, reach:41, size:212, alone:.44, door:null,
+   desc:'Four sound systems, three streets, and a queue that never really forms because there is nothing to queue for.'},
+  {id:'a9', t:'Family',    title:'Rooftop Cine Club',        venue:'Granary Roof',         at: 215, dur:150, reach:16, size:128, alone:.25, door:'Tomás',
+   desc:'One film a month on the grain store roof. Doors early because the lift only takes six at a time.'},
+  {id:'a10',t:'Community', title:'Repair Café',              venue:'Ironmonger Rooms',     at: 300, dur:180, reach:53, size:58,  alone:.62, door:'Elke',
+   desc:'Bring the broken thing. Someone who knows how it works sits down with you until it works again, or until you both agree it will not.'},
+  {id:'a11',t:'Culture',   title:'Harbour Lantern Walk',     venue:'East Quay',            at: 345, dur:120, reach:22, size:96,  alone:.29, door:'Aiko',
+   desc:'A slow loop of the harbour after dark, carrying a paper lantern you fold yourself at the start.'},
+  {id:'a12',t:'Community', title:'The Overnight Bake',           venue:'Halsey Bakehouse',     at: 430, dur:120, reach:38, size:22,  alone:.68, door:'Sami',
+   desc:'The overnight bake, with room for six people who want to see what happens to dough at two in the morning.'},
+  {id:'a13',t:'Business',  title:'Design Crit, Six Up',  venue:'Studio 4, Tanner Yard', at: 265, dur:120, reach:71, size:26, alone:.58, door:null,
+   desc:'Bring one thing you are stuck on. Thirty minutes each, no audience participation trophies.'},
+  {id:'a14',t:'Family',    title:'Harbour Loop Run',      venue:'East Quay steps',      at: 520, dur:75,  reach:22, size:46,  alone:.63, door:'Priya',
+   desc:'Five slow kilometres round the water before anything opens. Coffee after for whoever wants it.'},
+  {id:'a15',t:'Culture',   title:'Feria Cultural Bilingüe',  venue:'Plaza Norte',          at: 480, dur:360, reach:57, size:310, alone:.21, door:'Sofía',
+   desc:'A bilingual street fair that has outgrown its permit twice. Food from eleven, music from two.'},
+  {id:'a16',t:'Community', title:'Tool Library Open Hours',  venue:'Depot Annexe',         at: 400, dur:150, reach:44, size:38,  alone:.55, door:null,
+   desc:'Borrow anything on the wall for a week. Membership is free and the only form is your first name.'},
+  {id:'a17',t:'Business',  title:'Founders Long Table',venue:'Café Vista',           at: 560, dur:90,  reach:33, size:74,  alone:.58, door:'Tomás',
+   desc:'One long table, and a rule that nobody talks about funding for the first half hour.'},
+  /* already happened — the left of the field */
+  {id:'p1', t:'Community', title:'Kreuzberg Repair Café',    venue:'Oranien Rooms',        at: -85, dur:180, reach:53, size:58,
+   came:58,  aloneCame:34, stayed:39, desc:'Bring the broken thing, leave with the working thing and usually a new acquaintance.'},
+  {id:'p2', t:'Culture',   title:'Brass Band, No Permit',    venue:'Market Steps',         at:-130, dur:90,  reach:14, size:120,
+   came:186, aloneCame:74, stayed:96, desc:'Nobody booked them. They played for an hour and a half and then packed up and left.'},
+  {id:'p3', t:'Family',    title:'Mercado de Barrio',        venue:'Calle Roma',           at: -40, dur:240, reach:47, size:400,
+   came:630, aloneCame:96, stayed:410,desc:'A street market that closed two roads and ran six hours past the time on the paperwork.'}
+];
+
+var FIELD = { tMin:-150, tMax:690, pxPerMin:2.6, reachMax:90, H:0, W:0 };
+var leaveAt = 0;            // minutes from load
+var leaveLive = true;
+var view = 'field';
+var thread = [];            // ordered event ids
+var openId = null;
+var lastFocus = null;
+
+/* ── helpers ──────────────────────────────────────────────────────────── */
+function clockOf(at){
+  var d = new Date(BASE.getTime() + at*60000);
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+function nowMin(){ return (Date.now() - LOAD.getTime())/60000; }
+function byId(id){ for(var i=0;i<EVENTS.length;i++) if(EVENTS[i].id===id) return EVENTS[i]; return null; }
+function isPast(e){ return e.came != null; }
+function reachable(e){ return !isPast(e) && (e.at - e.reach) >= leaveAt; }
+function x(at){ return (at - FIELD.tMin) * FIELD.pxPerMin; }
+function y(reach){ return FIELD.H - (reach / FIELD.reachMax) * FIELD.H; }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function say(msg){ document.getElementById('live').textContent = msg; }
+var toastT;
+function toast(msg){
+  var el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(function(){ el.classList.remove('show'); }, 2200);
+}
+
+/* ── the field ────────────────────────────────────────────────────────── */
+function sizeField(){
+  var fh = Math.max(280, Math.min(520, Math.round(window.innerHeight * 0.44)));
+  FIELD.H = fh;
+  FIELD.W = Math.round((FIELD.tMax - FIELD.tMin) * FIELD.pxPerMin);
+  var f = document.getElementById('field');
+  document.documentElement.style.setProperty('--fh', fh + 'px');
+  f.style.width = FIELD.W + 'px';
+  document.getElementById('xaxis').style.width = FIELD.W + 'px';
+  var ov = document.getElementById('overlay');
+  ov.setAttribute('viewBox', '0 0 ' + FIELD.W + ' ' + fh);
+  ov.setAttribute('width', FIELD.W); ov.setAttribute('height', fh);
+  var gr = document.getElementById('grid');
+  gr.setAttribute('viewBox', '0 0 ' + FIELD.W + ' ' + fh);
+  gr.setAttribute('width', FIELD.W); gr.setAttribute('height', fh);
+}
+
+function drawGrid(){
+  var g = [], fh = FIELD.H;
+  // travel bands — the ones people actually think in
+  [0,15,30,45,60,75,90].forEach(function(r){
+    var yy = y(r);
+    g.push('<line x1="0" y1="'+yy+'" x2="'+FIELD.W+'" y2="'+yy+'" stroke="var(--line-soft)" stroke-width="1"/>');
+  });
+  // hour ticks
+  var firstHour = Math.ceil((BASE.getHours()*60 + BASE.getMinutes() + FIELD.tMin) / 60) * 60;
+  var labels = [];
+  for(var m = firstHour - (BASE.getHours()*60 + BASE.getMinutes()); m <= FIELD.tMax; m += 60){
+    if(m < FIELD.tMin) continue;
+    var xx = x(m);
+    g.push('<line x1="'+xx+'" y1="0" x2="'+xx+'" y2="'+fh+'" stroke="var(--line-soft)" stroke-width="1"/>');
+    labels.push('<span style="left:'+xx+'px">'+clockOf(m)+'</span>');
+  }
+  document.getElementById('grid').innerHTML = g.join('');
+  document.getElementById('xaxis').innerHTML = labels.join('');
+
+  var ya = [];
+  [0,15,30,45,60,75,90].forEach(function(r){
+    ya.push('<span style="top:'+y(r)+'px">'+(r===0 ? 'at home' : r+' min')+'</span>');
+  });
+  document.getElementById('yaxis').innerHTML = ya.join('');
+}
+
+function drawOverlay(){
+  var fh = FIELD.H;
+  var x0 = x(leaveAt), x1 = x(leaveAt + FIELD.reachMax);
+  var parts = [];
+  // everything left of the leave line has gone without you
+  parts.push('<path d="M'+x1+',0 L'+FIELD.W+',0 L'+FIELD.W+','+fh+' L'+x0+','+fh+' Z" fill="rgba(255,90,43,.05)"/>');
+  parts.push('<line x1="'+x0+'" y1="'+fh+'" x2="'+x1+'" y2="0" stroke="var(--signal)" stroke-width="1.5"/>');
+  parts.push('<circle cx="'+x0+'" cy="'+fh+'" r="3.5" fill="var(--signal)"/>');
+  // the thread, drawn through the evening you have assembled
+  if(thread.length > 1){
+    var pts = thread.map(function(id){ var e = byId(id); return x(e.at)+','+y(e.reach); });
+    parts.push('<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--bone)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".75"/>');
+  }
+  document.getElementById('overlay').innerHTML = parts.join('');
+}
+
+function drawNodes(){
+  var html = EVENTS.map(function(e){
+    var cls = 'node';
+    if(isPast(e)) cls += ' is-past';
+    else if(!reachable(e)) cls += ' is-gone';
+    if(thread.indexOf(e.id) !== -1) cls += ' in-thread';
+    var label = isPast(e)
+      ? e.title + ', ' + clockOf(e.at) + ', already happened, ' + e.came + ' came'
+      : e.title + ', starts ' + clockOf(e.at) + ', ' + e.reach + ' minutes away, '
+        + (reachable(e) ? 'you can still make it' : 'gone if you leave at ' + clockOf(leaveAt));
+    return '<button class="'+cls+'" style="left:'+x(e.at)+'px;top:'+y(e.reach)+'px" '
+      + 'data-id="'+e.id+'" aria-label="'+esc(label)+'" onclick="openEvent(\'' + e.id + '\')">'
+      + '<span class="dot" aria-hidden="true"></span>'
+      + (isPast(e) ? '' : '<span class="nlab">'+esc(e.title)+'</span>') + '</button>';
+  }).join('');
+  document.getElementById('nodes').innerHTML = html;
+}
+
+function renderField(){ drawOverlay(); drawNodes(); }
+
+/* ── the leave control ────────────────────────────────────────────────── */
+function setLeave(mins, live){
+  leaveAt = Math.max(0, Math.min(600, mins));
+  leaveLive = !!live;
+  document.getElementById('leave-time').textContent = clockOf(leaveAt);
+  document.getElementById('leave-range').value = String(Math.round(leaveAt));
+  var nb = document.getElementById('leave-now');
+  nb.classList.toggle('on', leaveLive);
+  nb.setAttribute('aria-pressed', String(leaveLive));
+  var open = EVENTS.filter(reachable).length;
+  var lost = EVENTS.filter(function(e){ return !isPast(e) && !reachable(e); }).length;
+  document.getElementById('leave-read').innerHTML =
+    '<b>' + open + '</b> still reachable &nbsp;·&nbsp; ' + lost + ' gone';
+  renderField(); renderList(); renderThread();
+}
+function nudgeLeave(){ if(leaveLive) setLeave(0, true); }
+
+/* ── list view: the same information, read rather than looked at ──────── */
+function rowHtml(e){
+  var cls = 'row' + (isPast(e) ? ' is-past' : (reachable(e) ? '' : ' is-gone'));
+  var right = isPast(e)
+    ? '<b>'+e.came.toLocaleString()+'</b> came<i>'+Math.round(e.aloneCame/e.came*100)+'% alone · '
+      + Math.round(e.stayed/e.came*100)+'% stayed late</i>'
+    : '<b>'+e.reach+' min</b> away<i>'+(reachable(e) ? 'leave by ' + clockOf(e.at - e.reach) : 'gone')+'</i>';
+  return '<button class="'+cls+'" onclick="openEvent(\''+e.id+'\')">'
+    + '<span class="row-t">'+clockOf(e.at)+'</span>'
+    + '<span class="row-m"><b>'+esc(e.title)+'</b><span>'+esc(e.venue)+' · '+e.t+'</span></span>'
+    + '<span class="row-r">'+right+'</span></button>';
+}
+function renderList(){
+  var up = EVENTS.filter(function(e){ return !isPast(e); })
+                 .sort(function(a,b){ return a.at - b.at; });
+  document.getElementById('list').innerHTML = up.map(rowHtml).join('');
+  var past = EVENTS.filter(isPast).sort(function(a,b){ return b.at - a.at; });
+  document.getElementById('echo-list').innerHTML = past.map(rowHtml).join('');
+  var total = past.reduce(function(t,e){ return t + e.came; }, 0);
+  document.getElementById('echo-count').textContent = total.toLocaleString() + ' people';
+}
+
+function setView(v){
+  view = v;
+  document.getElementById('field-view').hidden = (v !== 'field');
+  document.getElementById('list-view').hidden = (v !== 'list');
+  [['v-field','field'],['v-list','list']].forEach(function(p){
+    var b = document.getElementById(p[0]);
+    b.classList.toggle('on', v === p[1]);
+    b.setAttribute('aria-pressed', String(v === p[1]));
+  });
+  document.getElementById('field-sub').textContent = v === 'field'
+    ? 'Across is the clock. Up is how long it takes you to get there. The angled line is the moment you leave — anything left of it has already gone without you.'
+    : 'The same evening as a list, ordered by start time. Each row says when you would have to leave.';
+  say(v === 'field' ? 'Field view' : 'List view');
+}
+
+/* ── thread: an evening, checked ──────────────────────────────────────── */
+function inThread(id){ return thread.indexOf(id) !== -1; }
+function toggleThread(id){
+  var i = thread.indexOf(id);
+  if(i !== -1){ thread.splice(i,1); toast('Removed from your route'); }
+  else {
+    var e = byId(id);
+    if(isPast(e)){ toast('That one already happened'); return; }
+    thread.push(id);
+    thread.sort(function(a,b){ return byId(a).at - byId(b).at; });
+    toast('Added to your route');
+  }
+  save(); renderThread(); renderField();
+  if(openId === id) paintSheet(byId(id));
+}
+
+/* Can you actually get from one to the next? The gap is the time between the
+   first one ending and the next one starting, against the travel between them.
+   Without both venues' coordinates the honest estimate is the difference in
+   their travel times from you, plus a floor — so it is stated as an estimate. */
+function legGap(a, b){
+  var free = b.at - (a.at + a.dur);
+  var hop  = Math.max(8, Math.abs(b.reach - a.reach));
+  return { free:free, hop:hop, ok: free >= hop, slack: free - hop };
+}
+
+function renderThread(){
+  var host = document.getElementById('thread-b');
+  var count = document.getElementById('thread-count');
+  if(!thread.length){
+    count.textContent = 'Empty';
+    host.innerHTML = '<p class="empty">Pick two or three things and Convene checks whether the route actually joins up — whether you can get from one to the next without leaving early.</p>';
+    return;
+  }
+  count.textContent = thread.length + (thread.length === 1 ? ' stop' : ' stops');
+  var out = [], bad = 0;
+  thread.forEach(function(id, i){
+    var e = byId(id);
+    out.push('<div class="leg"><span class="leg-t">'+clockOf(e.at)+'</span>'
+      + '<span class="leg-m"><b>'+esc(e.title)+'</b><span>'+esc(e.venue)+' · leave by '+clockOf(e.at - e.reach)+'</span></span>'
+      + '<button class="leg-x" onclick="toggleThread(\''+e.id+'\')" aria-label="Remove '+esc(e.title)+' from your route">×</button></div>');
+    if(i < thread.length - 1){
+      var g = legGap(e, byId(thread[i+1]));
+      if(!g.ok) bad++;
+      out.push('<div class="gap '+(g.ok ? (g.slack < 15 ? 'tight' : '') : 'bad')+'">'
+        + (g.ok
+            ? '≈' + g.hop + ' min hop, ' + g.free + ' min free' + (g.slack < 15 ? ' — tight' : '')
+            : g.free < 0
+              ? 'these overlap by ' + Math.abs(g.free) + ' min, plus ≈' + g.hop + ' to travel'
+              : 'only ' + g.free + ' min free, needs ≈' + g.hop + ' — you would leave early')
+        + '</div>');
+    }
+  });
+  var first = byId(thread[0]);
+  out.push('<div class="gap" style="color:var(--dim)">Leave home by <b style="color:var(--signal)">'
+    + clockOf(first.at - first.reach) + '</b></div>');
+  if(bad) out.push('<p class="note" style="margin-top:10px">' + bad
+    + (bad === 1 ? ' hop does not join up.' : ' hops do not join up.')
+    + ' Drop one, or accept leaving before the end.</p>');
+  host.innerHTML = out.join('');
+}
+
+/* ── detail ───────────────────────────────────────────────────────────── */
+function thresholdOf(e){
+  var score = 0;
+  if(e.alone >= .45) score += 2; else if(e.alone >= .25) score += 1;
+  if(e.size >= 150) score += 1; else if(e.size < 45) score -= 1;
+  if(e.door) score += 2;
+  var level = score >= 4 ? 'open' : (score >= 2 ? 'steady' : 'tight');
+  return { level:level,
+    label: level==='open' ? 'Easy to walk into alone' : (level==='steady' ? 'Fine to arrive alone' : 'A tight-knit room'),
+    note: level==='open' ? 'Most people there will not know anyone either.'
+        : level==='steady' ? 'Enough people arrive by themselves that you will not stand out.'
+        : 'Mostly people who already know each other. Worth bringing someone.' };
+}
+
+function paintSheet(e){
+  var b = document.getElementById('sheet-b'), f = document.getElementById('sheet-f');
+  var head = '<div class="d-title">'+esc(e.title)+'</div>'
+    + '<div class="d-sub">'+clockOf(e.at)+' · '+esc(e.venue)+' · '+e.t+'</div>';
+  var meta;
+  if(isPast(e)){
+    var ap = Math.round(e.aloneCame/e.came*100), sp = Math.round(e.stayed/e.came*100);
+    meta = '<div class="reading"><h3>What came of it</h3><div class="cells">'
+      + '<div class="cell"><b>'+e.came.toLocaleString()+'</b><span>came</span></div>'
+      + '<div class="cell"><b>'+ap+'%</b><span>arrived alone</span></div>'
+      + '<div class="cell"><b>'+sp+'%</b><span>stayed past the end</span></div></div>'
+      + '<p class="note">No star rating. These are the only numbers that say whether it was worth the walk.</p></div>';
+    f.innerHTML = '<button class="btn ghost" onclick="closeSheet()">Close</button>';
+  } else {
+    var t = thresholdOf(e);
+    var leaveBy = clockOf(e.at - e.reach);
+    meta = '<dl class="d-meta">'
+      + '<div><dt>Starts</dt><dd>'+clockOf(e.at)+', runs about '+Math.round(e.dur/60*10)/10+' h</dd></div>'
+      + '<div><dt>Travel</dt><dd>'+e.reach+' min door to door — leave by <b>'+leaveBy+'</b></dd></div>'
+      + '<div><dt>Cost</dt><dd>Free, and nobody takes your name at the door</dd></div>'
+      + '</dl>'
+      + '<div class="reading"><h3>Walking in</h3><div class="cells">'
+      + '<div class="cell"><b>'+e.size+'</b><span>expected</span></div>'
+      + '<div class="cell"><b>'+Math.round(e.alone*100)+'%</b><span>arrive alone</span></div>'
+      + '<div class="cell"><b>'+(e.door ? 'Yes' : 'No')+'</b><span>someone on the door</span></div></div>'
+      + '<p class="note"><b>'+t.label+'.</b> '+t.note
+      + (e.door ? ' Ask for <b>'+esc(e.door)+'</b> — they meet anyone arriving for the first time.' : '')
+      + '</p></div>';
+    var on = inThread(e.id), can = reachable(e);
+    f.innerHTML = '<button class="btn'+(on?' ghost':'')+'" onclick="toggleThread(\''+e.id+'\')"'
+      + (can||on ? '' : ' disabled') + '>'
+      + (on ? 'Remove from your route' : (can ? 'Add to your route' : 'Too late to make it'))
+      + '</button>';
+  }
+  b.innerHTML = head + meta + '<p class="d-desc">'+esc(e.desc)+'</p>';
+}
+
+function openEvent(id){
+  var e = byId(id); if(!e) return;
+  openId = id;
+  lastFocus = document.activeElement;
+  paintSheet(e);
+  var sh = document.getElementById('sheet');
+  sh.removeAttribute('inert'); sh.removeAttribute('aria-hidden');
+  sh.classList.add('open');
+  document.getElementById('scrim').classList.add('open');
+  sh.setAttribute('tabindex','-1'); sh.focus({preventScroll:true});
+}
+function closeSheet(){
+  var sh = document.getElementById('sheet');
+  if(sh.contains(document.activeElement)){
+    if(lastFocus && document.body.contains(lastFocus)) lastFocus.focus({preventScroll:true});
+    else document.getElementById('main').focus({preventScroll:true});
+  }
+  sh.classList.remove('open');
+  sh.setAttribute('inert',''); sh.setAttribute('aria-hidden','true');
+  document.getElementById('scrim').classList.remove('open');
+  openId = null;
+}
+
+/* ── state, kept on this device only ──────────────────────────────────── */
+var KEY = 'convene.field.v1';
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify({thread:thread})); }catch(err){} }
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY); if(!raw) return;
+    var s = JSON.parse(raw);
+    if(s && s.thread) thread = s.thread.filter(function(id){ return !!byId(id); });
+  }catch(err){}
+}
+
+/* ── wiring ───────────────────────────────────────────────────────────── */
+document.getElementById('leave-range').addEventListener('input', function(){
+  setLeave(Number(this.value), false);
+});
+document.getElementById('leave-now').addEventListener('click', function(){
+  setLeave(0, true); say('Departure set to now');
+});
+document.addEventListener('keydown', function(ev){
+  if(ev.key === 'Escape'){
+    if(document.getElementById('sheet').classList.contains('open')){ closeSheet(); return; }
+  }
+  if(ev.key === 'l' && !/^(INPUT|TEXTAREA)$/.test(ev.target.tagName)){
+    setView(view === 'field' ? 'list' : 'field');
+  }
+});
+window.addEventListener('resize', function(){ sizeField(); drawGrid(); renderField(); });
+
+/* The leave line follows the clock while it is live, so the field quietly
+   loses options as the evening goes on. */
+setInterval(function(){ if(leaveLive) setLeave(0, true); }, 30000);
+
+window.openEvent = openEvent;
+window.closeSheet = closeSheet;
+window.toggleThread = toggleThread;
+window.setView = setView;
+
+/* A single named seam for the test suite, so verifying the reachability rule does
+   not require exporting the whole module. Read-only apart from the actions above. */
+window.__convene = {
+  events: EVENTS,
+  legGap: legGap,
+  state: function(){ return { leaveAt:leaveAt, leaveLive:leaveLive, view:view, thread:thread.slice() }; },
+  reachable: reachable,
+  isPast: isPast
+};
+
+load();
+sizeField();
+drawGrid();
+setLeave(0, true);
+setView('field');
+// open the field on the first reachable thing rather than at the far left
+var firstOpen = EVENTS.filter(reachable).sort(function(a,b){ return a.at - b.at; })[0];
+if(firstOpen) document.getElementById('scroller').scrollLeft = Math.max(0, x(firstOpen.at) - 220);
+})();
+</script>

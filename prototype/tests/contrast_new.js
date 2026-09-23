@@ -49,17 +49,22 @@ const AUDIT = () => {
 (async()=>{
   const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
   let bad=0;
-  for(const theme of ['light','dark']){
-    const pg=await b.newPage({viewport:{width:1280,height:900}, colorScheme:theme});
-    await pg.goto('file://'+path.resolve('wrapped-web.html'));
-    await pg.waitForTimeout(1600);
-    for(const view of ['discover','gatherings','profile']){
-      await pg.evaluate(v=>go(v), view); await pg.waitForTimeout(350);
-      const res=await pg.evaluate(AUDIT);
-      if(res.length){ bad+=res.length; console.log(`${theme}/${view}:`); res.forEach(r=>console.log('   ',JSON.stringify(r))); }
-    }
-    await pg.close();
+  const pg=await b.newPage({viewport:{width:1280,height:900}});
+  await pg.goto('file://'+path.resolve('wrapped-new.html'));
+  await pg.waitForTimeout(1000);
+  const steps = [
+    ['field',   async()=>{}],
+    ['later',   async()=>{ await pg.evaluate(()=>{const r=document.getElementById('leave-range'); r.value=240; r.dispatchEvent(new Event('input',{bubbles:true}));}); }],
+    ['list',    async()=>{ await pg.evaluate(()=>setView('list')); }],
+    ['route',   async()=>{ await pg.evaluate(()=>{ setView('field'); const r=__convene.events.filter(e=>e.came==null).sort((x,y)=>x.at-y.at); toggleThread(r[0].id); toggleThread(r[4].id); }); }],
+    ['sheet',   async()=>{ await pg.evaluate(()=>openEvent(__convene.events.find(e=>e.came==null).id)); }],
+    ['sheet-past', async()=>{ await pg.evaluate(()=>{ closeSheet(); openEvent(__convene.events.find(e=>e.came!=null).id); }); }]
+  ];
+  for(const [name, act] of steps){
+    await act(); await pg.waitForTimeout(400);
+    const res = await pg.evaluate(AUDIT);
+    if(res.length){ bad+=res.length; console.log(name+':'); res.forEach(r=>console.log('   ',JSON.stringify(r))); }
   }
-  console.log(bad===0 ? '\nContrast: no text below WCAG AA in either theme' : `\nContrast: ${bad} findings`);
+  console.log(bad===0 ? '\nContrast: no text below WCAG AA' : `\nContrast: ${bad} findings`);
   await b.close();
 })();
