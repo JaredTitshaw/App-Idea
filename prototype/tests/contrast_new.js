@@ -52,7 +52,9 @@ const AUDIT = () => {
 (async()=>{
   const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
   let bad=0;
-  const pg=await b.newPage({viewport:{width:1280,height:900}});
+  for(const scheme of ['light','dark']){
+  console.log('— '+scheme+' theme');
+  const pg=await (await b.newContext({viewport:{width:1280,height:900}, colorScheme:scheme})).newPage();
   await pg.goto('file://'+path.resolve('wrapped-new.html')+'#field');
   await pg.waitForTimeout(450);
   // measure the self-test while it is still on screen
@@ -80,6 +82,8 @@ const AUDIT = () => {
     await act(); await pg.waitForTimeout(400);
     const res = await pg.evaluate(AUDIT);
     if(res.length){ bad+=res.length; console.log(name+':'); res.forEach(r=>console.log('   ',JSON.stringify(r))); }
+  }
+  await pg.context().close();
   }
   console.log(bad===0 ? '\nContrast: no text below WCAG AA' : `\nContrast: ${bad} findings`);
   await b.close();
