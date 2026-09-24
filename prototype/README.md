@@ -77,6 +77,7 @@ node tests/wheeltest.js      # the feature wheel: input, snapping, Show me, firs
 node tests/contrast_new.js   # convene.html measured in every state, boot included
 node tests/mobrepro.js       # phone layout: scrollable, timeline clear of the nav
 node tests/bandtest.js       # globe sizing across the width range
+node tests/herotest.js       # convene.html's hero: the lake, the notch pickers, the rail, the cards, every width
 node tests/experiencetest.js     # the Experience: timeline, frame, gallery, filters, ask, save, fallbacks
 node tests/contrast_experience.js # its text against the rendered landscape, both themes, every station
 ```
