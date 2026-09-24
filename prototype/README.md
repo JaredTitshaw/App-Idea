@@ -10,30 +10,33 @@ session.
 | `convene.html` (the Field) | https://claude.ai/artifact/BHWzCY93bKbmHx29Snc3vs |
 | `convene-experience.html` | https://claude.ai/artifact/LjTQt6Z6ntxRSoecp8sBq5 |
 
-Each is a single self-contained file with no build step. Open it in a browser, or
-publish it as an artifact. The one exception is `convene-experience.html`, which loads
-three.js r128 from cdnjs.
+Each is a single self-contained file with no build step and no dependencies. Open it
+in a browser, or publish it as an artifact.
 
 ## The Experience
 
-`convene-experience.html` is one long scroll that plays as a timeline. The scroll
-position maps to a value `f` from 0 to 5, and one particle system morphs between six
-shapes as `f` moves:
+`convene-experience.html` is an evening you scroll through. It shows a lake at dusk
+inside a floating frame, drawn live in WebGL rather than from a photo. Behind the frame
+is a blurred copy of the same view. Scrolling works like a clock: the sky runs from
+alpenglow to night, and tonight's gatherings come up in the order they start. Each one
+is a warm light on the far shore, and its name stands in the landscape between the
+mountains and the village, reflected in the water.
 
-| `f` | Section | What you see |
+| Station | Frame | In the landscape |
 |---|---|---|
-| 0 | hero | light spirals round the Convene mark |
-| 1 | burst | the mark tips over and the particles fly apart |
-| 2 | manifesto | the ring stands on edge behind "Where everyone gathers" |
-| 3 | gallery | the camera flies through smoke past the nine gatherings |
-| 4 | lab | a honeycomb lattice behind the link to the Field |
-| 5 | outro | the particles tie off as a knot |
+| Tonight | notched, with a card cut into the corner | WALK INTO / TONIGHT |
+| Free | full-bleed | EVERYTHING HERE IS / FREE |
+| Nine gatherings | slimmer frame, tiles along the bottom | FERIA, REPAIR, BAIRRO … LANTERNS |
+| The Field | full-bleed, night | the last lights on the shore |
+| Go out | notched again | NOTHING TO SIGN UP FOR · JUST / GO OUT |
 
-In the gallery you can filter by kind, type a question into the ask box ("Spanish",
-"on my own", "running now"), step through the gatherings with ‹ ›, and open one by
-clicking its card or pressing Open. With reduced motion the scene holds still apart
-from what your scrolling moves. If WebGL or three.js is unavailable, the page shows the
-same gatherings as a flat list.
+The filters sit in the notch (kind, language, distance) and in the two corner toggles
+(on my own, running now). The Ask box turns plain words into those same filters, so you
+can always see what it understood. You can open a gathering by clicking its word in the
+landscape, its tile, or the list. Saved gatherings and the day/night theme are stored
+in this browser only. `#<id>` (for example `#lantern`) opens the page on that gathering.
+With reduced motion the scene only moves when you scroll. Without WebGL, the words appear
+as plain text over a gradient.
 
 ## Deep link
 
@@ -74,17 +77,11 @@ node tests/wheeltest.js      # the feature wheel: input, snapping, Show me, firs
 node tests/contrast_new.js   # convene.html measured in every state, boot included
 node tests/mobrepro.js       # phone layout: scrollable, timeline clear of the nav
 node tests/bandtest.js       # globe sizing across the width range
-node tests/experiencetest.js     # the Experience: timeline, gallery, ask box, sheet, fallbacks
-node tests/contrast_experience.js # its text measured against the rendered 3D pixels behind it
+node tests/experiencetest.js     # the Experience: timeline, frame, gallery, filters, ask, save, fallbacks
+node tests/contrast_experience.js # its text against the rendered landscape, both themes, every station
 ```
 
-The two Experience suites serve three.js from a local copy instead of cdnjs. Point
-`THREE_LOCAL` at a `three.min.js` from r128 (default: `tests/three.min.js`). They run
-Chromium with SwiftShader so WebGL works headless:
-
-```sh
-THREE_LOCAL=/path/to/three.min.js node tests/experiencetest.js
-```
+The two Experience suites run Chromium with SwiftShader so WebGL works headless.
 
 The contrast checks walk every rendered text node, resolve the effective background
 by climbing the ancestor chain, and compare against the 4.5:1 (or 3:1 for large text)
