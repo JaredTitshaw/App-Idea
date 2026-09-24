@@ -26,7 +26,7 @@
   --sig-rgb:42,30,120;
   --ink-rgb:21,20,42;
   --glass:rgba(243,242,248,.86);
-  --veil:rgba(233,231,241,.55);
+  --veil:rgba(233,231,241,.64);
   --scrim:rgba(8,7,20,.42);
   --shadow:rgba(30,22,70,.30);
   --edge:rgba(255,255,255,.8);
@@ -86,6 +86,7 @@ p{ margin:0; }
 .backdrop{ position:fixed; inset:-40px; z-index:-2; background:var(--backdrop) center/cover no-repeat;
   filter:blur(22px) saturate(1.1); }
 .backdrop::after{ content:""; position:absolute; inset:0; background:var(--veil); }
+.bd-live{ position:absolute; inset:0; width:100%; height:100%; display:block; }
 .frame{
   position:relative; margin:clamp(10px,2.4vw,30px); border-radius:clamp(24px,3vw,40px);
   background:var(--void); box-shadow:0 50px 90px -30px var(--shadow), 0 0 0 1px var(--edge) inset;
@@ -290,11 +291,12 @@ input[type=range]{
 .btn[disabled]{ opacity:.4; cursor:not-allowed; }
 
 .toast{
-  position:fixed; left:50%; bottom:24px; transform:translate(-50%,10px); z-index:90;
+  position:fixed; left:50%; bottom:24px; transform:translate(-50%,calc(100% + 40px)); z-index:90;
   background:var(--bone); color:var(--void); padding:11px 18px; border-radius:999px;
-  font-size:12.5px; font-weight:700; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+  font-size:12.5px; font-weight:700; pointer-events:none; visibility:hidden;
+  transition:transform .22s ease, visibility 0s linear .22s;       /* slides, never half-transparent */
 }
-.toast.show{ opacity:1; transform:translate(-50%,0); }
+.toast.show{ visibility:visible; transform:translate(-50%,0); transition:transform .22s ease; }
 
 @media (max-width:900px){
   .below{ grid-template-columns:1fr; }
@@ -331,10 +333,6 @@ input[type=range]{
   *{ transition:none !important; animation:none !important; }
 }
 /* ══ the hero: the mockup's frame, with the lake inside it ══════════════ */
-.chrome{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:22px clamp(18px,4vw,48px) 0; }
-.chrome .guest{ color:var(--bone); }
-.frame{ margin-top:18px !important; }
-.hero{ position:relative; height:clamp(560px,80vh,800px); padding:12px; }
 .scene{ position:absolute; inset:12px; }
 #hero-gl{ position:absolute; inset:0; width:100%; height:100%; display:block;
   background:linear-gradient(180deg,#34477F 0%,#8A5E8C 40%,#F29A74 57%,#2E2F48 58%,#171A30 100%); }
@@ -393,13 +391,10 @@ input[type=range]{
 .badge .ring{ position:absolute; inset:6px; width:calc(100% - 12px); height:calc(100% - 12px); }
 .badge .ring text{ font-family:var(--mono); font-size:8.6px; letter-spacing:.22em; fill:currentColor; }
 .badge .mk{ width:38px; height:38px; fill:none; stroke:currentColor; stroke-width:1.8; }
-.hero + .filters{ margin-top:30px; }
 .compact .hpill span{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 .compact .hpill{ padding:0 15px; }
-.norail .rail{ display:none; }
 
 @media (max-width:760px){
-  .hero{ height:700px; padding:8px; }
   .scene{ inset:8px; }
   .notch{ top:8px; }
   .nf select{ font-size:13px; padding-right:17px; }
@@ -421,8 +416,86 @@ input[type=range]{
   .upnext small{ display:block; font-size:12px; color:var(--dim); margin-top:2px; }
   .upnext i{ width:36px; height:36px; border-radius:50%; background:var(--panel); display:flex; align-items:center; justify-content:center; font-style:normal; flex-shrink:0; }
   .hero-eb{ font-size:10.5px; letter-spacing:.3em; }
-  .chrome{ padding:14px 14px 0; }
-  .frame{ margin-top:10px !important; }
+}
+
+/* ══ one screen: the whole Field lives inside the frame ═══════════════════ */
+html, body{ height:100%; }
+body{ display:flex; flex-direction:column; min-height:100vh; }
+.chrome{ flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:14px; height:70px; padding:0 clamp(18px,5vw,90px); }
+.chrome.bot{ height:84px; }
+.chrome .guest{ color:var(--bone); }
+.c-route{ display:flex; align-items:center; gap:10px; font-size:20px; font-weight:500; color:var(--bone); padding:6px 2px; }
+.c-route svg{ width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; }
+.c-route b{ font-weight:600; font-variant-numeric:tabular-nums; }
+.c-next{ display:flex; align-items:center; gap:10px; font-size:17px; font-weight:500; color:var(--bone); padding:11px 22px;
+  border:1.5px solid var(--bone); border-radius:999px; }
+.c-next:hover{ background:var(--bone); color:var(--void); }
+.frame{ flex:1 1 auto; min-height:520px; margin:0 clamp(16px,5vw,90px); border-radius:clamp(30px,3.4vw,48px);
+  --ct:92px; --cl:102px; --cr:30px; --cuth:200px; --cutw:480px; }
+.screen{ position:absolute; inset:0; z-index:2; pointer-events:none; }
+.screen > *{ pointer-events:auto; }
+.screen[hidden]{ display:none; }
+/* a slide, not a fade: text is at full contrast from the first frame */
+@keyframes panein{ from{ transform:translateY(14px) scale(.985); } }
+.fx .screen:not([hidden]) .pane, .fx .screen:not([hidden]) .route-grid, .fx .screen:not([hidden]) .clocks{ animation:panein .4s cubic-bezier(.2,.8,.3,1) backwards; }
+.pane, .route-grid{ position:absolute; left:var(--cl); right:var(--cr); top:var(--ct); bottom:calc(var(--cuth) + 14px); min-height:0; }
+.pane, .route-grid .panel{ display:flex; flex-direction:column; overflow:hidden;
+  background:var(--glass); border:1px solid var(--edge); border-radius:28px;
+  -webkit-backdrop-filter:blur(20px) saturate(1.2); backdrop-filter:blur(20px) saturate(1.2); }
+.pane .field-head{ padding:16px 20px 8px; align-items:center; }
+.pane .field-head h2{ font-family:var(--display); font-size:clamp(17px,1.8vw,21px); font-weight:500; letter-spacing:-.01em; }
+.pane .field-head p{ font-size:12.5px; color:var(--dim); max-width:64ch; margin-top:3px; }
+.pane .filters{ padding:0 20px 10px; }
+#field-view{ flex:1 1 0; min-height:0; overflow:hidden; padding:10px 14px 0 0; }
+.pane-h{ display:flex; align-items:center; gap:12px; padding:16px 20px 12px; border-bottom:1px solid var(--line); }
+.pane-h > div{ flex:1; min-width:0; }
+.pane-h h2{ font-family:var(--display); font-size:19px; font-weight:500; letter-spacing:-.01em; }
+.pane-h p{ font-size:12.5px; color:var(--dim); margin-top:3px; }
+.pane-scroll{ flex:1 1 0; min-height:0; overflow:auto; padding:4px 20px 16px; }
+.pane-scroll[hidden]{ display:none; }
+.route-grid{ display:grid; grid-template-columns:1.15fr 1fr; gap:14px; }
+.route-grid .panel-b{ flex:1 1 0; min-height:0; overflow:auto; }
+.route-grid .panel-h b{ margin-left:auto; }
+.route-grid .panel-h .pill{ text-transform:none; letter-spacing:0; font-family:var(--sans); }
+/* the decide-by countdowns, as tiles beside the leave card */
+.s-field .clocks{ position:absolute; left:calc(var(--cutw) + 14px); right:var(--cr); bottom:30px; height:calc(var(--cuth) - 44px); max-height:112px;
+  display:flex; gap:10px; padding:0; flex-wrap:nowrap; align-items:stretch; }
+.s-field .clock{ flex:1 1 0; min-width:0; flex-direction:column; align-items:flex-start; justify-content:center; gap:5px; padding:14px 18px; border-radius:20px;
+  background:var(--glass); border:1px solid var(--edge); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); font-size:11px; }
+.s-field .clock b{ font-size:21px; font-family:var(--display); font-weight:500; }
+.s-field .clock em{ max-width:100%; font-size:13px; }
+.rail-tight .rail{ gap:2px; padding:5px; }
+.rail-tight .rail button{ width:36px; height:36px; }
+
+@media (max-width:760px){
+  .chrome{ height:52px; padding:0 14px; }
+  .chrome.bot{ height:70px; }
+  .chrome.bot > *{ display:none; }
+  .frame{ margin:0 8px; border-radius:28px; min-height:600px; }
+  .rail{ position:fixed; top:auto; left:50%; bottom:10px; transform:translateX(-50%); flex-direction:row; z-index:45; box-shadow:0 12px 30px -10px var(--shadow); }
+  .rail button{ width:40px; height:40px; }
+  .rail button:hover::after, .rail button:focus-visible::after{ display:none; }
+  .pane, .route-grid{ bottom:calc(var(--cuth) + 10px); }
+  .s-field .pane{ bottom:calc(var(--cuth) + 60px); }
+  .s-field .clocks{ left:18px; right:18px; bottom:calc(var(--cuth) + 10px); height:42px; max-height:none; overflow-x:auto; }
+  .s-field .clock{ flex:0 0 auto; flex-direction:row; align-items:center; padding:8px 13px; border-radius:999px; }
+  .s-field .clock b{ font-size:12px; font-family:var(--mono); }
+  .route-grid{ grid-template-columns:1fr; grid-template-rows:minmax(0,1.2fr) minmax(0,1fr); gap:10px; }
+  .pane .field-head p{ display:none; }
+  .pane .field-head{ padding:12px 14px 6px; gap:8px; }
+  .pane .filters{ padding:0 14px 8px; }
+  .pane-h{ padding:12px 14px 10px; }
+  .pane-scroll{ padding:4px 14px 12px; }
+  /* on a phone the leave card is one compact block, and the chart header one row */
+  .cut{ padding:14px 16px 12px; }
+  .cut-h{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .cut .leave{ grid-template-columns:auto 1fr; gap:4px 14px; }
+  .cut .leave-time{ font-size:26px; }
+  .cut .leave-read{ font-size:11px; }
+  .pane .field-head h2{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .pane .views{ display:none; }
+  .pane .field-head .acts{ margin:0; }
+  .toast{ bottom:84px; }
 }
 
 /* ══ boot ═══════════════════════════════════════════════════════════════
@@ -667,7 +740,6 @@ input[type=range]{
   /* the header has three things in it on a 360px screen; the button keeps one word */
   .ex-long{ display:none; }
   .back-long{ display:none; }
-  .frame{ margin:8px; border-radius:24px; }
   .top .guest{ display:none; }
 }
 @media (max-width:900px){
@@ -710,11 +782,10 @@ input[type=range]{
 
 <a class="skip" href="#main">Skip to the field</a>
 <div class="backdrop" aria-hidden="true"></div>
-<div class="chrome">
+<header class="chrome top">
   <div class="mark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16.2 8.2A5.4 5.4 0 1 0 16.2 15.8"/></svg><b>Convene</b><i>Field</i></div>
   <span class="guest">Guest<span class="guest-long"> &middot; nothing saved to any server</span></span>
-</div>
-<div class="frame">
+</header>
 
 <div class="explore" id="explore" role="dialog" aria-modal="true" aria-labelledby="ex-h" hidden inert>
   <div class="ex-top">
@@ -731,9 +802,7 @@ input[type=range]{
 </div>
 <p class="vh" id="live" role="status" aria-live="polite"></p>
 
-
-
-<section class="hero" id="hero" aria-label="Tonight, from where you are">
+<main class="frame" id="main" tabindex="-1">
   <div class="scene" id="scene">
     <canvas id="hero-gl" aria-hidden="true"></canvas>
     <div class="hero-eb" id="hero-eb" aria-hidden="true">If you leave now</div>
@@ -748,12 +817,13 @@ input[type=range]{
   </form>
   <button class="hpill r" id="hp-run" type="button" aria-pressed="false" onclick="setFilter('running')"><span>Running now</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></button>
 
-  <nav class="rail" aria-label="Tools">
-    <button id="explore-btn" type="button" onclick="openExplore()" aria-label="Explore features" data-tip="Explore features"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg></button>
-    <button id="rail-sweep" type="button" onclick="toggleSweep()" aria-label="Sweep the night" data-tip="Sweep the night"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 12l7-7M12 19l7-7"/></svg></button>
-    <button id="rail-route" type="button" aria-label="Build me a route" data-tip="Build me a route"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H14a3.5 3.5 0 0 0 0-7h-4a3.5 3.5 0 0 1 0-7h5.5"/></svg></button>
-    <button id="rail-list" type="button" aria-label="Show the list" data-tip="Show the list"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+  <nav class="rail" id="rail" aria-label="Screens">
+    <button type="button" data-screen-btn="tonight" aria-label="Tonight" data-tip="Tonight"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
+    <button type="button" data-screen-btn="field" aria-label="The field" data-tip="The field"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16"/><circle cx="9" cy="14" r="1.7"/><circle cx="13" cy="8.5" r="1.7"/><circle cx="17.5" cy="12" r="1.7"/></svg></button>
+    <button type="button" data-screen-btn="list" aria-label="List" data-tip="List"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+    <button type="button" data-screen-btn="route" aria-label="Your route" data-tip="Your route"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H14a3.5 3.5 0 0 0 0-7h-4a3.5 3.5 0 0 1 0-7h5.5"/></svg></button>
     <span class="rail-sep" aria-hidden="true"></span>
+    <button id="explore-btn" type="button" onclick="openExplore()" aria-label="Explore features" data-tip="Explore features"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5-4.8 2 2.2-5z"/></svg></button>
     <button id="theme-btn" type="button" aria-label="Switch to night theme" data-tip="Night theme"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="theme-ic" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
   </nav>
 
@@ -775,7 +845,9 @@ input[type=range]{
 </section>
   </div>
 
-  <article class="feat" id="feat" aria-labelledby="feat-t">
+  <section class="screen s-tonight" id="s-tonight" aria-labelledby="h-tonight">
+    <h1 class="vh" id="h-tonight">Tonight, from where you are</h1>
+    <article class="feat" id="feat" aria-labelledby="feat-t">
     <div class="feat-top">
       <div><div class="feat-k" id="feat-k">Next you can make</div><h2 id="feat-t">&mdash;</h2>
         <p class="addr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span id="feat-a"></span></p></div>
@@ -785,36 +857,32 @@ input[type=range]{
     <ul class="facts" id="feat-f"></ul>
     <div class="feat-act"><button class="act" type="button" id="feat-route">Add to your route</button></div>
   </article>
-  <button class="upnext" type="button" id="upnext"><span><b id="up-t">&mdash;</b><small id="up-m"></small></span><i aria-hidden="true">&#8599;</i></button>
-
-  <div class="badge" aria-hidden="true">
+    <button class="upnext" type="button" id="upnext"><span><b id="up-t">&mdash;</b><small id="up-m"></small></span><i aria-hidden="true">&#8599;</i></button>
+    <div class="badge" aria-hidden="true">
     <svg class="ring" viewBox="0 0 100 100"><defs><path id="ring-p" d="M50 50 m-40 0 a40 40 0 1 1 80 0 a40 40 0 1 1 -80 0"/></defs>
       <g id="ring-g"><text><textPath href="#ring-p">FREE TO WALK INTO · NO ACCOUNT · NO TICKET ·</textPath></text></g></svg>
     <svg class="mk" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M16.2 8.2A5.4 5.4 0 1 0 16.2 15.8"/></svg>
   </div>
-</section>
+  </section>
 
-<div class="filters" id="filters" role="group" aria-label="Filter gatherings"></div>
-<div class="clocks" id="clocks" aria-live="off"></div>
-
-<main id="main" tabindex="-1">
-  <div class="stage">
-    <div class="field-head">
-      <div>
-        <h1>What you can still get to</h1>
-        <p id="field-sub">Across is the clock. Up is how long it takes you to get there. The angled line is the moment you leave &mdash; anything left of it has already gone without you.</p>
-      </div>
-      <div class="acts">
+  <section class="screen s-field" id="s-field" aria-labelledby="h-field" hidden>
+    <div class="pane pane-field">
+      <div class="field-head">
+        <div>
+          <h2 id="h-field">What you can still get to</h2>
+          <p id="field-sub">Across is the clock. Up is how long it takes you to get there. The angled line is the moment you leave &mdash; anything left of it has already gone without you.</p>
+        </div>
+        <div class="acts">
         <button class="pill" id="sweep-btn" onclick="toggleSweep()">Sweep the night</button>
         <button class="pill" id="solve-btn" onclick="solveRoute()">Build me a route</button>
       </div>
-      <div class="views" role="group" aria-label="View">
+        <div class="views" role="group" aria-label="View">
         <button class="pill on" id="v-field" aria-pressed="true" onclick="setView('field')">Field</button>
         <button class="pill" id="v-list" aria-pressed="false" onclick="setView('list')">List</button>
       </div>
-    </div>
-
-    <div id="field-view">
+      </div>
+      <div class="filters" id="filters" role="group" aria-label="Filter gatherings"></div>
+      <div id="field-view">
       <div class="field-wrap">
         <div class="yaxis" id="yaxis" aria-hidden="true"></div>
         <div class="yaxis-cap" aria-hidden="true">Away</div>
@@ -828,28 +896,40 @@ input[type=range]{
         </div>
       </div>
     </div>
-
-    <div id="list-view" hidden>
-      <div style="padding:0 clamp(14px,3vw,26px);">
-        <div class="list" id="list"></div>
-      </div>
     </div>
-  </div>
+    <div class="clocks" id="clocks" aria-live="off"></div>
+  </section>
 
-  <div class="below">
-    <section class="panel" aria-labelledby="echo-h">
+  <section class="screen s-list" id="s-list" aria-labelledby="h-list" hidden>
+    <div class="pane">
+      <div class="pane-h">
+        <div><h2 id="h-list">The same evening, read</h2><p>In start order. Each row says when you would have to leave.</p></div>
+        <button class="pill" type="button" onclick="setView('field')">Back to the field</button>
+      </div>
+      <div class="pane-scroll" id="list-view" hidden><div class="list" id="list"></div></div>
+    </div>
+  </section>
+
+  <section class="screen s-route" id="s-route" aria-labelledby="h-route" hidden>
+    <h2 class="vh" id="h-route">Your route, and what already happened</h2>
+    <div class="route-grid">
+      <section class="panel" aria-labelledby="thread-h">
+      <div class="panel-h"><span id="thread-h">Your route</span><b id="thread-count">Empty</b><button class="pill" id="route-build" type="button" onclick="solveRoute()">Build me a route</button></div>
+      <div class="panel-b" id="thread-b"></div>
+    </section>
+      <section class="panel" aria-labelledby="echo-h">
       <div class="panel-h"><span id="echo-h">Already happened</span><b id="echo-count"></b></div>
       <div class="panel-b"><div class="list" id="echo-list"></div></div>
     </section>
-
-    <section class="panel" aria-labelledby="thread-h">
-      <div class="panel-h"><span id="thread-h">Your route</span><b id="thread-count">Empty</b></div>
-      <div class="panel-b" id="thread-b"></div>
-    </section>
-  </div>
+    </div>
+  </section>
 </main>
 
-</div><!-- /frame -->
+<footer class="chrome bot">
+  <button class="c-route" id="c-route" type="button"><span>Your route</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg><b id="c-route-n">empty</b></button>
+  <button class="c-next" id="c-next" type="button"><span id="c-next-l">Next &middot; The field</span><span aria-hidden="true">&raquo;</span></button>
+</footer>
+
 
 <div class="scrim" id="scrim" onclick="closeSheet()"></div>
 
@@ -997,7 +1077,10 @@ function toast(msg){
 
 /* ── the field ────────────────────────────────────────────────────────── */
 function sizeField(){
-  var fh = Math.max(280, Math.min(520, Math.round(window.innerHeight * 0.44)));
+  /* the chart fills whatever height its pane has; hidden, it keeps its last size */
+  var fv = document.getElementById('field-view'), avail = fv && fv.clientHeight ? fv.clientHeight - 40 : 0;
+  var fh = avail > 0 ? Math.max(170, Math.min(520, avail))
+                     : (FIELD.H || Math.max(280, Math.min(520, Math.round(window.innerHeight * 0.44))));
   FIELD.H = fh;
   FIELD.W = Math.round((FIELD.tMax - FIELD.tMin) * FIELD.pxPerMin);
   var f = document.getElementById('field');
@@ -1174,7 +1257,30 @@ function setView(v){
     ? 'Across is the clock. Up is how long it takes you to get there. The angled line is the moment you leave — anything left of it has already gone without you.'
     : 'The same evening as a list, ordered by start time. Each row says when you would have to leave.';
   say(v === 'field' ? 'Field view' : 'List view');
+  goScreen(v);
 }
+
+/* ── screens: everything lives inside the one frame ──────────────────── */
+var screen = null, parked = false;
+var SCREENS = ['tonight', 'field', 'list', 'route'];
+var SCREEN_NAME = { tonight:'Tonight', field:'The field', list:'The list', route:'Your route' };
+function goScreen(name){
+  if(SCREENS.indexOf(name) < 0) name = 'tonight';
+  if((name === 'field' || name === 'list') && view !== name){ setView(name); return; }
+  var changed = screen !== name;
+  screen = name;
+  SCREENS.forEach(function(n){ var el = document.getElementById('s-' + n); if(el) el.hidden = n !== name; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-screen-btn]'), function(b){
+    var on = b.getAttribute('data-screen-btn') === name;
+    b.classList.toggle('on', on);
+    if(on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  if(name === 'field'){ sizeField(); drawGrid(); renderField(); if(!parked) parkView(); else followLine(); }
+  var nx = SCREENS[(SCREENS.indexOf(name) + 1) % SCREENS.length], nl = document.getElementById('c-next-l');
+  if(nl) nl.textContent = nx === 'tonight' ? 'Back to tonight' : 'Next · ' + SCREEN_NAME[nx];
+  if(changed) document.dispatchEvent(new CustomEvent('convene:screen', { detail:name }));
+}
+function refit(){ if(screen === 'field'){ sizeField(); drawGrid(); renderField(); followLine(); } }
 
 /* ── thread: an evening, checked ──────────────────────────────────────── */
 function inThread(id){ return thread.indexOf(id) !== -1; }
@@ -1204,6 +1310,8 @@ function legGap(a, b){
 }
 
 function renderThread(){
+  var cr = document.getElementById('c-route-n');
+  if(cr) cr.textContent = thread.length ? thread.length + (thread.length === 1 ? ' stop' : ' stops') : 'empty';
   var host = document.getElementById('thread-b');
   var count = document.getElementById('thread-count');
   if(!thread.length){
@@ -1471,6 +1579,7 @@ function flyTo(el){
   if(!MOTION || !el) return;
   var dot = el.querySelector('.dot'); if(!dot) return;
   var r = dot.getBoundingClientRect();
+  if(!r.width) return;                     // its screen is not showing
   var f = document.createElement('div');
   f.className = 'flyer';
   f.style.left = r.left + 'px'; f.style.top = r.top + 'px';
@@ -1581,15 +1690,15 @@ var FEATURES = [
   { k:'The field', t:'Everything, on two axes',
     b:'Every gathering plotted against when it starts and how long it takes you to get there. Where a dot sits tells you whether you can go, before you read a word.',
     how:'Across: the clock. Up: door-to-door travel.',
-    go:function(){ parkView(); pulseEl(document.getElementById('field')); } },
+    go:function(){ goScreen('field'); parkView(); pulseEl(document.getElementById('field')); } },
   { k:'Leave line', t:'Watch the evening close',
     b:'The angled line is the moment you leave. Drag it later and options fall behind it one by one. Sweep runs it across the whole night for you.',
     how:'Reachable when start − travel ≥ departure.',
-    go:function(){ startSweep(); } },
+    go:function(){ goScreen('field'); startSweep(); } },
   { k:'Running now', t:'Late is still in',
     b:'A six-hour market is worth walking into four hours in. Anything you would arrive at partway is drawn as a ring, with how much of it you would actually get.',
     how:'Joinable while you arrive 25 min before it ends.',
-    go:function(){ setLeave(245, false); if(!filters.runningOnly) setFilter('running'); } },
+    go:function(){ goScreen('field'); setLeave(245, false); if(!filters.runningOnly) setFilter('running'); } },
   { k:'Threshold', t:'How hard is it to walk in alone',
     b:'Headcount, the share who arrive on their own, and whether a named person is on the door. The real barrier to a room of strangers is nerve, and nothing else tells you about it.',
     how:'Stated plainly, never scored behind the scenes.',
@@ -1601,15 +1710,15 @@ var FEATURES = [
   { k:'Decide by', t:'Minutes to decide, not to start',
     b:'"Starts in 40 minutes" is the wrong number. What matters is how long before you have to be out of the door, so that is what counts down.',
     how:'start − travel − now, live.',
-    go:function(){ setLeave(0, true); pulseEl(document.getElementById('clocks')); } },
+    go:function(){ goScreen('field'); setLeave(0, true); pulseEl(document.getElementById('clocks')); } },
   { k:'Spoken here', t:'Rooms where you can talk',
     b:'Every gathering says what is spoken in the room. Filter to a language and the field keeps only the places you could hold a conversation.',
     how:'Pairs with Threshold: can you walk in, can you talk.',
-    go:function(){ if(filters.lang !== 'ES') setFilter('lang','ES'); } },
+    go:function(){ goScreen('field'); if(filters.lang !== 'ES') setFilter('lang','ES'); } },
   { k:'Echo', t:'What came of it',
     b:'Things that already happened keep three numbers instead of a star rating: who came, how many came alone, and how many were still there after it ended.',
     how:'No five stars. Evidence.',
-    go:function(){ var e = EVENTS.filter(isPast)[0]; if(e) openEvent(e.id); } },
+    go:function(){ goScreen('route'); var e = EVENTS.filter(isPast)[0]; if(e) openEvent(e.id); } },
   { k:'List', t:'The same evening, read',
     b:'Everything the field shows, as rows in start order, each one saying the time you would have to leave. Press L to flip between them.',
     how:'A full equivalent, not a fallback.',
@@ -1785,10 +1894,7 @@ function pulseEl(el){
               { boxShadow:'inset 0 0 0 1px rgba(var(--sig-rgb),.9)' },
               { boxShadow:'inset 0 0 0 1px rgba(var(--sig-rgb),0)' }], { duration:900, easing:'ease-out' });
 }
-function scrollIntoPanel(id){
-  var el = document.getElementById(id);
-  if(el) setTimeout(function(){ el.scrollIntoView({ block:'center', behavior: MOTION ? 'smooth' : 'auto' }); }, 350);
-}
+function scrollIntoPanel(id){ goScreen('route'); }
 
 /* ══ motion budget ════════════════════════════════════════════════════════ */
 var MOTION = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1978,6 +2084,8 @@ window.setView = setView;
 window.toggleSweep = toggleSweep;
 window.solveRoute = solveRoute;
 window.setFilter = setFilter;
+window.goScreen = goScreen;
+window.__refit = refit;
 window.setFilterTo = setFilterTo;
 window.setLeave = function(m, live){ if(sweep.on) stopSweep(); setLeave(m, live); };
 window.openExplore = openExplore;
@@ -1997,6 +2105,7 @@ window.__convene = {
   solveFrom: solveFrom,
   edgeMinutes: edgeMinutes,
   clockOf: clockOf,
+  screen: function(){ return screen; },
   thread: function(){ return thread.slice(); },
   state: function(){ return { leaveAt:leaveAt, leaveLive:leaveLive, view:view, thread:thread.slice() }; },
   reachable: reachable,
@@ -2008,15 +2117,28 @@ renderFilters();
 sizeField();
 drawGrid();
 setLeave(0, true);
-setView('field');
 function parkView(){
   var sc = document.getElementById('scroller');
+  if(!sc.clientWidth){ parked = false; return; }       // not showing yet; park when it is
+  parked = true;
   // The leave line leans right as travel time rises, so park on its middle rather
   // than its foot — otherwise a narrow screen shows only the spent side.
   var mid = x(leaveAt + FIELD.reachMax * 0.5);
   sc.scrollLeft = Math.max(0, mid - sc.clientWidth * 0.34);
 }
-parkView();
+/* which screen to open on: #field, #list and #route go straight there */
+(function(){
+  var h = location.hash.slice(1);
+  setView(h === 'list' ? 'list' : 'field');
+  goScreen(SCREENS.indexOf(h) >= 0 ? h : 'tonight');
+})();
+Array.prototype.forEach.call(document.querySelectorAll('[data-screen-btn]'), function(b){
+  b.addEventListener('click', function(){ goScreen(b.getAttribute('data-screen-btn')); say(SCREEN_NAME[screen]); });
+});
+document.getElementById('c-next').addEventListener('click', function(){
+  goScreen(SCREENS[(SCREENS.indexOf(screen) + 1) % SCREENS.length]); say(SCREEN_NAME[screen]);
+});
+document.getElementById('c-route').addEventListener('click', function(){ goScreen('route'); say('Your route'); });
 
 initScrub();
 (function(){
@@ -2274,8 +2396,8 @@ function notchPath(g){
 }
 
 
-var hero = $('hero'), scene = $('scene'), cv = $('hero-gl');
-var gl = null, U = {}, tex = null, meta = null, word = '', H = { t:0, last:0, dirty:true, visible:true, k:1, q:1, slow:0, g:null, feat:null };
+var hero = $('main'), scene = $('scene'), cv = $('hero-gl'), bd = null;
+var gl = null, U = {}, tex = null, meta = null, word = '', H = { t:0, last:0, dirty:true, visible:true, k:1, q:1, slow:0, g:null, feat:null, screen:C.screen() };
 
 /* ── geometry: the notch holds the pickers, the bite in the corner holds the leave control ── */
 function geom(){
@@ -2294,7 +2416,15 @@ function layout(){
   document.querySelector('.badge').style.left = Math.round(scene.offsetLeft + g.w - 18 - $('feat').offsetWidth - 84) + 'px';
   var side = (g.w - g.nw - 2 * g.nd * .9) / 2 - 36;
   hero.classList.toggle('compact', !g.m && side < 190);
-  hero.classList.toggle('norail', !g.m && (g.h - g.ch - 96 - 16) < 270);
+  /* where the panes may sit: under the notch, beside the rail, above the leave card */
+  var cut = $('cut'), cuth = cut.offsetHeight + (g.m ? 8 : 12), cutw = cut.offsetWidth + 12;
+  hero.classList.toggle('rail-tight', !g.m && (g.h + 24 - cuth - 92 - 12) < 340);
+  hero.style.setProperty('--cuth', cuth + 'px');
+  hero.style.setProperty('--cutw', cutw + 'px');
+  hero.style.setProperty('--ct', (g.m ? 128 : 92) + 'px');
+  hero.style.setProperty('--cr', (g.m ? 18 : 30) + 'px');
+  hero.style.setProperty('--cl', (g.m ? 18 : 30 + $('rail').offsetWidth + 14) + 'px');
+  if(window.__refit) window.__refit();
   if(gl){
     H.k = Math.min(window.devicePixelRatio || 1, g.m ? 1.5 : 1.6) * H.q;
     var W = Math.round(g.w * H.k), Hh = Math.round(g.h * H.k);
@@ -2377,7 +2507,7 @@ function draw(){
   gl.uniform1f(U.uPan, 4 * SP); gl.uniform1f(U.uZoom, 0); gl.uniform1f(U.uSP, SP);
   gl.uniform1f(U.uYw, g.yw); gl.uniform1f(U.uAct, -10); gl.uniform1f(U.uAsp, g.w / h); gl.uniform1f(U.uVS, g.m ? .6 : 1);
   var wb = wordBox();
-  gl.uniform4f(U.uWA, 0, 4 * SP, wb.H, 1); gl.uniform4f(U.uWB, 0, 0, .2, 0);
+  gl.uniform4f(U.uWA, 0, 4 * SP, wb.H, H.screen === 'tonight' ? 1 : 0);   // the word belongs to Tonight gl.uniform4f(U.uWB, 0, 0, .2, 0);
   gl.uniform4f(U.uWX, meta.frac, meta.asp, meta.frac, meta.asp);
   gl.uniform1f(U.uRows, 1);
   var mt = [], rn = [];
@@ -2385,6 +2515,12 @@ function draw(){
   gl.uniform1fv(U['uMatch[0]'], new Float32Array(mt)); gl.uniform1fv(U['uRun[0]'], new Float32Array(rn));
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(U.uAtlas, 0);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
+  /* the page behind the frame is a blurred copy of this view, as in the mockup */
+  if(!bd){ bd = document.createElement('canvas'); bd.className = 'bd-live'; bd.width = 160; bd.height = 100; document.querySelector('.backdrop').appendChild(bd); }
+  var va = window.innerWidth / window.innerHeight, sw = cv.width, sh = h * k, sx = 0, sy = 0;
+  if(sw / sh > va){ var nw = sh * va; sx = (sw - nw) / 2; sw = nw; } else { var nh = sw / va; sy = (sh - nh) / 2; sh = nh; }
+  bd.height = Math.max(40, Math.round(160 / va));
+  try{ bd.getContext('2d').drawImage(cv, sx, sy, sw, sh, 0, 0, bd.width, bd.height); }catch(e){}
 }
 
 /* ── the DOM around the scene ── */
@@ -2394,6 +2530,8 @@ function paintEyebrow(){
   if(eb.textContent !== txt) eb.textContent = txt;
   var wb = gl ? wordBox() : null, top;
   var fw = $('hero-word'); if(fw.textContent !== clock) fw.textContent = clock;
+  var show = H.screen === 'tonight';
+  eb.style.visibility = show ? '' : 'hidden'; fw.style.visibility = show ? '' : 'hidden';
   if(wb) top = wb.top - 46;
   else { fw.style.top = Math.round(sceneH(H.g) * .32) + 'px'; top = fw.offsetTop - 44; }
   eb.style.transform = 'translate(' + Math.round(H.g.w / 2 - eb.offsetWidth / 2) + 'px,' + Math.round(top) + 'px)';
@@ -2434,8 +2572,6 @@ function paintNotch(){
   if(st.leaveLive) sel.value = '0';
   else if(v % 30 === 0) sel.value = String(v);
   else { var o = sel.querySelector('option[value="x"]'); o.textContent = C.clockOf(v); sel.value = 'x'; }
-  var lb = $('rail-list'), lbl = st.view === 'list' ? 'Show the field' : 'Show the list';
-  lb.setAttribute('aria-label', lbl); lb.setAttribute('data-tip', lbl);
 }
 function refresh(){
   if(!H.g) return;
@@ -2448,8 +2584,7 @@ function refresh(){
 $('f-leave').addEventListener('change', function(){ if(this.value === 'x') return; var m = +this.value; setLeave(m, m === 0); });
 $('f-kind').addEventListener('change', function(){ setFilterTo('tag', this.value); });
 $('f-lang').addEventListener('change', function(){ setFilterTo('lang', this.value); });
-$('rail-route').addEventListener('click', function(){ solveRoute(); var t = $('thread-b'); if(t) t.scrollIntoView({ block:'center', behavior:MOTION ? 'smooth' : 'auto' }); });
-$('rail-list').addEventListener('click', function(){ setView(C.state().view === 'field' ? 'list' : 'field'); paintNotch(); $('main').scrollIntoView({ behavior:MOTION ? 'smooth' : 'auto' }); });
+document.addEventListener('convene:screen', function(ev){ H.screen = ev.detail; paintEyebrow(); H.dirty = true; });
 $('feat-open').addEventListener('click', function(){ if(H.feat) openEvent(H.feat); });
 $('upnext').addEventListener('click', function(){ if(H.feat) openEvent(H.feat); });
 $('feat-route').addEventListener('click', function(){ if(H.feat) toggleThread(H.feat); });
@@ -2463,7 +2598,7 @@ function tick(now){
   H.acc = (H.acc || 0) + dt;
   /* nothing to see behind the start-up screen or the feature wheel */
   var covered = !$('explore').hidden || !$('boot').hidden;
-  if(MOTION && H.visible && !covered && H.acc >= .033){ H.t += H.acc; H.acc = 0; H.dirty = true; $('ring-g').setAttribute('transform', 'rotate(' + ((H.t * 6) % 360).toFixed(1) + ' 50 50)'); }
+  if(MOTION && H.visible && !covered && H.screen === 'tonight' && H.acc >= .033){ H.t += H.acc; H.acc = 0; H.dirty = true; $('ring-g').setAttribute('transform', 'rotate(' + ((H.t * 6) % 360).toFixed(1) + ' 50 50)'); }
   if(gl && H.dirty && H.visible && !covered){
     draw(); H.dirty = false;
     /* keep the page responsive: on a slow machine the scene steps its resolution down */
